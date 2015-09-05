@@ -29,14 +29,41 @@
 
 <script>
   var socket = io();
+
+  //reset these on window  resize
+  var winHeight = $(window).height();   // returns height of browser viewport
+  var winWidth = $(window).width();   // returns width of browser viewport
+  var centX = winWidth / 2;
+  var centY = winHeight / 2;
+  var mouseSensitivity = 0.1;
+
   $('form').submit(function(){
     socket.emit('chat message', $('#m').val());
     $('#m').val('');
     return false;
   });
 
+  socket.on('news', function (data) {
+      console.log(data);
+      socket.emit('my other event', { my: 'data' });
+  });
+
+  $("body").mousemove(function(e) {
+    console.log(mouseSensitivity * (e.clientY - centY) / winWidth);
+    pointed.applyAxisAngle (up, mouseSensitivity * (e.clientY - centY) / winWidth);
+  });
+
+
   var container, stats;
       var camera, scene, renderer;
+      //from currPos to view point
+      var pointed = new THREE.Vector3( 1, 0, 0);
+      var currPos = new THREE.Vector3( 1, 0, 0);
+      var up = new THREE.Vector3( 0, 1, 0);
+      var tmpVec = new THREE.Vector3();
+
+      var step = 1;
+      var speed = 1;
 
       init();
       animate();
@@ -120,7 +147,7 @@
         directionalLight.position.normalize();
         scene.add( directionalLight );
 
-        renderer = new THREE.CanvasRenderer();
+        renderer = new THREE.WebGLRenderer();
         renderer.setClearColor( 0xf0f0f0 );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
@@ -161,13 +188,47 @@
 
       }
 
+      window.addEventListener('keydown', function(event) {
+        var s = step * speed;
+        //console.log(event.keyCode);
+        console.log(pointed, currPos);
+        switch(event.keyCode){
+          case 87: //w
+            currPos.add(pointed)
+            break;
+          case 65: //a
+            tmpVec.crossVectors(up, pointed);
+            currPos.add(tmpVec);
+            break;
+          case 83: //s
+            currPos.sub(pointed)
+            break;
+          case 68: //d
+            tmpVec.crossVectors(pointed, up);
+            currPos.add(tmpVec);
+            break;
+          case 90: //z
+            currPos.y += s;
+            break;
+          case 88: //x
+            currPos.y -= s;
+            break;
+
+        }
+
+      }, false);
+
       function render() {
 
-        var timer = Date.now() * 0.0001;
+        //var timer = Date.now() * 0.0001;
 
-        camera.position.x = Math.cos( timer ) * 200;
+        //see if better way
+        camera.position.copy(currPos);
+      //  console.log(camera.position, currPos, lookAt);
+        camera.lookAt(tmpVec.addVectors(pointed, currPos));
+        /*camera.position.x = Math.cos( timer ) * 200;
         camera.position.z = Math.sin( timer ) * 200;
-        camera.lookAt( scene.position );
+        camera.lookAt( scene.position );*/
 
         renderer.render( scene, camera );
 

@@ -33,8 +33,11 @@ app.get('/js/libs/stats.min.js', function(req, res){
 io.on('connection', function(socket){
   socket.on('chat message', function(msg){
     console.log('message: ' + msg);
+    socket.emit('news', { hello: 'world' }); console.log('tits');
   });
 });
+
+  
 
 http.listen(8080, function(){
   console.log('listening on *:8080');
