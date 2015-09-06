@@ -6,7 +6,11 @@ app.get('/', function(req, res){
   res.sendfile('index.html');
 });
 
-app.get('/three.js', function(req, res){
+app.get('/app.js', function(req, res){
+  res.sendfile('assets/js/dest.js');
+});
+
+/*app.get('/three.js', function(req, res){
   res.sendfile('three.js');
 });
 
@@ -24,7 +28,7 @@ app.get('/js/renderers/CanvasRenderer.js', function(req, res){
 
 app.get('/js/libs/stats.min.js', function(req, res){
   res.sendfile('js/libs/stats.min.js');
-});
+});*/
 
 //io.on('connection', function(socket){
 //  console.log('a user connected');

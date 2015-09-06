@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.IO chat</title>
+    <title>Sample Game</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
@@ -12,6 +12,10 @@
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
     </style>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    
+
   </head>
   <body>
     <ul id="messages"></ul>
@@ -19,7 +23,8 @@
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
   </body>
-  <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+  <script src="app.js"></script>
+  <!--script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
   <script src="three.js"></script>
   <script src="three.min.js"></script>
   <script src="js/renderers/Projector.js"></script>
@@ -188,7 +193,14 @@
 
       }
 
-      window.addEventListener('keydown', function(event) {
+      var map = []; // Or you could call it "key"
+      onkeydown = onkeyup = function(e){
+          e = e || event; // to deal with IE
+          map[e.keyCode] = e.type == 'keydown';
+          console.log(e.which);
+      }
+
+     /* window.addEventListener('keydown', function(event) {
         var s = step * speed;
         //console.log(event.keyCode);
         console.log(pointed, currPos);
@@ -216,7 +228,7 @@
 
         }
 
-      }, false);
+      }, false);*/
 
       function render() {
 
@@ -233,5 +245,5 @@
         renderer.render( scene, camera );
 
       }
-</script>
+</script-->
 </html>
