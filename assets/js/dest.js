@@ -1753,7 +1753,7 @@ var winHeight = $(window).height();   // returns height of browser viewport
 var winWidth = $(window).width();   // returns width of browser viewport
 var centX = winHeight / 2;
 var centY = winWidth / 2;
-var mouseSensitivity = 25;
+var mouseSensitivity = 0.1;
 
 $('form').submit(function(){
   socket.emit('chat message', $('#m').val());
@@ -1793,27 +1793,25 @@ socket.on('news', function (data) {
 });
 
 $("body").mousemove(function(e) {
-  //pointed.normalize();
-  //pointed.applyAxisAngle (up, mouseSensitivity * (centY - e.clientY) / winWidth);
-  //target.addVectors(pointed, currPos);
-  //camera.position.applyAxisAngle (up, mouseSensitivity * (centY - e.clientY) / winWidth);
+
   var angle = mouseSensitivity * (centY - e.clientY) / winWidth;
-  //camera.position.x += angle;
-  //camera.position.z -= angle;
+
   //NEED TO UPDATE WHERE THE CAMERA IS POINTED AT WITH EVERY MOUSEMOVE AND KEYPRESS
+  pointed.applyAxisAngle (up,angle);
+  tmpVec.addVectors(camera.position, pointed);
+  camera.lookAt(tmpVec);
+
 });
 
 
 var container, stats;
 var camera, scene, renderer;
 //from currPos to view point
-var pointed = new THREE.Vector3( 50, -50, 0);
-var currPos = new THREE.Vector3( 50, 50, 0);
-var center = new THREE.Vector3( 0, 0, 0);
-var origin = new THREE.Vector3( 0, 0, 0);
-var up = new THREE.Vector3(0,1,0)
-var tmpVec = new THREE.Vector3();
-var target = new THREE.Vector3(100, 0, 0);
+var pointed = new THREE.Vector3( 1, 0, 0),
+    currPos = new THREE.Vector3( 50, 50, 0),
+    up = new THREE.Vector3(0,1,0),
+    //vector used for three js calculations
+    tmpVec = new THREE.Vector3();
 
 var stepFoot = 1;
 var speed = 1;
@@ -1835,11 +1833,12 @@ function init() {
   container.appendChild( info );
 
   camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-  //camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, - 500, 1000 );
-  camera.position.x = 200;
-  camera.position.y = 100;
-  camera.position.z = 200;
-  camera.lookAt(center);
+  camera.position.x = 50;
+  camera.position.y = 50;
+  camera.position.z = 0;
+
+  tmpVec.addVectors(camera.position, pointed);
+  camera.lookAt(tmpVec);
 
   scene = new THREE.Scene();
 
@@ -1932,10 +1931,8 @@ function onWindowResize() {
 
 }
 
-//
 
 function animate() {
-
   requestAnimationFrame( animate );
 
   render();
@@ -1943,91 +1940,89 @@ function animate() {
 
 }
 
-var map = []; // Or you could call it "key"
-  onkeydown = onkeyup = function(e){
-    pointed.normalize();
-  e = e || event; // to deal with IE
-  map[e.keyCode] = e.type == 'keydown';
-  
-  if(e.type == 'keyup')
-    return;
-  //console.log(currPos, pointed, e.type);
+var map = []; 
+onkeydown = onkeyup = function(e){
+  pointed.normalize();
+    e = e || event; // to deal with IE
+    map[e.keyCode] = e.type == 'keydown';
+    
+    if(e.type == 'keyup')
+      return;
 
-  
-  //w : 87
-  //s : 83
-  //a : 65
-  //d : 68
-
-  if(map[87] && map[83])
-    console.log('ya dick');
-  if(map[68] && map[65])
-    console.log('ya dick');
-  else{
-    var s = stepFoot * speed;
-    switch(event.keyCode){
-    case 87: //w
+    if((map[87] && map[83]) || (map[68] && map[65]))
+      console.log('no movement');
+    else if(map[87] && map[65]) //w + a
+    {
       camera.translateZ(-10);
-      //tmpVec.copy(pointed);
-      //center.add(tmpVec.multiplyScalar(s));
-      break;
-    case 65: //a
       camera.translateX(-10);
-      //tmpVec.crossVectors(up, pointed);
-      //center.add(tmpVec);
-      break;
-    case 83: //s
-      camera.translateZ(10);
-      //tmpVec.copy(pointed);
-      //center.sub(tmpVec.multiplyScalar(s));
-      break;
-    case 68: //d
+    }
+    else if(map[87] && map[68]) //w + d
+    {
+      camera.translateZ(-10);
       camera.translateX(10);
-      //tmpVec.crossVectors(pointed, up);
-      //center.add(tmpVec);
+    }
+    else if(map[83] && map[65]) //s + a
+    {
+      camera.translateZ(10);
+      camera.translateX(-10);
+    }
+    else if(map[83] && map[68]) //s + d
+    {
+      camera.translateZ(10);
+      camera.translateX(10);
+    }
+    else{
+      var s = stepFoot * speed;
+      switch(event.keyCode){
+      case 87: //w
+      camera.translateZ(-10);
       break;
-    case 90: //z
+      case 65: //a
+      camera.translateX(-10);
+      break;
+      case 83: //s
+      camera.translateZ(10);
+      break;
+      case 68: //d
+      camera.translateX(10);
+      break;
+      case 90: //z
       camera.translateY(-10);
       break;
-    case 88: //x
+      case 88: //x
       camera.translateY(10);
       break;
-    case 89: //y
-      if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
-        if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen();
-        } else if (document.documentElement.msRequestFullscreen) {
-          document.documentElement.msRequestFullscreen();
-        } else if (document.documentElement.mozRequestFullScreen) {
-          document.documentElement.mozRequestFullScreen();
-        } else if (document.documentElement.webkitRequestFullscreen) {
-          document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+      case 89: //y
+        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
+          if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+          } else if (document.documentElement.msRequestFullscreen) {
+            document.documentElement.msRequestFullscreen();
+          } else if (document.documentElement.mozRequestFullScreen) {
+            document.documentElement.mozRequestFullScreen();
+          } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+          }
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
         }
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.msExitFullscreen) {
-          document.msExitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-          document.mozCancelFullScreen();
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        }
+        break;
       }
-      break;
-
     }
-
   }
-  target.addVectors(pointed, currPos);
-  console.log(camera.position,currPosy);
-}
 
 
 
-function render() {
+  function render() {
 
-  renderer.render( scene, camera );
-
-}
+    renderer.render( scene, camera );
+  }
 
