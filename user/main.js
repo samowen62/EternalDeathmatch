@@ -3,9 +3,9 @@ var socket = io();
 //reset these on window  resize
 var winHeight = $(window).height();   // returns height of browser viewport
 var winWidth = $(window).width();   // returns width of browser viewport
-var centX = winWidth / 2;
-var centY = winHeight / 2;
-var mouseSensitivity = 0.1;
+var centX = winHeight / 2;
+var centY = winWidth / 2;
+var mouseSensitivity = 25;
 
 $('form').submit(function(){
   socket.emit('chat message', $('#m').val());
@@ -45,20 +45,29 @@ socket.on('news', function (data) {
 });
 
 $("body").mousemove(function(e) {
-  console.log(mouseSensitivity * (centY - e.clientY) / winWidth);
-  pointed.applyAxisAngle (up, mouseSensitivity * (centY - e.clientY) / winWidth);
+  //pointed.normalize();
+  //pointed.applyAxisAngle (up, mouseSensitivity * (centY - e.clientY) / winWidth);
+  //target.addVectors(pointed, currPos);
+  //camera.position.applyAxisAngle (up, mouseSensitivity * (centY - e.clientY) / winWidth);
+  var angle = mouseSensitivity * (centY - e.clientY) / winWidth;
+  //camera.position.x += angle;
+  //camera.position.z -= angle;
+  //NEED TO UPDATE WHERE THE CAMERA IS POINTED AT WITH EVERY MOUSEMOVE AND KEYPRESS
 });
 
 
 var container, stats;
 var camera, scene, renderer;
 //from currPos to view point
-var pointed = new THREE.Vector3( 1, 0, 0);
-var currPos = new THREE.Vector3( 1, 0, 0);
-var up = new THREE.Vector3( 0, 1, 0);
+var pointed = new THREE.Vector3( 50, -50, 0);
+var currPos = new THREE.Vector3( 50, 50, 0);
+var center = new THREE.Vector3( 0, 0, 0);
+var origin = new THREE.Vector3( 0, 0, 0);
+var up = new THREE.Vector3(0,1,0)
 var tmpVec = new THREE.Vector3();
+var target = new THREE.Vector3(100, 0, 0);
 
-var stepFoot = 0.1;
+var stepFoot = 1;
 var speed = 1;
 
 init();
@@ -77,10 +86,12 @@ function init() {
   info.innerHTML = '<a href="http://threejs.org" target="_blank">three.js</a> - orthographic view';
   container.appendChild( info );
 
-  camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, - 500, 1000 );
+  camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  //camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, - 500, 1000 );
   camera.position.x = 200;
   camera.position.y = 100;
   camera.position.z = 200;
+  camera.lookAt(center);
 
   scene = new THREE.Scene();
 
@@ -186,10 +197,15 @@ function animate() {
 
 var map = []; // Or you could call it "key"
   onkeydown = onkeyup = function(e){
+    pointed.normalize();
   e = e || event; // to deal with IE
   map[e.keyCode] = e.type == 'keydown';
-  console.log(e.which);
+  
+  if(e.type == 'keyup')
+    return;
+  //console.log(currPos, pointed, e.type);
 
+  
   //w : 87
   //s : 83
   //a : 65
@@ -203,27 +219,30 @@ var map = []; // Or you could call it "key"
     var s = stepFoot * speed;
     switch(event.keyCode){
     case 87: //w
-      tmpVec = pointed;
-      currPos.add(tmpVec.multiplyScalar(s));
+      camera.translateZ(-10);
+      //tmpVec.copy(pointed);
+      //center.add(tmpVec.multiplyScalar(s));
       break;
     case 65: //a
-      tmpVec.crossVectors(up, pointed);
-      currPos.add(tmpVec);
+      camera.translateX(-10);
+      //tmpVec.crossVectors(up, pointed);
+      //center.add(tmpVec);
       break;
     case 83: //s
-      tmpVec = pointed;
-      currPos.sub(tmpVec.multiplyScalar(s));
+      camera.translateZ(10);
+      //tmpVec.copy(pointed);
+      //center.sub(tmpVec.multiplyScalar(s));
       break;
     case 68: //d
-      tmpVec.crossVectors(pointed, up);
-      currPos.add(tmpVec);
+      camera.translateX(10);
+      //tmpVec.crossVectors(pointed, up);
+      //center.add(tmpVec);
       break;
     case 90: //z
-      currPos.y += s;
-
+      camera.translateY(-10);
       break;
     case 88: //x
-      currPos.y -= s;
+      camera.translateY(10);
       break;
     case 89: //y
       if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
@@ -250,19 +269,15 @@ var map = []; // Or you could call it "key"
       break;
 
     }
-  }
 
+  }
+  target.addVectors(pointed, currPos);
+  console.log(camera.position,currPosy);
 }
 
 
 
 function render() {
-
-
-  //see if better way
-  camera.position.copy(currPos);
-  //  console.log(camera.position, currPos, lookAt);
-  camera.lookAt(tmpVec.addVectors(pointed, currPos));
 
   renderer.render( scene, camera );
 
