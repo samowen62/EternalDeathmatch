@@ -199,12 +199,10 @@ function animate() {
   stats.update();
 
 }
-/*
-Controller = {
-    keyIsDown: [],
 
-    // Add a new control. up is optional.
-    // It avoids key repetitions
+var Controller = {
+    keyIsDown: [],
+    
     add: function (key, down, up) {
         $(document).keydown(function(e) {
             if(e.keyCode === key && !Controller.keyIsDown[key]) {
@@ -223,87 +221,72 @@ Controller = {
         })
     },
 }
-Example:
 
-Controller.add(65,
-    function () {
-        console.log("A is down")
-    },
-    // This argument is optional
-    function () {
-        console.log("A is up")
-})
+var keys = [65, 68, 83, 87, 88, 89, 90];
+for(var i in keys){
+  Controller.add(keys[i],
+      function () {},
+      function () {})
+}
 
-*/
+
 var map = [];    
-window.addEventListener('keydown',function(e){
-    //keyState[e.keyCode || e.which] = true;
-    e = e || event; // to deal with IE
-    map[e.keyCode || e.which] = true;
-    move();
-},true);    
-window.addEventListener('keyup',function(e){
-    e = e || event; // to deal with IE
-    map[e.keyCode || e.which] = false;
-    move();
-},true);
 
 function move(){
+  if(!map)
+    return;
   tmpVec.copy(camera.position);
   tmpVec.y = 0;
-  console.log(camera.position, tmpVec);
+  //console.log(camera.position, tmpVec);
   var s = stepFoot * speed;
   var diagS = s / Math.sqrt(2);
 
-  if((map[87] && map[83]) || (map[68] && map[65]))
+  if((Controller.keyIsDown[87] && Controller.keyIsDown[83]) || (Controller.keyIsDown[68] && Controller.keyIsDown[65]))
     console.log('no movement');
-  else if(map[87] && map[65]) //w + a
+  else if(Controller.keyIsDown[87] && Controller.keyIsDown[65]) //w + a
   {
     tmpVec.x += diagS * (pointed.z + pointed.x);
     tmpVec.z += diagS * (pointed.z - pointed.x);
   }
-  else if(map[87] && map[68]) //w + d
+  else if(Controller.keyIsDown[87] && Controller.keyIsDown[68]) //w + d
   {
     tmpVec.x += diagS * (pointed.x - pointed.z);
     tmpVec.z += diagS * (pointed.x + pointed.z);
   }
-  else if(map[83] && map[65]) //s + a
+  else if(Controller.keyIsDown[83] && Controller.keyIsDown[65]) //s + a
   {
     tmpVec.x += diagS * (pointed.z - pointed.x);
     tmpVec.z += diagS * ( -1 * pointed.x - pointed.z);
   }
-  else if(map[83] && map[68]) //s + d
+  else if(Controller.keyIsDown[83] && Controller.keyIsDown[68]) //s + d
   {
     tmpVec.x += diagS * (pointed.z - pointed.x);
     tmpVec.z += diagS * (pointed.x - pointed.z);
   }
-  else{
-
-    switch(event.keyCode){
-    case 87: //w
+  else if(Controller.keyIsDown[87]){ //w
       tmpVec.x += s * pointed.x;
       tmpVec.z += s * pointed.z;
-    break;
-    case 65: //a
+  }
+  else if(Controller.keyIsDown[65]){ //a
       tmpVec.x += s * pointed.z;
       tmpVec.z -= s * pointed.x;
-    break;
-    case 83: //s
+  }
+  else if(Controller.keyIsDown[83]){ //s
       tmpVec.x -= s * pointed.x;
       tmpVec.z -= s * pointed.z;
-    break;
-    case 68: //d
+  }
+  else if(Controller.keyIsDown[68]){ //d
       tmpVec.x -= s * pointed.z;
       tmpVec.z += s * pointed.x;
-    break;
-    case 90: //z
-    camera.translateY(-10);
-    break;
-    case 88: //x
-    camera.translateY(10);
-    break;
-    case 89: //y
-      if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
+  }
+  else if(Controller.keyIsDown[90]){ //z
+      camera.translateY(-10);
+  }
+  else if(Controller.keyIsDown[88]){ //x
+      camera.translateY(10);
+  }
+  else if(Controller.keyIsDown[89]){ //y
+    if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
         if (document.documentElement.requestFullscreen) {
           document.documentElement.requestFullscreen();
         } else if (document.documentElement.msRequestFullscreen) {
@@ -324,9 +307,8 @@ function move(){
           document.webkitExitFullscreen();
         }
       }
-      break;
     }
-  }
+  
   tmpVec.y = camera.position.y;  
   camera.position.copy(tmpVec);
 }
@@ -334,7 +316,7 @@ function move(){
 
 
   function render() {
-
+    move();
     renderer.render( scene, camera );
   }
 
