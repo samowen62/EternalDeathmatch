@@ -6,6 +6,7 @@ var winWidth = $(window).width();   // returns width of browser viewport
 var centX = winWidth / 2;
 var centY = winHeight / 2;
 var mouseSensitivity = 0.06;
+var boundaryList = [];
 
 $('form').submit(function(){
   socket.emit('chat message', $('#m').val());
@@ -92,7 +93,7 @@ function init() {
   info.innerHTML = '<a href="http://threejs.org" target="_blank">three.js</a> - orthographic view';
   container.appendChild( info );
 
-  camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 5000 );
   camera.position.x = 50;
   camera.position.y = 50;
   camera.position.z = 0;
@@ -104,7 +105,7 @@ function init() {
 
   // Grid
 
-  var size = 500, step = 50;
+  var size = 2000, step = 200;
 
   var geometry = new THREE.Geometry();
 
@@ -125,7 +126,7 @@ function init() {
 
   // Cubes
 
-  var geometry = new THREE.BoxGeometry( 50, 50, 50 );
+  var geometry = new THREE.BoxGeometry( 200, 200, 200 );
   var material = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, overdraw: 0.5 } );
 
   for ( var i = 0; i < 100; i ++ ) {
@@ -134,10 +135,16 @@ function init() {
 
     cube.scale.y = Math.floor( Math.random() * 2 + 1 );
 
-    cube.position.x = Math.floor( ( Math.random() * 1000 - 500 ) / 50 ) * 50 + 25;
-    cube.position.y = ( cube.scale.y * 50 ) / 2;
-    cube.position.z = Math.floor( ( Math.random() * 1000 - 500 ) / 50 ) * 50 + 25;
+    cube.position.x = Math.floor( ( Math.random() * 4000 - 2000 ) / 200 ) * 200 + 100;
+    cube.position.y = ( cube.scale.y * 200 ) / 2;
+    cube.position.z = Math.floor( ( Math.random() * 4000 - 2000 ) / 200 ) * 200 + 100;
 
+    //add verticies to list of collidable objects
+    boundaryList.push({
+      center : cube.position,
+      //not total width but half
+      thickness : new THREE.Vector3(100, 100 * cube.scale.y , 100)
+    });
     scene.add( cube );
 
   }
@@ -229,12 +236,33 @@ for(var i in keys){
       function () {})
 }
 
+var five = new THREE.Vector3(5,5,5);
 
-var map = [];    
+function detectCol(present,future){
+  if (present.equals(future))
+    return present
+  var charBounds = {
+    position : future,
+    thickness : five
+  },b;
+
+  for( var i in boundaryList){
+    b = boundaryList[i];
+    if((Math.abs(charBounds.position.x - b.center.x) < charBounds.thickness.x + b.thickness.x) && (Math.abs(charBounds.position.z - b.center.z) < charBounds.thickness.z + b.thickness.z)){
+      
+        return present;
+    }
+  }
+  return future
+}
 
 function move(){
-  if(!map)
-    return;
+  //detec collisions and move accordingly
+  //if at 45deg to surface just subtract portion of
+  //vector into wall
+  if(!Controller)
+    return
+
   tmpVec.copy(camera.position);
   tmpVec.y = 0;
   //console.log(camera.position, tmpVec);
@@ -309,8 +337,9 @@ function move(){
       }
     }
   
-  tmpVec.y = camera.position.y;  
-  camera.position.copy(tmpVec);
+  tmpVec.y = camera.position.y;
+  camera.position.copy(detectCol(camera.position,tmpVec));
+
 }
 
 
