@@ -1755,12 +1755,25 @@ var centX = winWidth / 2;
 var centY = winHeight / 2;
 var mouseSensitivity = 0.06;
 var boundaryList = [];
+var p_hash = makeid();
 
-$('form').submit(function(){
-  socket.emit('chat message', $('#m').val());
-  $('#m').val('');
-  return false;
-});
+//eventually inline the hash with jade serverside
+function makeid()
+{
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for( var i=0; i < 25; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
+var charBounds = {
+  position : new THREE.Vector3(0,0,0),
+  thickness : new THREE.Vector3(5,5,5)
+}
+
 
 function toggleFullScreen() {
   if (!document.fullscreenElement &&    // alternative standard method
@@ -1787,12 +1800,6 @@ function toggleFullScreen() {
   }
 }
 
-
-socket.on('news', function (data) {
-  console.log(data);
-  socket.emit('my other event', { my: 'data' });
-});
-
 $("body").mousemove(function(e) {
 
   var angleX = mouseSensitivity * (centX - e.clientX) / winWidth;
@@ -1816,11 +1823,22 @@ var camera, scene, renderer;
 var lastMouse = [winWidth/2,winHeight/2];
 //from currPos to view point
 var pointed = new THREE.Vector3( 1, 0, 0),
-    currPos = new THREE.Vector3( 50, 50, 0),
+    currPos = new THREE.Vector3( 0, 50, 0),
     up = new THREE.Vector3(0,1,0),
     left = new THREE.Vector3(1,0,0),
     //vector used for three js calculations
     tmpVec = new THREE.Vector3();
+
+var geometry = new THREE.SphereGeometry( 75, 32, 32 ); 
+var material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
+var testSphere = new THREE.Mesh( geometry, material ); 
+
+socket.on('o', function (data) {
+
+  testSphere.position.setX(-data.x)
+  testSphere.position.setY(data.y)
+  testSphere.position.setZ(-data.z)
+});
 
 var stepFoot = 10;
 var speed = 1;
@@ -1842,7 +1860,7 @@ function init() {
   container.appendChild( info );
 
   camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 5000 );
-  camera.position.x = 50;
+  camera.position.x = 0;
   camera.position.y = 50;
   camera.position.z = 0;
 
@@ -1871,7 +1889,7 @@ function init() {
 
   var line = new THREE.Line( geometry, material, THREE.LinePieces );
   scene.add( line );
-
+  scene.add(testSphere);
   // Cubes
 
   var geometry = new THREE.BoxGeometry( 200, 200, 200 );
@@ -1984,19 +2002,14 @@ for(var i in keys){
       function () {})
 }
 
-var five = new THREE.Vector3(5,5,5);
-
 function detectCol(present,future){
   if (present.equals(future))
     return present
-  var charBounds = {
-    position : future,
-    thickness : five
-  },b;
+  var b;
 
   for( var i in boundaryList){
     b = boundaryList[i];
-    if((Math.abs(charBounds.position.x - b.center.x) < charBounds.thickness.x + b.thickness.x) && (Math.abs(charBounds.position.z - b.center.z) < charBounds.thickness.z + b.thickness.z)){
+    if((Math.abs(future.x - b.center.x) < charBounds.thickness.x + b.thickness.x) && (Math.abs(future.z - b.center.z) < charBounds.thickness.z + b.thickness.z)){
       
         return present;
     }
@@ -2011,7 +2024,7 @@ function move(){
   if(!Controller)
     return
 
-  tmpVec.copy(camera.position);
+  tmpVec.copy(charBounds.position);
   tmpVec.y = 0;
   //console.log(camera.position, tmpVec);
   var s = stepFoot * speed;
@@ -2086,14 +2099,27 @@ function move(){
     }
   
   tmpVec.y = camera.position.y;
-  camera.position.copy(detectCol(camera.position,tmpVec));
+  tmpVec.copy(detectCol(camera.position,tmpVec));
+
+  //special camera effects could go here
+  camera.position.copy(tmpVec);
+  charBounds.position.copy(tmpVec);
+
 
 }
 
 
 
   function render() {
-    move();
+    if(true){//for when the player is dead etc.
+      move();
+      socket.emit('m', {
+        hash : p_hash,
+        x : charBounds.position.x,
+        y : charBounds.position.y,
+        z : charBounds.position.z
+      });
+    }
     renderer.render( scene, camera );
   }
 
