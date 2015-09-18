@@ -262,17 +262,30 @@ function detectCol(present,future){
   for( var i in boundaryList){
     b = boundaryList[i];
     if((Math.abs(future.x - b.center.x) < charBounds.thickness.x + b.thickness.x) && (Math.abs(future.z - b.center.z) < charBounds.thickness.z + b.thickness.z)){
-      
-        return present;
+        //subtract portion perp to surface for general surfaces
+        //that means later we want just a list of surfaces and blocks
+        //not just blocks. Also a list of walls for map boundaries
+        //Just either don't overlap or loop through everything
+
+        //for this approach we need to just find the surfaces it hits
+        //i.e. it can clip through corners
+        var x_wall_l = b.center.x - b.thickness.x,
+        x_wall_h = b.center.x + b.thickness.x,
+        z_wall_l = b.center.z - b.thickness.z,
+        z_wall_h = b.center.z + b.thickness.z;
+        if((present.x < x_wall_l && x_wall_l < future.x) || (future.x < x_wall_h && x_wall_h < present.x)){
+          future.x = present.x;
+        } 
+        if((present.z < z_wall_l && z_wall_l < future.z) || (future.z < z_wall_h && z_wall_h < present.z)){
+          future.z = present.z;
+        } 
+        return future;
     }
   }
   return future
 }
 
 function move(){
-  //detec collisions and move accordingly
-  //if at 45deg to surface just subtract portion of
-  //vector into wall
   if(!Controller)
     return
 
