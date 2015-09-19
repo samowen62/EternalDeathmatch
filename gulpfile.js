@@ -8,7 +8,13 @@ var server = lr();
 
 gulp.task('scripts', function() {
 	//source files here
-    gulp.src(["js/three.min.js","js/renderers/Projector.js","js/libs/stats.min.js","user/main.js"])
+    gulp.src(["js/three.min.js",
+      "js/renderers/Projector.js",
+      "js/libs/stats.min.js",
+      "user/defs.js",
+      "user/controls.js",
+      "user/scene.js",
+      "user/main.js"])
        // .pipe(browserify())
         .pipe(concat('dest.js'))
         .pipe(gulp.dest('assets/js'))
