@@ -1,6 +1,7 @@
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var players = [], newId
 
 //need hashes for user and game
 function makeid()
@@ -23,15 +24,23 @@ app.get('/app.js', function(req, res){
   res.sendfile('assets/js/dest.js');
 });
 
+io.sockets.on('connection', function(socket){
+  newId = makeid()
+  socket.emit('id', { 
+      id : newId
+    });
 
-//io.on('connection', function(socket){
-//  console.log('a user connected');
-//});
+  players.push(newId);
 
-io.on('connection', function(socket){
+   socket.on('disconnect', function() {
+      console.log('Got disconnect!');
+
+      var i = players.indexOf(socket);
+      delete players[i];
+   });
+
+  console.log('user connected');
   socket.on('m', function(msg){
-    console.log('message: ' + msg.x +','+msg.y+','+msg.z+' p_hash'+msg.hash);
-
     //testing by inverting coords :)
     socket.emit('o', { 
       x : msg.x,

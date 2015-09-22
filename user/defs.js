@@ -1,17 +1,4 @@
-var p_hash = makeid();
-var socket = io();
- 
-//eventually inline the hash with jade serverside
-function makeid()
-{
-    var text = "";
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-    for( var i=0; i < 25; i++ )
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-
-    return text;
-}
+var p_hash,socket = io();
 
 var charBounds = {
   position : new THREE.Vector3(0,0,0),
