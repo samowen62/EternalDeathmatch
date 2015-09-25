@@ -1,4 +1,4 @@
-var p_hash,socket = io();
+var p_hash = null,socket = io(),players=[];
 
 var charBounds = {
   position : new THREE.Vector3(0,0,0),

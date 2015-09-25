@@ -1746,7 +1746,7 @@ k.id="msText";k.style.cssText="color:#0f0;font-family:Helvetica,Arial,sans-serif
 "block";d.style.display="none";break;case 1:a.style.display="none",d.style.display="block"}};return{REVISION:11,domElement:f,setMode:t,begin:function(){l=Date.now()},end:function(){var b=Date.now();g=b-l;n=Math.min(n,g);o=Math.max(o,g);k.textContent=g+" MS ("+n+"-"+o+")";var a=Math.min(30,30-30*(g/200));e.appendChild(e.firstChild).style.height=a+"px";r++;b>m+1E3&&(h=Math.round(1E3*r/(b-m)),p=Math.min(p,h),q=Math.max(q,h),i.textContent=h+" FPS ("+p+"-"+q+")",a=Math.min(30,30-30*(h/100)),c.appendChild(c.firstChild).style.height=
 a+"px",m=b,r=0);return b},update:function(){l=this.end()}}};
 
-var p_hash,socket = io();
+var p_hash = null,socket = io(),players=[];
 
 var charBounds = {
   position : new THREE.Vector3(0,0,0),
@@ -1846,7 +1846,9 @@ function detectCol(present,future){
         //Just either don't overlap or loop through everything
 
         //for this approach we need to just find the surfaces it hits
-        //i.e. it can clip through corners
+        //i.e. it can clip through intersecting corners (just don't design maps like this)
+
+        //should use bounding boxes instead with c & h and c_i +/- h_i is extent of volume
         var x_wall_l = b.center.x - b.thickness.x,
         x_wall_h = b.center.x + b.thickness.x,
         z_wall_l = b.center.z - b.thickness.z,
@@ -2085,13 +2087,13 @@ function render() {
     renderer.render( scene, camera );
 }
 socket.on('o', function (data) {
-
-  testSphere.position.setX(-data.x)
+  console.log("rec'd")//
+  testSphere.position.setX(data.x)
   testSphere.position.setY(data.y)
   testSphere.position.setZ(data.z)
 });
 
 socket.on('id', function (data) {
-  p_hash = data.id
-  console.log(p_hash)
+  if(p_hash == null)
+    p_hash = data.id
 });

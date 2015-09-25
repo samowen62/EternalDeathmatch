@@ -80,7 +80,9 @@ function detectCol(present,future){
         //Just either don't overlap or loop through everything
 
         //for this approach we need to just find the surfaces it hits
-        //i.e. it can clip through corners
+        //i.e. it can clip through intersecting corners (just don't design maps like this)
+
+        //should use bounding boxes instead with c & h and c_i +/- h_i is extent of volume
         var x_wall_l = b.center.x - b.thickness.x,
         x_wall_h = b.center.x + b.thickness.x,
         z_wall_l = b.center.z - b.thickness.z,
