@@ -12,6 +12,7 @@ gulp.task('scripts', function() {
       "js/renderers/Projector.js",
       "js/libs/stats.min.js",
       "user/defs.js",
+      "user/objects.js",
       "user/controls.js",
       "user/scene.js",
       "user/main.js"])
