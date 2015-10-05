@@ -31,8 +31,7 @@ io.sockets.on('connection', function(socket){
   socket.room = rooms[0]//random room later
   socket.iter = 0
   socket.latency = BASE_LATENCY
-  socket.join(rooms[0])
-  //{'id': newId, 'pos' : null, 'point' : null}
+  socket.join(socket.room)
 
   socket.on('disconnect', function() {
     console.log('Got disconnect!');
@@ -43,6 +42,10 @@ io.sockets.on('connection', function(socket){
   socket.on('m', function(msg){
     socket.iter = socket.iter + 1
 
+    /*
+      optimize per socket latency later to respond more frequently
+      to faster clients that demand more and vice-versa
+    */
     if(socket.iter == socket.latency){
       socket.iter = 0;
       socket.broadcast.to(socket.room).emit('o', { 

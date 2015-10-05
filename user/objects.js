@@ -18,7 +18,6 @@ var collisionWall = class {
 
     this.normal = tmp3
     this.next = null,this.prev = null
-    console.log(this)
   }
 
   addNext(next) {
