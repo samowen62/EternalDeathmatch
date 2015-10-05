@@ -2071,10 +2071,10 @@ function init() {
     wzMax = Math.max(ul.z,lr.z)
     wzMin = Math.min(ul.z,lr.z)
     //good here
-    wxMax = (wxMax - wxMax % t) + (wxMax>0?t:-t)
-    wxMin = (wxMin - wxMin % t) + (wxMin<0?t:-t)
-    wzMax = (wzMax - wzMax % t) + (wzMax>0?t:-t)
-    wzMin = (wzMin - wzMin % t) + (wzMin<0?t:-t)
+    wxMax = (wxMax - wxMax % t) + t
+    wxMin = (wxMin - wxMin % t) - t
+    wzMax = (wzMax - wzMax % t) + t
+    wzMin = (wzMin - wzMin % t) - t
 
     //min/max incorrect
     console.log(wxMin,wxMax,wzMin,wzMax)
