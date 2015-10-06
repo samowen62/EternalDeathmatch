@@ -1775,12 +1775,13 @@ for(boundaries = [];boundaries.length < sqSize; boundaries.push([]));
 for(var i = 0; i < sqSize; i ++)
 	for(var j = 0; j < sqSize; j ++)
 		boundaries[i].push([])
+var calcVec = new THREE.Vector3()
 var collisionWall = class {
 
   /*
-  	looking at normal this is upper left and lower right
-  	make sure upperLeft has higher y coord
-  */
+   * looking at normal this is upper left and lower right
+   * make sure upperLeft has higher y coord
+   */
   constructor(upperLeft, lowerRight) {
   	var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
 
@@ -1806,13 +1807,13 @@ var collisionWall = class {
   }
 
   /*
-	returns positive values if 'inside' (side normal points to),
-	negative values if on the outside, and 0 if point is inline
-	with this boundary wall
-  */
+	 * returns positive values if 'inside' (side normal points to),
+	 * negative values if on the outside, and 0 if point is inline
+	 * with this boundary wall
+   */
   whichSide(point){
-  	point.subVectors(point,this.center)
-  	return point.dot(this.normal);// > 0 ? 'inside' : 'outside';
+  	calcVec.subVectors(point,this.center)
+  	return calcVec.dot(this.normal);// > 0 ? 'inside' : 'outside';
   }
 
   //statics take 2 objs as input
@@ -1891,35 +1892,36 @@ var boundaryList = [],stepFoot = 10,speed = 1;
 function detectCol(present,future){
   if (present.equals(future))
     return present
-  var b;
 
-  for( var i in boundaryList){
-    b = boundaryList[i];
-    if((Math.abs(future.x - b.center.x) < charBounds.thickness.x + b.thickness.x) && (Math.abs(future.z - b.center.z) < charBounds.thickness.z + b.thickness.z)){
-        //subtract portion perp to surface for general surfaces
-        //that means later we want just a list of surfaces and blocks
-        //not just blocks. Also a list of walls for map boundaries
-        //Just either don't overlap or loop through everything
+  var wxMax,wxMin,wzMax,wzMin,tiles = [],t = 2*sqThick,a,b
 
-        //for this approach we need to just find the surfaces it hits
-        //i.e. it can clip through intersecting corners (just don't design maps like this)
+  wxMax = Math.max(present.x,future.x)
+  wxMin = Math.min(present.x,future.x)
+  wzMax = Math.max(present.z,future.z)
+  wzMin = Math.min(present.z,future.z)
+  wxMax = (wxMax - wxMax % t) + t
+  wxMin = (wxMin - wxMin % t) - t
+  wzMax = (wzMax - wzMax % t) + t
+  wzMin = (wzMin - wzMin % t) - t
 
-        //should use bounding boxes instead with c & h and c_i +/- h_i is extent of volume
-        var x_wall_l = b.center.x - b.thickness.x,
-        x_wall_h = b.center.x + b.thickness.x,
-        z_wall_l = b.center.z - b.thickness.z,
-        z_wall_h = b.center.z + b.thickness.z;
-        if((present.x < x_wall_l && x_wall_l < future.x) || (future.x < x_wall_h && x_wall_h < present.x)){
-          future.x = present.x;
-        } 
-        if((present.z < z_wall_l && z_wall_l < future.z) || (future.z < z_wall_h && z_wall_h < present.z)){
-          future.z = present.z;
-        } 
-        return future;
+  for(var j=wxMin;j<=wxMax;j+=t)
+    for(var k = wzMin;k<wzMax;k+=t)
+      tiles.push(boundaries[j/t + 11][k/t + 11])
+
+  for(t in tiles){
+    for(var i in tiles[t]){
+      a = tiles[t][i].whichSide(present) > 0
+      b = tiles[t][i].whichSide(future) > 0
+      if((!a && b)||(a&& !b)){
+        //detected
+        //later will want to subtract the 'bad' part of the vector so that the 
+        //user may 'slide' along the wall
+        return present
+      }
     }
   }
   return future
-}
+ }
 
 function move(){
   if(!Controller)
@@ -2002,6 +2004,7 @@ function move(){
   tmpVec.y = camera.position.y;
   tmpVec.copy(detectCol(camera.position,tmpVec));
 
+  //console.log(tmpVec)
   //special camera effects could go here
   camera.position.copy(tmpVec);
   charBounds.position.copy(tmpVec);
@@ -2070,14 +2073,10 @@ function init() {
     wxMin = Math.min(ul.x,lr.x)
     wzMax = Math.max(ul.z,lr.z)
     wzMin = Math.min(ul.z,lr.z)
-    //good here
     wxMax = (wxMax - wxMax % t) + t
     wxMin = (wxMin - wxMin % t) - t
     wzMax = (wzMax - wzMax % t) + t
     wzMin = (wzMin - wzMin % t) - t
-
-    //min/max incorrect
-    console.log(wxMin,wxMax,wzMin,wzMax)
 
     for(var j=wxMin;j<=wxMax;j+=t)
       for(var k = wzMin;k<wzMax;k+=t)
