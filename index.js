@@ -2,7 +2,7 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var rooms = ['lobby'], newId
-var BASE_LATENCY = 5
+var BASE_LATENCY = 5 
 
 //need hashes for user and game
 function makeid(){
