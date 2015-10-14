@@ -65,14 +65,14 @@ var platform = class {
     tmp3.crossVectors(tmp2, tmp1)
     tmp3.normalize()
 
-    if(tmp3.y < 0)
-      tmp3.multiplyScalar(-1.0)
+    if(tmp3.y < 0) tmp3.multiplyScalar(-1.0)
 
     this.normal = tmp3, this.d = points[0].dot(tmp3)
   }
 
   //not really above, but tells which side of the plane it's on, 
   //maybe subtract a little from d and see if the point is above the this.HIGHEST_Y_COORD
+  //might want to call below to make more clear?
   above(point){
     return point.dot(this.normal) > this.d
   }

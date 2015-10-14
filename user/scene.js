@@ -73,6 +73,13 @@ function init() {
     scene.add(wall);
 }
 console.log(boundaries)
+ 
+  // Ground
+  ground.push(new platform([new THREE.Vector3(2000,0,2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)]));
+  ground.push(new platform([new THREE.Vector3(-2000,0,-2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)]));
+
+
+
   // Lights
 
   var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );

@@ -70,6 +70,10 @@ function detectCol(present,future){
   if (present.equals(future))
     return present
 
+  //must detect ground clipping here
+  //only or all in ground if on HORIZON
+  if(!ground[0].above(charBounds.position) || !ground[1].above(charBounds.position)) console.log('underground')
+
   var wxMax,wxMin,wzMax,wzMin,tiles = [],t = 2*sqThick,a,b
 
   wxMax = Math.max(present.x,future.x)

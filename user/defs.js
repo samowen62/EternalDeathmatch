@@ -1,3 +1,6 @@
+/*
+ * In this file store all global variables shared between files
+ */
 var p_hash = null,socket = io(),players=[];
 
 var charBounds = {
@@ -27,3 +30,5 @@ for(boundaries = [];boundaries.length < sqSize; boundaries.push([]));
 for(var i = 0; i < sqSize; i ++)
 	for(var j = 0; j < sqSize; j ++)
 		boundaries[i].push([])
+
+var ground = [];

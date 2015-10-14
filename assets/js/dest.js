@@ -1746,6 +1746,9 @@ k.id="msText";k.style.cssText="color:#0f0;font-family:Helvetica,Arial,sans-serif
 "block";d.style.display="none";break;case 1:a.style.display="none",d.style.display="block"}};return{REVISION:11,domElement:f,setMode:t,begin:function(){l=Date.now()},end:function(){var b=Date.now();g=b-l;n=Math.min(n,g);o=Math.max(o,g);k.textContent=g+" MS ("+n+"-"+o+")";var a=Math.min(30,30-30*(g/200));e.appendChild(e.firstChild).style.height=a+"px";r++;b>m+1E3&&(h=Math.round(1E3*r/(b-m)),p=Math.min(p,h),q=Math.max(q,h),i.textContent=h+" FPS ("+p+"-"+q+")",a=Math.min(30,30-30*(h/100)),c.appendChild(c.firstChild).style.height=
 a+"px",m=b,r=0);return b},update:function(){l=this.end()}}};
 
+/*
+ * In this file store all global variables shared between files
+ */
 var p_hash = null,socket = io(),players=[];
 
 var charBounds = {
@@ -1775,6 +1778,8 @@ for(boundaries = [];boundaries.length < sqSize; boundaries.push([]));
 for(var i = 0; i < sqSize; i ++)
 	for(var j = 0; j < sqSize; j ++)
 		boundaries[i].push([])
+
+var ground = [];
 var calcVec = new THREE.Vector3()
 var collisionWall = class {
 
@@ -1842,14 +1847,14 @@ var platform = class {
     tmp3.crossVectors(tmp2, tmp1)
     tmp3.normalize()
 
-    if(tmp3.y < 0)
-      tmp3.multiplyScalar(-1.0)
+    if(tmp3.y < 0) tmp3.multiplyScalar(-1.0)
 
     this.normal = tmp3, this.d = points[0].dot(tmp3)
   }
 
   //not really above, but tells which side of the plane it's on, 
   //maybe subtract a little from d and see if the point is above the this.HIGHEST_Y_COORD
+  //might want to call below to make more clear?
   above(point){
     return point.dot(this.normal) > this.d
   }
@@ -1926,6 +1931,10 @@ var boundaryList = [],stepFoot = 10,speed = 1;
 function detectCol(present,future){
   if (present.equals(future))
     return present
+
+  //must detect ground clipping here
+  //only or all in ground if on HORIZON
+  if(!ground[0].above(charBounds.position) || !ground[1].above(charBounds.position)) console.log('underground')
 
   var wxMax,wxMin,wzMax,wzMin,tiles = [],t = 2*sqThick,a,b
 
@@ -2120,6 +2129,13 @@ function init() {
     scene.add(wall);
 }
 console.log(boundaries)
+ 
+  // Ground
+  ground.push(new platform([new THREE.Vector3(2000,0,2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)]));
+  ground.push(new platform([new THREE.Vector3(-2000,0,-2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)]));
+
+
+
   // Lights
 
   var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );
