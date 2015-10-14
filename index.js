@@ -19,6 +19,12 @@ app.get('/', function(req, res){
 app.get('/app.js', function(req, res){
   res.sendfile('assets/js/dest.js');
 });
+app.get('/jquery.js', function(req, res){
+  res.sendfile('assets/js/jquery-1.11.1.js');
+});
+app.get('/socket.js', function(req, res){
+  res.sendfile('assets/js/socket.io-1.2.0.js');
+});
 
 io.sockets.on('connection', function(socket){
   newId = makeid()
