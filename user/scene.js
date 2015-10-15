@@ -39,20 +39,18 @@ function init() {
   scene.add(testSphere);
 
   var wallLength = 140,wxMax,wxMin,wzMax,wzMin
-  var geometry = new THREE.PlaneGeometry( wallLength, 200, 10,10 );
   var material = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, overdraw: 0.5 } );
 
   for ( var i = 0; i < 100; i ++ ) {
-  	var wall = new THREE.Mesh( geometry, material );
-  	wall.position.x = 2000 * Math.cos(Math.PI * (i / 50.0))
-  	wall.position.z = 2000 * Math.sin(Math.PI * (i / 50.0))
-  	wall.rotation.y = Math.PI * ((75 - i) % 100 / 50) 
+  	var x = 2000 * Math.cos(Math.PI * (i / 50.0))
+  	   ,z = 2000 * Math.sin(Math.PI * (i / 50.0))
+  	   ,y = Math.PI * ((75 - i) % 100 / 50) 
 
   	var wall_x = (wallLength / 2) * Math.cos(Math.PI * ((i + 25) % 100/ 50.0)),
   		wall_z = (wallLength / 2) * Math.sin(Math.PI * ((i + 25) % 100/ 50.0))
 
-  	var ul = new THREE.Vector3(wall.position.x + wall_x,200,wall.position.z + wall_z),
-  		lr = new THREE.Vector3(wall.position.x - wall_x,  0,wall.position.z - wall_z)
+  	var ul = new THREE.Vector3(x + wall_x, 200, z + wall_z),
+  		lr = new THREE.Vector3(x - wall_x,  0, z - wall_z)
 
   	var cw = new collisionWall(ul, lr),t = 2*sqThick
     //computes bounding box of wall in closest thickness sqThick*2
@@ -69,8 +67,7 @@ function init() {
       for(var k = wzMin;k<wzMax;k+=t)
         boundaries[j/t + 11][k/t + 11].push(cw)
 
-
-    scene.add(wall);
+    scene.add(new THREE.Mesh( cw.render(), material ));
 }
 console.log(boundaries)
  

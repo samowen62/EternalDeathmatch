@@ -1786,9 +1786,12 @@ var collisionWall = class {
   /*
    * looking at normal this is upper left and lower right
    * make sure upperLeft has higher y coord
+   *
+   * this will create a vertical collision wall
    */
   constructor(upperLeft, lowerRight) {
   	var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
+    var ly = lowerRight.y
 
     tmp1.addVectors(upperLeft, lowerRight).multiplyScalar(0.5)
     this.center = tmp1
@@ -1801,6 +1804,28 @@ var collisionWall = class {
 
     this.normal = tmp3
     this.next = null,this.prev = null
+
+    lowerRight.y = ly
+    this.verts = {ul : upperLeft, lr : lowerRight}
+    this.verts.ll = new THREE.Vector3(upperLeft.x, ly, upperLeft.z)
+    this.verts.ur = new THREE.Vector3(lowerRight.x, upperLeft.y, lowerRight.z)
+  }
+
+  render(){
+    var geometry = new THREE.Geometry();
+
+    geometry.vertices.push( new THREE.Vector3( this.verts.ul.x,  this.verts.ul.y, this.verts.ul.z ) );
+    geometry.vertices.push( new THREE.Vector3( this.verts.ur.x,  this.verts.ur.y, this.verts.ur.z ) );
+    geometry.vertices.push( new THREE.Vector3( this.verts.lr.x,  this.verts.lr.y, this.verts.lr.z ) );
+    geometry.vertices.push( new THREE.Vector3( this.verts.ll.x,  this.verts.ll.y, this.verts.ll.z ) );
+
+    geometry.faces.push( new THREE.Face3( 0, 1, 2 ) ); // counter-clockwise winding order
+    geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
+
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
+
+    return geometry;
   }
 
   addNext(next) {
@@ -1827,7 +1852,7 @@ var collisionWall = class {
    }
 };
 
-
+//might not work on js?
 var platform = class {
   //need plane normal and d s.t. the plane is {x : n * x = d}
   //specify verticies of three pts
@@ -2095,20 +2120,18 @@ function init() {
   scene.add(testSphere);
 
   var wallLength = 140,wxMax,wxMin,wzMax,wzMin
-  var geometry = new THREE.PlaneGeometry( wallLength, 200, 10,10 );
   var material = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, overdraw: 0.5 } );
 
   for ( var i = 0; i < 100; i ++ ) {
-  	var wall = new THREE.Mesh( geometry, material );
-  	wall.position.x = 2000 * Math.cos(Math.PI * (i / 50.0))
-  	wall.position.z = 2000 * Math.sin(Math.PI * (i / 50.0))
-  	wall.rotation.y = Math.PI * ((75 - i) % 100 / 50) 
+  	var x = 2000 * Math.cos(Math.PI * (i / 50.0))
+  	   ,z = 2000 * Math.sin(Math.PI * (i / 50.0))
+  	   ,y = Math.PI * ((75 - i) % 100 / 50) 
 
   	var wall_x = (wallLength / 2) * Math.cos(Math.PI * ((i + 25) % 100/ 50.0)),
   		wall_z = (wallLength / 2) * Math.sin(Math.PI * ((i + 25) % 100/ 50.0))
 
-  	var ul = new THREE.Vector3(wall.position.x + wall_x,200,wall.position.z + wall_z),
-  		lr = new THREE.Vector3(wall.position.x - wall_x,  0,wall.position.z - wall_z)
+  	var ul = new THREE.Vector3(x + wall_x, 200, z + wall_z),
+  		lr = new THREE.Vector3(x - wall_x,  0, z - wall_z)
 
   	var cw = new collisionWall(ul, lr),t = 2*sqThick
     //computes bounding box of wall in closest thickness sqThick*2
@@ -2125,8 +2148,7 @@ function init() {
       for(var k = wzMin;k<wzMax;k+=t)
         boundaries[j/t + 11][k/t + 11].push(cw)
 
-
-    scene.add(wall);
+    scene.add(new THREE.Mesh( cw.render(), material ));
 }
 console.log(boundaries)
  
