@@ -1,23 +1,33 @@
 /*
  * In this file store all global variables shared between files
  */
-var p_hash = null,socket = io(),players=[];
-
-var charBounds = {
-  position : new THREE.Vector3(0,0,0),
-  thickness : new THREE.Vector3(45,45,45)
-}
-
-var container, stats;
-var camera, scene, renderer;
-var lastMouse = [winWidth/2,winHeight/2];
-//from currPos to view point
-var pointed = new THREE.Vector3( 1, 0, 0),
+var p_hash = null,
+	socket = io(),
+	players=[],
+	
+	container, 
+	stats, 
+	camera, 
+	scene, 
+	renderer,
+	
+	lastMouse = [winWidth/2,winHeight/2],
+	//from currPos to view point
+ 	pointed = new THREE.Vector3( 1, 0, 0),
     currPos = new THREE.Vector3( 0, 50, 0),
     up = new THREE.Vector3(0,1,0),
     left = new THREE.Vector3(1,0,0),
     //vector used for three js calculations
-    tmpVec = new THREE.Vector3();
+    tmpVec = new THREE.Vector3(),
+
+	winHeight = $(window).height(),
+	winWidth = $(window).width(),
+	centX = winWidth / 2,
+	centY = winHeight / 2,
+	mouseSensitivity = 0.06,
+
+	BASE_STEP_FOOT = 10,
+	BASE_SPEED = 1;
 
 /* set collision detection spacial structure
  *

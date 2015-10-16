@@ -122,12 +122,15 @@ function animate() {
 
 function render() {
     if(true){//for when the player is dead etc.
-    	move();
+    	//move();
+      character.act();
+      camera.position.copy(character.position);
+      
     	socket.emit('m', {
     		hash : p_hash,
-    		x : charBounds.position.x,
-    		y : charBounds.position.y,
-    		z : charBounds.position.z
+    		x : character.position.x,
+    		y : character.position.y,
+    		z : character.position.z
     	});
     }
     renderer.render( scene, camera );
