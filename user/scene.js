@@ -34,48 +34,48 @@ function init() {
 
   var material = new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } );
 
-  var line = new THREE.Line( geometry, material, THREE.LinePieces );
+  var line = new THREE.Line( geometry, material, THREE.LinePieces ),cw;
   scene.add( line );
   scene.add(testSphere);
 
   var wallLength = 140,wxMax,wxMin,wzMax,wzMin
   var material = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, overdraw: 0.5 } );
-
+/*
   for ( var i = 0; i < 100; i ++ ) {
   	var x = 2000 * Math.cos(Math.PI * (i / 50.0))
   	   ,z = 2000 * Math.sin(Math.PI * (i / 50.0))
-  	   ,y = Math.PI * ((75 - i) % 100 / 50) 
+  	   ,y = Math.PI * ((75 - i) % 100 / 50);
 
   	var wall_x = (wallLength / 2) * Math.cos(Math.PI * ((i + 25) % 100/ 50.0)),
-  		wall_z = (wallLength / 2) * Math.sin(Math.PI * ((i + 25) % 100/ 50.0))
+  		wall_z = (wallLength / 2) * Math.sin(Math.PI * ((i + 25) % 100/ 50.0));
 
-  	var ul = new THREE.Vector3(x + wall_x, 200, z + wall_z),
-  		lr = new THREE.Vector3(x - wall_x,  0, z - wall_z)
+  	var lr = new THREE.Vector3(x + wall_x, 0, z + wall_z),
+  		ul = new THREE.Vector3(x - wall_x,  200, z - wall_z);
 
-  	var cw = new collisionWall(ul, lr),t = 2*sqThick
+  	var cw = new collisionWall(ul, lr),t = 2*sqThick;
     //computes bounding box of wall in closest thickness sqThick*2
-    wxMax = Math.max(ul.x,lr.x)
-    wxMin = Math.min(ul.x,lr.x)
-    wzMax = Math.max(ul.z,lr.z)
-    wzMin = Math.min(ul.z,lr.z)
-    wxMax = (wxMax - wxMax % t) + t
-    wxMin = (wxMin - wxMin % t) - t
-    wzMax = (wzMax - wzMax % t) + t
-    wzMin = (wzMin - wzMin % t) - t
 
-    for(var j=wxMin;j<=wxMax;j+=t)
-      for(var k = wzMin;k<wzMax;k+=t)
-        boundaries[j/t + 11][k/t + 11].push(cw)
-
+    //add to 2d array of boundary arrays
+    cw.addTo(boundaries);//, t);
     scene.add(new THREE.Mesh( cw.render(), material ));
-}
-console.log(boundaries)
- 
+  }
+*/
   // Ground
   ground.push(new platform([new THREE.Vector3(2000,0,2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)]));
   ground.push(new platform([new THREE.Vector3(-2000,0,-2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)]));
 
+  //unify height = 140ish
+  var building1 = [
+    {ul : new THREE.Vector3(1000,140,-750), lr : new THREE.Vector3(250,0,0)},
+    {ul : new THREE.Vector3(1400,140,-750), lr : new THREE.Vector3(1000,0,-750)},
+  ];
 
+
+  for (var b in building1){
+    cw = new collisionWall(building1[b].ul, building1[b].lr);
+    cw.addTo(boundaries);
+    scene.add(new THREE.Mesh( cw.render(), material ));//do specific material in building1 array
+  }
 
   // Lights
 

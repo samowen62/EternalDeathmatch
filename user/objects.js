@@ -48,19 +48,22 @@ var collisionWall = class {
     this.next = null,this.prev = null
     
 
-    lowerRight.y = ly
-    this.verts = {ul : upperLeft, lr : lowerRight}
-    this.verts.ll = new THREE.Vector3(upperLeft.x, ly, upperLeft.z)
-    this.verts.ur = new THREE.Vector3(lowerRight.x, upperLeft.y, lowerRight.z)
+    lowerRight.y = ly,
+    this.verts = {ul : upperLeft, lr : lowerRight},
+    this.verts.ll = new THREE.Vector3(upperLeft.x, ly, upperLeft.z),
+    this.verts.ur = new THREE.Vector3(lowerRight.x, upperLeft.y, lowerRight.z),
+
+    this.normal_ul = new THREE.Vector3(tmp3.z,0,-tmp3.x),
+    this.normal_lr = new THREE.Vector3(-tmp3.z,0,tmp3.x);
   }
 
   render(){
     var geometry = new THREE.Geometry();
 
     geometry.vertices.push( new THREE.Vector3( this.verts.ul.x,  this.verts.ul.y, this.verts.ul.z ) );
-    geometry.vertices.push( new THREE.Vector3( this.verts.ur.x,  this.verts.ur.y, this.verts.ur.z ) );
-    geometry.vertices.push( new THREE.Vector3( this.verts.lr.x,  this.verts.lr.y, this.verts.lr.z ) );
     geometry.vertices.push( new THREE.Vector3( this.verts.ll.x,  this.verts.ll.y, this.verts.ll.z ) );
+    geometry.vertices.push( new THREE.Vector3( this.verts.lr.x,  this.verts.lr.y, this.verts.lr.z ) );
+    geometry.vertices.push( new THREE.Vector3( this.verts.ur.x,  this.verts.ur.y, this.verts.ur.z ) );
 
     geometry.faces.push( new THREE.Face3( 0, 1, 2 ) ); // counter-clockwise winding order
     geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
@@ -77,6 +80,27 @@ var collisionWall = class {
 
   addNext(prev) {
   	this.prev = prev
+  }
+
+  /*
+   * adds collision wall to the necessary locations in the array of boundaries
+   *
+   * arr: 3d boundary array
+   */
+  addTo(arr){
+    var t = 2*sqThick,
+    wxMax = Math.max(this.verts.ul.x,this.verts.lr.x),
+    wxMin = Math.min(this.verts.ul.x,this.verts.lr.x),
+    wzMax = Math.max(this.verts.ul.z,this.verts.lr.z),
+    wzMin = Math.min(this.verts.ul.z,this.verts.lr.z),
+    wxMax = (wxMax - wxMax % t) + t,
+    wxMin = (wxMin - wxMin % t) - t,
+    wzMax = (wzMax - wzMax % t) + t,
+    wzMin = (wzMin - wzMin % t) - t;
+
+    for(var j=wxMin;j<=wxMax;j+=t)
+      for(var k = wzMin;k<wzMax;k+=t)
+        boundaries[j/t + 11][k/t + 11].push(this);
   }
 
   /*
@@ -98,6 +122,35 @@ var collisionWall = class {
     return calcVec.dot(this.normal);// > 0 ? 'inside' : 'outside';
   }
 
+  /*
+   * Sees if either of the two vectors are even in a position within the edges
+   *
+   * returns true if there is a collision
+   */
+  inScope(a,b){
+    var c,d;
+    calcVec.subVectors(a,this.verts.ul);
+    c = calcVec.dot(this.normal_ul) > 0;
+    calcVec.subVectors(a,this.verts.lr);
+    d = calcVec.dot(this.normal_lr) > 0;
+//not even getting here
+//console.log(c,d);
+    return c && d;
+  }
+
+//check bookmark and try alt implementation of collision
+  collides(pres, fut){
+    var a = this.whichSide(pres) > 0,
+    b = this.whichSide(fut) > 0;
+
+    if((!a && b)||(a&& !b)){ //not sure if && would be faster to consolidate next  or test if in scope first?
+
+      return this.inScope(pres,fut);
+    }
+
+    return false;
+  }
+
   //statics take 2 objs as input
   static distance(a, b) {
     return 0
@@ -106,20 +159,14 @@ var collisionWall = class {
 
 //might not work on js?
 var platform = class {
-  //need plane normal and d s.t. the plane is {x : n * x = d}
-  //specify verticies of three pts
-  //variable on player whether grounded or not for physics
-
-  /*
-   * constructor takes array of 3 Vector3's
-   */
+  
   constructor(points) {
+    this.points = points;
+
+    //the following for generalized triangles
     if(points.length != 3)
       return;
-
-    this.points = points;
-//    this.points = [new THREE.Vector2(points[0].x, points[0].z),new THREE.Vector2(points[1].x, points[1].z),new THREE.Vector2(points[2].x, points[2].z)]
-    //for barycentric coordinates
+    this.flat = (points[0].y == points[1].y) && (points[1].y == points[2].y);
     this.v0 = new THREE.Vector3(points[1].x - points[0].x,points[1].y - points[0].y,points[1].z - points[0].z);
     this.v1 = new THREE.Vector3(points[2].x - points[0].x,points[2].y - points[0].y,points[2].z - points[0].z);
     this.d00 = this.v0.dot(this.v0);
@@ -128,6 +175,7 @@ var platform = class {
     this.den = this.d00 * this.d11 - this.d01 * this.d01;
     if(this.den == 0)
       this.den = 1;//invalid
+  
 
     var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
 
@@ -141,16 +189,11 @@ var platform = class {
     this.normal = tmp3, this.d = points[0].dot(tmp3)
   }
 
-  //maybe just calculate barycentric coords
   sign (p1,p2,p3)
   {
     return (p1.x - p3.x) * (p2.z - p3.z) - (p2.x - p3.x) * (p1.z - p3.z);
   }
 
-  //not really above, but tells which side of the plane it's on, 
-  //maybe subtract a little from d and see if the point is above the this.HIGHEST_Y_COORD
-  //might want to call below to make more clear?
-  //
   //WONT WORK FOR SLANTED HILL PLATFORMS SINCE THE PLANE TAKES UP THE ENTIRE ENVIREONMENT
   //SO ONLY LOOK AT IT IF THE USER IS OVER IT
   above(point){
@@ -185,11 +228,31 @@ var platform = class {
   }
 
   yAt(pos){
+    if(this.flat)
+      return this.points[0].y;
     return this.baryCoords(pos);
   }
 
 };
 
+
+var triangleBd = class {
+  
+};
+
+
+/*var Person = Class.extend({
+  init: function(isDancing){
+    this.dancing = isDancing;
+  }
+});
+ 
+var Ninja = Person.extend({
+  init: function(){
+    this._super( false );
+  }
+});
+*/
 var cEntity = class {
 
   constructor(pos) {
@@ -388,17 +451,15 @@ var cEntity = class {
 
     for(var j=wxMin;j<=wxMax;j+=t)
       for(var k = wzMin;k<wzMax;k+=t)
-        tiles.push(boundaries[j/t + 11][k/t + 11])
+        tiles.push(boundaries[j/t + 11][k/t + 11]);
+        //maybe just examine here instead of loop again
 
     for(t in tiles){
       for(var i in tiles[t]){
-        a = tiles[t][i].whichSide(present) > 0
-        b = tiles[t][i].whichSide(future) > 0
-        if((!a && b)||(a&& !b)){
-          //detected
+        if( tiles[t][i].collides(present, future)){
           //later will want to subtract the 'bad' part of the vector so that the 
           //user may 'slide' along the wall
-          return present
+          return present;
         }
       }
     }
