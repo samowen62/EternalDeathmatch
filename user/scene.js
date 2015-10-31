@@ -2,6 +2,10 @@ var geometry = new THREE.SphereGeometry( 75, 32, 32 );
 var material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
 var testSphere = new THREE.Mesh( geometry, material ); 
 
+//not working right now
+var concrete = new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture('images/concrete.jpg') } );
+var grass = new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture('images/grass.jpg') } );
+
 init();
 animate();
 
@@ -23,7 +27,7 @@ function init() {
   // Grid
 
   var size = 2000, step = 200;
-  var geometry = new THREE.Geometry();
+  /*var geometry = new THREE.Geometry();
 
   for ( var i = - size; i <= size; i += step ) {
   	geometry.vertices.push( new THREE.Vector3( - size, 0, i ) );
@@ -34,8 +38,9 @@ function init() {
 
   var material = new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } );
 
-  var line = new THREE.Line( geometry, material, THREE.LinePieces ),cw;
-  scene.add( line );
+  var line = new THREE.Line( geometry, material, THREE.LinePieces );
+  scene.add( line );*/
+  var cw;
   scene.add(testSphere);
 
   var wallLength = 140,wxMax,wxMin,wzMax,wzMin
@@ -61,20 +66,59 @@ function init() {
   }
 */
   // Ground
-  ground.push(new platform([new THREE.Vector3(2000,0,2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)]));
-  ground.push(new platform([new THREE.Vector3(-2000,0,-2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)]));
-
-  //unify height = 140ish
-  var building1 = [
-    {ul : new THREE.Vector3(1000,140,-750), lr : new THREE.Vector3(250,0,0)},
-    {ul : new THREE.Vector3(1400,140,-750), lr : new THREE.Vector3(1000,0,-750)},
+  var grasses =[
+    [new THREE.Vector3(2000,0,2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)],
+    [new THREE.Vector3(-2000,0,-2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)],  
   ];
 
+  
+
+  var floor1_h = 160;
+  var building1 = [
+    {ul : new THREE.Vector3(250,floor1_h,0), lr : new THREE.Vector3(250,0,50)},
+    {ul : new THREE.Vector3(250,floor1_h,50), lr : new THREE.Vector3(280,0,50)},
+    {ul : new THREE.Vector3(280,floor1_h,50), lr : new THREE.Vector3(280,0,10)},
+    {ul : new THREE.Vector3(280,floor1_h,10), lr : new THREE.Vector3(1000,0,-730)},
+    {ul : new THREE.Vector3(1000,floor1_h,-730), lr : new THREE.Vector3(1050,0,-730)},
+    {ul : new THREE.Vector3(1050,floor1_h,-730), lr : new THREE.Vector3(1050,0,-750)},
+
+    {ul : new THREE.Vector3(1000,floor1_h,-750), lr : new THREE.Vector3(250,0,0)},
+    {ul : new THREE.Vector3(1050,floor1_h,-750), lr : new THREE.Vector3(1000,0,-750)},
+    {ul : new THREE.Vector3(1250,floor1_h,-750), lr : new THREE.Vector3(1200,0,-750)},
+    {ul : new THREE.Vector3(1200,floor1_h,-750), lr : new THREE.Vector3(1200,0,-730)},
+    {ul : new THREE.Vector3(1200,floor1_h,-730), lr : new THREE.Vector3(1250,0,-730)},
+    {ul : new THREE.Vector3(1200,floor1_h,-750), lr : new THREE.Vector3(1050,floor1_h - 20,-750)},
+    {ul : new THREE.Vector3(1050,floor1_h,-730), lr : new THREE.Vector3(1250,floor1_h - 20,-730)},
+    
+
+  ];
+
+  var platforms = [
+    [new THREE.Vector3(250,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1000,floor1_h,0)],
+    [new THREE.Vector3(1000,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1250,floor1_h,-750)],
+    [new THREE.Vector3(1250,floor1_h,-750),new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(1000,floor1_h,0)],
+    
+  ];
 
   for (var b in building1){
     cw = new collisionWall(building1[b].ul, building1[b].lr);
     cw.addTo(boundaries);
     scene.add(new THREE.Mesh( cw.render(), material ));//do specific material in building1 array
+  }
+
+  for (var p in platforms){
+    var pl = new platform(platforms[p]);
+    var cl = new ceiling(platforms[p]);
+    ground.push(pl);
+    ceil.push(cl);
+    scene.add(new THREE.Mesh( pl.render(), material));
+    scene.add(new THREE.Mesh( cl.render(), material));
+  }
+
+  for (var g in grasses){
+    var gr = new platform(grasses[g]);
+    ground.push(gr);
+    scene.add(new THREE.Mesh(gr.render(), material));
   }
 
   // Lights
@@ -124,8 +168,10 @@ function render() {
     if(true){//for when the player is dead etc.
     	//move();
       character.act();
+      //character.position.y += character.thickness.y;
       camera.position.copy(character.position);
-      
+      camera.position.y += character.thickness.y;
+
     	socket.emit('m', {
     		hash : p_hash,
     		x : character.position.x,

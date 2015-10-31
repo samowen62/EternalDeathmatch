@@ -1,5 +1,5 @@
 // threejs.org/license
-'use strict';var THREE={REVISION:"71"};"object"===typeof module&&(module.exports=THREE);void 0===Math.sign&&(Math.sign=function(a){return 0>a?-1:0<a?1:+a});THREE.log=function(){console.log.apply(console,arguments)};THREE.warn=function(){console.warn.apply(console,arguments)};THREE.error=function(){console.error.apply(console,arguments)};THREE.MOUSE={LEFT:0,MIDDLE:1,RIGHT:2};THREE.CullFaceNone=0;THREE.CullFaceBack=1;THREE.CullFaceFront=2;THREE.CullFaceFrontBack=3;THREE.FrontFaceDirectionCW=0;
+'use strict';var THREE={REVISION:"71"};"object"===typeof module&&(module.exports=THREE);void 0===Math.sign&&(Math.sign=function(a){return 0>a?-1:0<a?1:+a});THREE.log=function(){console.log.apply(console,arguments)};THREE.warn=function(){/*console.warn.apply(console,arguments)*/};THREE.error=function(){console.error.apply(console,arguments)};THREE.MOUSE={LEFT:0,MIDDLE:1,RIGHT:2};THREE.CullFaceNone=0;THREE.CullFaceBack=1;THREE.CullFaceFront=2;THREE.CullFaceFrontBack=3;THREE.FrontFaceDirectionCW=0;
 THREE.FrontFaceDirectionCCW=1;THREE.BasicShadowMap=0;THREE.PCFShadowMap=1;THREE.PCFSoftShadowMap=2;THREE.FrontSide=0;THREE.BackSide=1;THREE.DoubleSide=2;THREE.NoShading=0;THREE.FlatShading=1;THREE.SmoothShading=2;THREE.NoColors=0;THREE.FaceColors=1;THREE.VertexColors=2;THREE.NoBlending=0;THREE.NormalBlending=1;THREE.AdditiveBlending=2;THREE.SubtractiveBlending=3;THREE.MultiplyBlending=4;THREE.CustomBlending=5;THREE.AddEquation=100;THREE.SubtractEquation=101;THREE.ReverseSubtractEquation=102;
 THREE.MinEquation=103;THREE.MaxEquation=104;THREE.ZeroFactor=200;THREE.OneFactor=201;THREE.SrcColorFactor=202;THREE.OneMinusSrcColorFactor=203;THREE.SrcAlphaFactor=204;THREE.OneMinusSrcAlphaFactor=205;THREE.DstAlphaFactor=206;THREE.OneMinusDstAlphaFactor=207;THREE.DstColorFactor=208;THREE.OneMinusDstColorFactor=209;THREE.SrcAlphaSaturateFactor=210;THREE.MultiplyOperation=0;THREE.MixOperation=1;THREE.AddOperation=2;THREE.UVMapping=300;THREE.CubeReflectionMapping=301;THREE.CubeRefractionMapping=302;
 THREE.EquirectangularReflectionMapping=303;THREE.EquirectangularRefractionMapping=304;THREE.SphericalReflectionMapping=305;THREE.RepeatWrapping=1E3;THREE.ClampToEdgeWrapping=1001;THREE.MirroredRepeatWrapping=1002;THREE.NearestFilter=1003;THREE.NearestMipMapNearestFilter=1004;THREE.NearestMipMapLinearFilter=1005;THREE.LinearFilter=1006;THREE.LinearMipMapNearestFilter=1007;THREE.LinearMipMapLinearFilter=1008;THREE.UnsignedByteType=1009;THREE.ByteType=1010;THREE.ShortType=1011;
@@ -1789,7 +1789,7 @@ for(var i = 0; i < sqSize; i ++)
 	for(var j = 0; j < sqSize; j ++)
 		boundaries[i].push([])
 
-var ground = [];
+var ground = [],ceil = [];
 var Controller = {
     keyIsDown: [],
     
@@ -1829,12 +1829,12 @@ var collisionWall = class {
     tmp1.addVectors(upperLeft, lowerRight).multiplyScalar(0.5)
     this.center = tmp1
 
-    tmp2.subVectors(upperLeft, lowerRight)
-    this.halfHeight = upperLeft.y - lowerRight.y
-    lowerRight.y = upperLeft.y
-    tmp3.subVectors(upperLeft, lowerRight)
-    tmp3.crossVectors(tmp2, tmp3)
-    tmp3.normalize()
+    tmp2.subVectors(upperLeft, lowerRight);
+    this.halfHeight = (upperLeft.y - ly) / 2;
+    lowerRight.y = upperLeft.y;
+    tmp3.subVectors(upperLeft, lowerRight);
+    tmp3.crossVectors(tmp2, tmp3);
+    tmp3.normalize();
 
     this.normal = tmp3
     this.next = null,this.prev = null
@@ -1908,7 +1908,11 @@ var collisionWall = class {
   //will return 0 if the point is above or below the wall
   whichSide(point){
     calcVec.subVectors(point,this.center)
-      if(point.y > this.center.y + this.halfHeight || point.y < this.center.y - this.halfHeight ){
+    //look at this line closer later
+    
+      //the real player center is on the ground so the equals sign is necessary on
+      //the first half but harmful on the second
+      if(point.y >= this.center.y + this.halfHeight || point.y < this.center.y - this.halfHeight ){
         return 0;
       }
     return calcVec.dot(this.normal);// > 0 ? 'inside' : 'outside';
@@ -1925,8 +1929,6 @@ var collisionWall = class {
     c = calcVec.dot(this.normal_ul) > 0;
     calcVec.subVectors(a,this.verts.lr);
     d = calcVec.dot(this.normal_lr) > 0;
-//not even getting here
-//console.log(c,d);
     return c && d;
   }
 
@@ -1949,7 +1951,7 @@ var collisionWall = class {
    }
 };
 
-//might not work on js?
+//points in clockwise directions
 var platform = class {
   
   constructor(points) {
@@ -1983,25 +1985,41 @@ var platform = class {
 
   sign (p1,p2,p3)
   {
-    return (p1.x - p3.x) * (p2.z - p3.z) - (p2.x - p3.x) * (p1.z - p3.z);
+    return ((p1.x - p3.x) * (p2.z - p3.z)) - ((p2.x - p3.x) * (p1.z - p3.z));
   }
 
   //WONT WORK FOR SLANTED HILL PLATFORMS SINCE THE PLANE TAKES UP THE ENTIRE ENVIREONMENT
   //SO ONLY LOOK AT IT IF THE USER IS OVER IT
+  //false if underneath
   above(point){
-    return point.dot(this.normal) > this.d;
+    return point.dot(this.normal) >= this.d;
   }
 
   /*
    * Checks if we are even within the x/z triangle in question
    */
   over(point){
-    var pt = new THREE.Vector2(point.x, point.z),
-        b1 = this.sign(pt, this.points[0], this.points[1]) < 0,
-        b2 = this.sign(pt, this.points[1], this.points[2]) < 0,
-        b3 = this.sign(pt, this.points[2], this.points[0]) < 0;
-
+    var pt = {x : point.x, z: point.z},
+        b1 = this.sign(point, this.points[0], this.points[1]) < 0,
+        b2 = this.sign(point, this.points[1], this.points[2]) < 0,
+        b3 = this.sign(point, this.points[2], this.points[0]) < 0;
+//console.log(b1,b2,b3)
     return ((b1 == b2) && (b2 == b3));
+  }
+
+  render(){
+    var geometry = new THREE.Geometry();
+
+    geometry.vertices.push( this.points[0]);
+    geometry.vertices.push( this.points[1]);
+    geometry.vertices.push( this.points[2]);
+
+    geometry.faces.push( new THREE.Face3( 0, 2, 1 ) );
+
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
+
+    return geometry;
   }
 
   baryCoords(pos){
@@ -2027,36 +2045,90 @@ var platform = class {
 
 };
 
+var ceiling = class {
+  
+  constructor(points) {
+    this.points = points;
+
+    //the following for generalized triangles
+    if(points.length != 3)
+      return;
+
+    var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
+
+    tmp1.subVectors(points[0], points[1])
+    tmp2.subVectors(points[0], points[2])
+    tmp3.crossVectors(tmp2, tmp1)
+    tmp3.normalize()
+
+    //normal is down not up
+    if(tmp3.y > 0) tmp3.multiplyScalar(-1.0)
+
+    this.normal = tmp3, this.d = points[0].dot(tmp3)
+  }
+
+  sign (p1,p2,p3)
+  {
+    return ((p1.x - p3.x) * (p2.z - p3.z)) - ((p2.x - p3.x) * (p1.z - p3.z));
+  }
+
+  //true if below
+  below(point){
+    return point.dot(this.normal) > this.d;
+  }
+
+  /*
+   * Checks if we are even within the x/z triangle in question
+   */
+  over(point){
+    var pt = {x : point.x, z: point.z},
+        b1 = this.sign(point, this.points[0], this.points[1]) < 0,
+        b2 = this.sign(point, this.points[1], this.points[2]) < 0,
+        b3 = this.sign(point, this.points[2], this.points[0]) < 0;
+    return ((b1 == b2) && (b2 == b3));
+  }
+
+  render(){
+    var geometry = new THREE.Geometry();
+
+    geometry.vertices.push( this.points[0]);
+    geometry.vertices.push( this.points[1]);
+    geometry.vertices.push( this.points[2]);
+
+    //reverse order than floor so we can use same verticies
+    geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
+
+    return geometry;
+  }
+
+  yAt(pos){
+    return this.points[0].y;
+  }
+
+};
+
 
 var triangleBd = class {
   
 };
 
-
-/*var Person = Class.extend({
-  init: function(isDancing){
-    this.dancing = isDancing;
-  }
-});
- 
-var Ninja = Person.extend({
-  init: function(){
-    this._super( false );
-  }
-});
-*/
 var cEntity = class {
 
   constructor(pos) {
     this.thickness = new THREE.Vector3(45,45,45);
+    pos.y = this.thickness.y + 5;
     this.position = pos;
 
     this.stepFoot = BASE_STEP_FOOT;
     this.speed = BASE_SPEED;
 
-    //could insert in mid-air?
-    this.grounded = true;
+    //have to insert in mid-air?
+    this.grounded = false;
+    this.jumping = false;
 
+    this.air_o = 0;
     this.air_v =  0;
     this.start_t = -1;
   }
@@ -2082,52 +2154,125 @@ var cEntity = class {
   move(){
     if(!Controller)
       return
-    
-    tmpVec.y = 0;
-    //console.log(camera.position, tmpVec);
+
     var s = this.stepFoot * this.speed;
     var diagS = s / Math.sqrt(2);
-    
+    this.position.y = isNaN(this.position.y) ? 0: this.position.y;
+    var new_y = this.position.y;
+
+    //MAKE ONE GODDAMN THING DETERMINE THE FUCKING Y VALUE 
 
     if(Controller.keyIsDown[32] && this.grounded){
-      console.log('jumping')
       var d = new Date();
+      console.log('jumping')
+      this.jumping = true;
       this.grounded = false;
-      //this.air_v = 60;
+      this.ground = null; //redundant
+
       this.air_v = 100;
       this.start_t = d.getTime();
       this.air_o = this.position.y;
       s *= 0.4;
     }
 
-    //check for landing and clunking head by looping through platforms
-    if(!this.grounded){
+    else if(this.grounded){
+      new_y = this.ground.yAt(this.position);
+
+      //walked off ledge or switching platforms
+      if(!this.ground.over(this.position)){
+        console.log('falling')
+        
+        this.grounded = false;
+        for(var g in ground){
+          if(ground[g].over(this.position)){
+            //changing platforms
+            if((this.position.y - ground[g].points[0].y) < 3){
+              this.grounded = true;
+              this.jumping = false;
+              this.ground = ground[g];
+              break;
+            }      
+          }
+        }
+
+        if(!this.grounded){
+          var d = new Date();
+          this.jumping = false;
+          this.ground = null;
+
+
+          this.air_v = 0;
+          this.start_t = d.getTime();
+          this.air_o = this.position.y;// - this.thickness.y;
+        }
+      }
+    }
+    else if(!this.grounded){
+
       var d = new Date();
       var dt = (d.getTime() - this.start_t) / 100;       
-      var new_y = -5 * (dt*dt) + this.air_v*dt + this.air_o
+      new_y = -5 * (dt*dt) + this.air_v*dt + this.air_o;
+      var hit = false;
 
-
-      //need to add character y thickness
-      // or not?
       var new_pos = new THREE.Vector3(this.position.x, new_y, this.position.z);
-      for(var g in ground){
-        if(ground[g].over(this.position)){
-          var a = ground[g].above(this.position), b = ground[g].above(new_pos);
-          if((!a && b)||(a && !b)){
-            this.grounded = true;
-            break;
+
+      if(this.jumping){
+
+        for(var c in ceil){
+          if(ceil[c].over(this.position)){
+            var a = ceil[c].below(this.position);
+            var b = ceil[c].below(new_pos);
+
+            if((!a && b)||(a && !b)){
+              var d = new Date();
+              this.start_t = d.getTime();
+              new_y = this.position.y;
+              this.air_o = this.position.y;
+              this.air_v = 0;
+              hit = true;
+              break;
+            }
+          }
+        }
+
+        for(var g in ground){
+          if(ground[g].over(this.position)){
+            if(Math.abs(ground[g].yAt(this.position) - new_pos.y) < 3){
+              var a = ground[g].above(this.position), b = ground[g].above(new_pos);
+              if((!a && b)||(a && !b)){
+                new_y = ground[g].yAt(this.position);
+                this.grounded = true;
+                this.jumping = false;
+                this.ground = ground[g];
+                break;
+              }
+            }
+          }
+        }
+
+      }
+
+      if(!hit){
+        for(var g in ground){
+          if(ground[g].over(this.position)){
+
+              var a = ground[g].above(this.position), b = ground[g].above(new_pos);
+              if((!a && b)||(a && !b)){
+                new_y = ground[g].yAt(this.position);
+                this.grounded = true;
+                this.jumping = false;
+                this.ground = ground[g];
+                break;
+              }
+
           }
         }
       }
-
-      if(!this.grounded)
-        this.position.y = new_y;
     }
 
-
+    this.position.y = new_y;
     tmpVec.copy(this.position);
     tmpPos.copy(this.position);
-    var tY = this.position.y;
 
 
     if((Controller.keyIsDown[87] && Controller.keyIsDown[83]) || (Controller.keyIsDown[68] && Controller.keyIsDown[65]))
@@ -2203,22 +2348,10 @@ var cEntity = class {
       }
     
     //if grounded look at the platform we are over in the future and calculate the y value
-    tmpVec.y = tY;
+    tmpVec.y = new_y;
     tmpVec.copy(this.detectCol(tmpPos,tmpVec));
 
-    if(this.grounded){
-      for(var g in ground){
-        if(ground[g].over(this.position)){
-          tmpVec.y = ground[g].yAt(this.position);// + this.thickness.y; //for some reason crashes?
-          break;
-        }
-      }
-    }
 
-    tmpVec.y = tmpVec.y + this.thickness.y;
-    //console.log(tmpVec)
-    //special camera effects could go here
-    
     this.position.copy(tmpVec);
   }
 
@@ -2293,6 +2426,10 @@ var geometry = new THREE.SphereGeometry( 75, 32, 32 );
 var material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
 var testSphere = new THREE.Mesh( geometry, material ); 
 
+//not working right now
+var concrete = new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture('images/concrete.jpg') } );
+var grass = new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture('images/grass.jpg') } );
+
 init();
 animate();
 
@@ -2314,7 +2451,7 @@ function init() {
   // Grid
 
   var size = 2000, step = 200;
-  var geometry = new THREE.Geometry();
+  /*var geometry = new THREE.Geometry();
 
   for ( var i = - size; i <= size; i += step ) {
   	geometry.vertices.push( new THREE.Vector3( - size, 0, i ) );
@@ -2325,8 +2462,9 @@ function init() {
 
   var material = new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } );
 
-  var line = new THREE.Line( geometry, material, THREE.LinePieces ),cw;
-  scene.add( line );
+  var line = new THREE.Line( geometry, material, THREE.LinePieces );
+  scene.add( line );*/
+  var cw;
   scene.add(testSphere);
 
   var wallLength = 140,wxMax,wxMin,wzMax,wzMin
@@ -2352,20 +2490,59 @@ function init() {
   }
 */
   // Ground
-  ground.push(new platform([new THREE.Vector3(2000,0,2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)]));
-  ground.push(new platform([new THREE.Vector3(-2000,0,-2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)]));
-
-  //unify height = 140ish
-  var building1 = [
-    {ul : new THREE.Vector3(1000,140,-750), lr : new THREE.Vector3(250,0,0)},
-    {ul : new THREE.Vector3(1400,140,-750), lr : new THREE.Vector3(1000,0,-750)},
+  var grasses =[
+    [new THREE.Vector3(2000,0,2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)],
+    [new THREE.Vector3(-2000,0,-2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)],  
   ];
 
+  
+
+  var floor1_h = 160;
+  var building1 = [
+    {ul : new THREE.Vector3(250,floor1_h,0), lr : new THREE.Vector3(250,0,50)},
+    {ul : new THREE.Vector3(250,floor1_h,50), lr : new THREE.Vector3(280,0,50)},
+    {ul : new THREE.Vector3(280,floor1_h,50), lr : new THREE.Vector3(280,0,10)},
+    {ul : new THREE.Vector3(280,floor1_h,10), lr : new THREE.Vector3(1000,0,-730)},
+    {ul : new THREE.Vector3(1000,floor1_h,-730), lr : new THREE.Vector3(1050,0,-730)},
+    {ul : new THREE.Vector3(1050,floor1_h,-730), lr : new THREE.Vector3(1050,0,-750)},
+
+    {ul : new THREE.Vector3(1000,floor1_h,-750), lr : new THREE.Vector3(250,0,0)},
+    {ul : new THREE.Vector3(1050,floor1_h,-750), lr : new THREE.Vector3(1000,0,-750)},
+    {ul : new THREE.Vector3(1250,floor1_h,-750), lr : new THREE.Vector3(1200,0,-750)},
+    {ul : new THREE.Vector3(1200,floor1_h,-750), lr : new THREE.Vector3(1200,0,-730)},
+    {ul : new THREE.Vector3(1200,floor1_h,-730), lr : new THREE.Vector3(1250,0,-730)},
+    {ul : new THREE.Vector3(1200,floor1_h,-750), lr : new THREE.Vector3(1050,floor1_h - 20,-750)},
+    {ul : new THREE.Vector3(1050,floor1_h,-730), lr : new THREE.Vector3(1250,floor1_h - 20,-730)},
+    
+
+  ];
+
+  var platforms = [
+    [new THREE.Vector3(250,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1000,floor1_h,0)],
+    [new THREE.Vector3(1000,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1250,floor1_h,-750)],
+    [new THREE.Vector3(1250,floor1_h,-750),new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(1000,floor1_h,0)],
+    
+  ];
 
   for (var b in building1){
     cw = new collisionWall(building1[b].ul, building1[b].lr);
     cw.addTo(boundaries);
     scene.add(new THREE.Mesh( cw.render(), material ));//do specific material in building1 array
+  }
+
+  for (var p in platforms){
+    var pl = new platform(platforms[p]);
+    var cl = new ceiling(platforms[p]);
+    ground.push(pl);
+    ceil.push(cl);
+    scene.add(new THREE.Mesh( pl.render(), material));
+    scene.add(new THREE.Mesh( cl.render(), material));
+  }
+
+  for (var g in grasses){
+    var gr = new platform(grasses[g]);
+    ground.push(gr);
+    scene.add(new THREE.Mesh(gr.render(), material));
   }
 
   // Lights
@@ -2415,8 +2592,10 @@ function render() {
     if(true){//for when the player is dead etc.
     	//move();
       character.act();
+      //character.position.y += character.thickness.y;
       camera.position.copy(character.position);
-      
+      camera.position.y += character.thickness.y;
+
     	socket.emit('m', {
     		hash : p_hash,
     		x : character.position.x,
