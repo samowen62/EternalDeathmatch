@@ -57,7 +57,7 @@ var collisionWall = class {
     this.normal_lr = new THREE.Vector3(-tmp3.z,0,tmp3.x);
   }
 
-  render(){
+  render(mat){
     var geometry = new THREE.Geometry();
 
     geometry.vertices.push( new THREE.Vector3( this.verts.ul.x,  this.verts.ul.y, this.verts.ul.z ) );
@@ -71,7 +71,7 @@ var collisionWall = class {
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
 
-    return geometry;
+    return new THREE.Mesh(geometry, mat);
   }
 
   addNext(next) {
@@ -367,8 +367,6 @@ var cEntity = class {
     var diagS = s / Math.sqrt(2);
     this.position.y = isNaN(this.position.y) ? 0: this.position.y;
     var new_y = this.position.y;
-
-    //MAKE ONE GODDAMN THING DETERMINE THE FUCKING Y VALUE 
 
     if(Controller.keyIsDown[32] && this.grounded){
       var d = new Date();

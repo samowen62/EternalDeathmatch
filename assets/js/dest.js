@@ -1849,7 +1849,7 @@ var collisionWall = class {
     this.normal_lr = new THREE.Vector3(-tmp3.z,0,tmp3.x);
   }
 
-  render(){
+  render(mat){
     var geometry = new THREE.Geometry();
 
     geometry.vertices.push( new THREE.Vector3( this.verts.ul.x,  this.verts.ul.y, this.verts.ul.z ) );
@@ -1863,7 +1863,7 @@ var collisionWall = class {
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
 
-    return geometry;
+    return new THREE.Mesh(geometry, mat);
   }
 
   addNext(next) {
@@ -2159,8 +2159,6 @@ var cEntity = class {
     var diagS = s / Math.sqrt(2);
     this.position.y = isNaN(this.position.y) ? 0: this.position.y;
     var new_y = this.position.y;
-
-    //MAKE ONE GODDAMN THING DETERMINE THE FUCKING Y VALUE 
 
     if(Controller.keyIsDown[32] && this.grounded){
       var d = new Date();
@@ -2513,6 +2511,37 @@ function init() {
     {ul : new THREE.Vector3(1200,floor1_h,-730), lr : new THREE.Vector3(1250,0,-730)},
     {ul : new THREE.Vector3(1200,floor1_h,-750), lr : new THREE.Vector3(1050,floor1_h - 20,-750)},
     {ul : new THREE.Vector3(1050,floor1_h,-730), lr : new THREE.Vector3(1250,floor1_h - 20,-730)},
+
+    //wall
+    {ul : new THREE.Vector3(1250,400,-800), lr : new THREE.Vector3(1250,0,-400)},
+    {ul : new THREE.Vector3(1250,400,-1200), lr : new THREE.Vector3(1250,0,-800)},
+    {ul : new THREE.Vector3(1250,400,-1600), lr : new THREE.Vector3(1250,0,-1200)},
+    {ul : new THREE.Vector3(1250,400,-2000), lr : new THREE.Vector3(1250,0,-1600)},
+
+//render outlines in colwall as well
+    {ul : new THREE.Vector3(1050,400,-2000), lr : new THREE.Vector3(1250,0,-2000)},
+    {ul : new THREE.Vector3(850,400,-2000), lr : new THREE.Vector3(1050,0,-2000)},
+    {ul : new THREE.Vector3(650,400,-2000), lr : new THREE.Vector3(850,0,-2000)},
+    {ul : new THREE.Vector3(450,400,-2000), lr : new THREE.Vector3(650,0,-2000)},
+    {ul : new THREE.Vector3(250,400,-2000), lr : new THREE.Vector3(450,0,-2000)},
+    {ul : new THREE.Vector3(50,400,-2000), lr : new THREE.Vector3(250,0,-2000)},
+
+    //another building
+    {ul : new THREE.Vector3(1000,400,-1450), lr : new THREE.Vector3(1000,0,-1850)},
+    {ul : new THREE.Vector3(1000,400,-1850), lr : new THREE.Vector3(500,0,-1850)},
+    {ul : new THREE.Vector3(300,400,-1850), lr : new THREE.Vector3(-100,0,-1850)},
+    {ul : new THREE.Vector3(-100,400,-1850), lr : new THREE.Vector3(-100,0,-1000)},
+    {ul : new THREE.Vector3(-100,400,-1000), lr : new THREE.Vector3(200,0,-1000)},
+    {ul : new THREE.Vector3(200,400,-1000), lr : new THREE.Vector3(200,0,-1020)},
+    {ul : new THREE.Vector3(200,400,-1020), lr : new THREE.Vector3(-80,0,-1020)},
+    {ul : new THREE.Vector3(-80,400,-1020), lr : new THREE.Vector3(-80,0,-1830)},
+    {ul : new THREE.Vector3(-80,400,-1830), lr : new THREE.Vector3(200,0,-1830)},    
+    {ul : new THREE.Vector3(200,400,-1830), lr : new THREE.Vector3(200,0,-1850)},
+
+    //{ul : new THREE.Vector3(1250,400,-2000), lr : new THREE.Vector3(1250,0,-1600)},
+    //{ul : new THREE.Vector3(1250,400,-2000), lr : new THREE.Vector3(1250,0,-1600)},
+    //{ul : new THREE.Vector3(1250,400,-2000), lr : new THREE.Vector3(1250,0,-1600)},
+
     
 
   ];
@@ -2527,7 +2556,7 @@ function init() {
   for (var b in building1){
     cw = new collisionWall(building1[b].ul, building1[b].lr);
     cw.addTo(boundaries);
-    scene.add(new THREE.Mesh( cw.render(), material ));//do specific material in building1 array
+    scene.add(cw.render(material) );//pass material to render
   }
 
   for (var p in platforms){
