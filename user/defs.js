@@ -41,4 +41,4 @@ for(var i = 0; i < sqSize; i ++)
 	for(var j = 0; j < sqSize; j ++)
 		boundaries[i].push([])
 
-var ground = [],ceil = [];
+var ground = [],ceil = [], ramps = [];

@@ -328,8 +328,8 @@ var ramp = class {
     geometry.vertices.push( this.points[2]);
     geometry.vertices.push( this.points[3]);
 
-    geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
-    geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
+    geometry.faces.push( new THREE.Face3( 0, 2, 1) );
+    geometry.faces.push( new THREE.Face3( 0, 3, 2 ) );
 
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
@@ -477,6 +477,17 @@ var cEntity = class {
       new_y = this.ground.yAt(this.position);
 
       //walked off ledge or switching platforms
+
+      //check if walked onto ramp here
+      for(var r in ramps){
+        var y = ramps[r].over(this.position);
+        if(y > new_y){
+          //switch to this new ramp as the ground
+          new_y = y;
+        }
+
+      }
+
       if(!this.ground.over(this.position)){
         console.log('falling')
         

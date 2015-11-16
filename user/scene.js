@@ -152,6 +152,12 @@ function init() {
     scene.add(new THREE.Mesh(gr.render(), material));
   }
 
+  var slope = new ramp([new THREE.Vector3(100,100,0), new THREE.Vector3(100,100,100),
+                      new THREE.Vector3(0,0,100), new THREE.Vector3(0,0,0)]);
+  ramps.push(slope);
+  scene.add(new THREE.Mesh( slope.render(), material));
+  
+
   // Lights
 
   var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );

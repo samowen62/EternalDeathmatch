@@ -1789,7 +1789,7 @@ for(var i = 0; i < sqSize; i ++)
 	for(var j = 0; j < sqSize; j ++)
 		boundaries[i].push([])
 
-var ground = [],ceil = [];
+var ground = [],ceil = [], ramps = [];
 var Controller = {
     keyIsDown: [],
     
@@ -2120,8 +2120,8 @@ var ramp = class {
     geometry.vertices.push( this.points[2]);
     geometry.vertices.push( this.points[3]);
 
-    geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
-    geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
+    geometry.faces.push( new THREE.Face3( 0, 2, 1) );
+    geometry.faces.push( new THREE.Face3( 0, 3, 2 ) );
 
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
@@ -2269,6 +2269,17 @@ var cEntity = class {
       new_y = this.ground.yAt(this.position);
 
       //walked off ledge or switching platforms
+
+      //check if walked onto ramp here
+      for(var r in ramps){
+        var y = ramps[r].over(this.position);
+        if(y > new_y){
+          //switch to this new ramp as the ground
+          new_y = y;
+        }
+
+      }
+
       if(!this.ground.over(this.position)){
         console.log('falling')
         
@@ -2665,6 +2676,12 @@ function init() {
     ground.push(gr);
     scene.add(new THREE.Mesh(gr.render(), material));
   }
+
+  var slope = new ramp([new THREE.Vector3(100,100,0), new THREE.Vector3(100,100,100),
+                      new THREE.Vector3(0,0,100), new THREE.Vector3(0,0,0)]);
+  ramps.push(slope);
+  scene.add(new THREE.Mesh( slope.render(), material));
+  
 
   // Lights
 
