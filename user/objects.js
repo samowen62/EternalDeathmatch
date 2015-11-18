@@ -71,7 +71,19 @@ var collisionWall = class {
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
 
-    return new THREE.Mesh(geometry, mat);
+    var lineMat = new THREE.LineBasicMaterial({
+        color: 0x000000,
+        linewidth: 3,
+    });
+    var lineGeo = new THREE.Geometry();
+    lineGeo.vertices.push(this.verts.ul);
+    lineGeo.vertices.push(this.verts.ur);
+    lineGeo.vertices.push(this.verts.lr);
+    lineGeo.vertices.push(this.verts.ll);
+    lineGeo.vertices.push(this.verts.ul);
+
+
+    return [new THREE.Mesh(geometry, mat), new THREE.Line(lineGeo, lineMat)];
   }
 
   addNext(next) {
@@ -223,6 +235,7 @@ var platform = class {
     geometry.vertices.push( this.points[2]);
 
     geometry.faces.push( new THREE.Face3( 0, 2, 1 ) );
+    geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
 
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();

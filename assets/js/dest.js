@@ -1863,7 +1863,19 @@ var collisionWall = class {
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
 
-    return new THREE.Mesh(geometry, mat);
+    var lineMat = new THREE.LineBasicMaterial({
+        color: 0x000000,
+        linewidth: 3,
+    });
+    var lineGeo = new THREE.Geometry();
+    lineGeo.vertices.push(this.verts.ul);
+    lineGeo.vertices.push(this.verts.ur);
+    lineGeo.vertices.push(this.verts.lr);
+    lineGeo.vertices.push(this.verts.ll);
+    lineGeo.vertices.push(this.verts.ul);
+
+
+    return [new THREE.Mesh(geometry, mat), new THREE.Line(lineGeo, lineMat)];
   }
 
   addNext(next) {
@@ -2015,6 +2027,7 @@ var platform = class {
     geometry.vertices.push( this.points[2]);
 
     geometry.faces.push( new THREE.Face3( 0, 2, 1 ) );
+    geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
 
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
@@ -2632,6 +2645,11 @@ function init() {
     //another building
     {ul : new THREE.Vector3(1000,400,-1450), lr : new THREE.Vector3(1000,0,-1850)},
     {ul : new THREE.Vector3(1000,400,-1850), lr : new THREE.Vector3(500,0,-1850)},
+    {ul : new THREE.Vector3(500,400,-1850), lr : new THREE.Vector3(500,0,-1830)},
+    {ul : new THREE.Vector3(500,400,-1830), lr : new THREE.Vector3(980,0,-1830)},
+    {ul : new THREE.Vector3(980,400,-1830), lr : new THREE.Vector3(980,0,-1450)},
+    {ul : new THREE.Vector3(980,400,-1450), lr : new THREE.Vector3(1000,0,-1450)},
+
     {ul : new THREE.Vector3(300,400,-1850), lr : new THREE.Vector3(-100,0,-1850)},
     {ul : new THREE.Vector3(-100,400,-1850), lr : new THREE.Vector3(-100,0,-1000)},
     {ul : new THREE.Vector3(-100,400,-1000), lr : new THREE.Vector3(200,0,-1000)},
@@ -2641,11 +2659,8 @@ function init() {
     {ul : new THREE.Vector3(-80,400,-1830), lr : new THREE.Vector3(200,0,-1830)},    
     {ul : new THREE.Vector3(200,400,-1830), lr : new THREE.Vector3(200,0,-1850)},
 
-    //{ul : new THREE.Vector3(1250,400,-2000), lr : new THREE.Vector3(1250,0,-1600)},
-    //{ul : new THREE.Vector3(1250,400,-2000), lr : new THREE.Vector3(1250,0,-1600)},
-    //{ul : new THREE.Vector3(1250,400,-2000), lr : new THREE.Vector3(1250,0,-1600)},
-
-    
+    {ul : new THREE.Vector3(500,400,-1850), lr : new THREE.Vector3(-100,200,-1850)},
+    {ul : new THREE.Vector3(-100,400,-1830), lr : new THREE.Vector3(500,200,-1830)},
 
   ];
 
@@ -2653,13 +2668,20 @@ function init() {
     [new THREE.Vector3(250,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1000,floor1_h,0)],
     [new THREE.Vector3(1000,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1250,floor1_h,-750)],
     [new THREE.Vector3(1250,floor1_h,-750),new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(1000,floor1_h,0)],
-    
+
+    //other building
+    [new THREE.Vector3(980,200,-1830),new THREE.Vector3(980,200,-1450),new THREE.Vector3(-80,200,-1830)],
+    [new THREE.Vector3(-80,200,-1450),new THREE.Vector3(-80,200,-1830),new THREE.Vector3(980,200,-1450)],
+    [new THREE.Vector3(-80,200,-1450),new THREE.Vector3(-80,200,-1020),new THREE.Vector3(200,200,-1450)],
+    [new THREE.Vector3(200,200,-1020),new THREE.Vector3(200,200,-1450),new THREE.Vector3(-80,200,-1020)],
   ];
 
   for (var b in building1){
     cw = new collisionWall(building1[b].ul, building1[b].lr);
     cw.addTo(boundaries);
-    scene.add(cw.render(material) );//pass material to render
+    var toRend = cw.render(material);
+    scene.add(toRend[0] );
+    scene.add(toRend[1] );
   }
 
   for (var p in platforms){
