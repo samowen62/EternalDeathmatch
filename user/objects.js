@@ -259,9 +259,7 @@ var platform = class {
   }
 
   yAt(pos){
-    if(this.flat)
-      return this.points[0].y;
-    return this.baryCoords(pos);
+    return this.points[0].y;
   }
 
 };
@@ -281,6 +279,14 @@ var ramp = class {
     this.points = points;
 
     var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
+
+    //used for determining if a point is inside the range
+    tmp1.subVectors(points[1], points[0]);
+    this.AB = new THREE.Vector2(tmp1.x, tmp1.z);
+    this.AB_Sqared = this.AB.dot(this.AB);
+    tmp1.subVectors(points[3], points[0]);
+    this.AD = new THREE.Vector2(tmp1.x, tmp1.z);
+    this.AD_Sqared = this.AD.dot(this.AD);
 
     tmp1.subVectors(points[0], points[1]);
     tmp2.subVectors(points[0], points[2]);
@@ -316,21 +322,12 @@ var ramp = class {
    * and returns appropriate y
    */
   over(point){
-    //might actually work
-    var tmp2Vec = new THREE.Vector2(point.x-this.center.x, point.z-this.center.z); //put point relative to center
+    var AM = new THREE.Vector2(point.x - this.points[0].x, point.z - this.points[0].z),
+        AMdAB = AM.dot(this.AB),
+        AMdAD = AM.dot(this.AD);
 
-    var p_down = tmp2Vec.dot(this.down_ramp);//component down
-    if(Math.pow(p_down,2) > this.len_down)
-      return false;
-
-    var p_side = tmp2Vec.dot(this.side_ramp);//component down
-    if(Math.pow(p_side,2) > this.len_across)
-      return false;
-
-    var y = this.center.y + p_down * this.down_ramp.y;//need actual 3d y component for accuracy
-    console.log(y);
-    return y;
-
+    return ((0 < AMdAB) && (AMdAB < this.AB_Sqared) && (0 < AMdAD) && (AMdAD < this.AD_Sqared));
+  
   }
 
   render(){
@@ -351,7 +348,13 @@ var ramp = class {
   }
 
   yAt(pos){
-    
+    var tmp2Vec = new THREE.Vector3();
+    tmp2Vec.subVectors(pos, this.center);
+
+    var p_down = tmp2Vec.dot(this.down_ramp),
+        p_side = tmp2Vec.dot(this.side_ramp);//component sideways
+
+    return this.center.y + p_down * this.down_ramp.y;
   }
 
 };
@@ -423,10 +426,6 @@ var ceiling = class {
 };
 
 
-var triangleBd = class {
-  
-};
-
 var cEntity = class {
 
   constructor(pos) {
@@ -492,19 +491,22 @@ var cEntity = class {
       //walked off ledge or switching platforms
 
       //check if walked onto ramp here
-      for(var r in ramps){
-        var y = ramps[r].over(this.position);
-        if(y > new_y){
-          //switch to this new ramp as the ground
-          new_y = y;
-        }
 
+      for(var r in ramps){
+        if(ramps[r].over(this.position)){
+          var r_y = ramps[r].yAt(this.position);
+          if(Math.abs(new_y - r_y) < 5){//for slight error
+            this.ground = ramps[r];
+            new_y = r_y;
+          }
+        }
       }
 
       if(!this.ground.over(this.position)){
         console.log('falling')
         
         this.grounded = false;
+
         for(var g in ground){
           if(ground[g].over(this.position)){
             //changing platforms
@@ -557,6 +559,7 @@ var cEntity = class {
           }
         }
 
+        //ramps here too
         for(var g in ground){
           if(ground[g].over(this.position)){
             if(Math.abs(ground[g].yAt(this.position) - new_pos.y) < 3){

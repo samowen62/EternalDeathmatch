@@ -112,21 +112,41 @@ function init() {
     {ul : new THREE.Vector3(980,400,-1830), lr : new THREE.Vector3(980,0,-1450)},
     {ul : new THREE.Vector3(980,400,-1450), lr : new THREE.Vector3(1000,0,-1450)},
 
-    {ul : new THREE.Vector3(300,400,-1850), lr : new THREE.Vector3(-100,0,-1850)},
-    {ul : new THREE.Vector3(-100,400,-1850), lr : new THREE.Vector3(-100,0,-1000)},
+    {ul : new THREE.Vector3(200,400,-1850), lr : new THREE.Vector3(-100,0,-1850)},
+    {ul : new THREE.Vector3(-100,400,-1850), lr : new THREE.Vector3(-100,0,-1720)},
+    {ul : new THREE.Vector3(-100,200,-1720), lr : new THREE.Vector3(-100,0,-1420)},
+    {ul : new THREE.Vector3(-100,400,-1420), lr : new THREE.Vector3(-100,0,-1000)},
     {ul : new THREE.Vector3(-100,400,-1000), lr : new THREE.Vector3(200,0,-1000)},
     {ul : new THREE.Vector3(200,400,-1000), lr : new THREE.Vector3(200,0,-1020)},
     {ul : new THREE.Vector3(200,400,-1020), lr : new THREE.Vector3(-80,0,-1020)},
-    {ul : new THREE.Vector3(-80,400,-1020), lr : new THREE.Vector3(-80,0,-1830)},
+    {ul : new THREE.Vector3(-80,400,-1720), lr : new THREE.Vector3(-80,0,-1830)},
+    {ul : new THREE.Vector3(-80,200,-1420), lr : new THREE.Vector3(-80,0,-1720)},
+    {ul : new THREE.Vector3(-80,400,-1020), lr : new THREE.Vector3(-80,0,-1420)},
     {ul : new THREE.Vector3(-80,400,-1830), lr : new THREE.Vector3(200,0,-1830)},    
     {ul : new THREE.Vector3(200,400,-1830), lr : new THREE.Vector3(200,0,-1850)},
 
+    {ul : new THREE.Vector3(-80,400,-1420), lr : new THREE.Vector3(-100,200,-1420)},
+    {ul : new THREE.Vector3(-100,400,-1720), lr : new THREE.Vector3(-80,200,-1720)},
     {ul : new THREE.Vector3(500,400,-1850), lr : new THREE.Vector3(-100,200,-1850)},
     {ul : new THREE.Vector3(-100,400,-1830), lr : new THREE.Vector3(500,200,-1830)},
 
+    {ul : new THREE.Vector3(1000,300,-1020), lr : new THREE.Vector3(1000,0,-1450)},
+    {ul : new THREE.Vector3(980,300,-1020), lr : new THREE.Vector3(1000,0,-1020)},
+    {ul : new THREE.Vector3(980,300,-1450), lr : new THREE.Vector3(980,0,-1020)},
+    {ul : new THREE.Vector3(700,198,-1200), lr : new THREE.Vector3(700,0,-1450)},
+    {ul : new THREE.Vector3(680,198,-1200), lr : new THREE.Vector3(700,0,-1200)},
+    {ul : new THREE.Vector3(680,198,-1550), lr : new THREE.Vector3(680,0,-1200)},
+    {ul : new THREE.Vector3(980,198,-1550), lr : new THREE.Vector3(680,0,-1550)},
+
+    {ul : new THREE.Vector3(150,600,-1400), lr : new THREE.Vector3(250,0,-1400)},//150, 250  -1500,-1400
+    {ul : new THREE.Vector3(250,600,-1400), lr : new THREE.Vector3(250,0,-1500)},
+    {ul : new THREE.Vector3(250,600,-1500), lr : new THREE.Vector3(150,0,-1500)},
+    {ul : new THREE.Vector3(150,600,-1500), lr : new THREE.Vector3(150,0,-1400)},
   ];
 
-  var platforms = [
+  //specified cw
+  //holds boundaries for both platforms and ceilings
+  var horiz_bounds = [
     [new THREE.Vector3(250,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1000,floor1_h,0)],
     [new THREE.Vector3(1000,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1250,floor1_h,-750)],
     [new THREE.Vector3(1250,floor1_h,-750),new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(1000,floor1_h,0)],
@@ -138,6 +158,29 @@ function init() {
     [new THREE.Vector3(200,200,-1020),new THREE.Vector3(200,200,-1450),new THREE.Vector3(-80,200,-1020)],
   ];
 
+  var ramp_array = [
+    //ccw
+    //[new THREE.Vector3(100,100,0), new THREE.Vector3(100,100,100), new THREE.Vector3(0,0,100), new THREE.Vector3(0,0,0)],
+    [new THREE.Vector3(980,0,-1200), new THREE.Vector3(700,0,-1200), new THREE.Vector3(700,200,-1450), new THREE.Vector3(980,200,-1450)],
+  
+  ];
+
+  //strictly ceilings
+  var ceils = [
+    [new THREE.Vector3(200,200,-1850), new THREE.Vector3(500,200,-1850), new THREE.Vector3(500,200,-1830)],
+    [new THREE.Vector3(200,200,-1850), new THREE.Vector3(500,200,-1830), new THREE.Vector3(200,200,-1830)]
+  ];
+
+  //strictly floors
+  var platforms = [
+    [new THREE.Vector3(1000,300,-1450),new THREE.Vector3(1000,300,-1020),new THREE.Vector3(980,300,-1020)],
+    [new THREE.Vector3(1000,300,-1450),new THREE.Vector3(980,300,-1020),new THREE.Vector3(980,300,-1450)],
+    [new THREE.Vector3(700,198,-1450),new THREE.Vector3(700,198,-1200),new THREE.Vector3(680,198,-1200)],
+    [new THREE.Vector3(700,198,-1450),new THREE.Vector3(680,198,-1200),new THREE.Vector3(680,198,-1450)],
+    [new THREE.Vector3(-100,200,-1420),new THREE.Vector3(-80,200,-1420),new THREE.Vector3(-80,200,-1720)],
+    [new THREE.Vector3(-100,200,-1420),new THREE.Vector3(-80,200,-1720),new THREE.Vector3(-100,200,-1720)]
+  ];
+
   for (var b in building1){
     cw = new collisionWall(building1[b].ul, building1[b].lr);
     cw.addTo(boundaries);
@@ -146,12 +189,24 @@ function init() {
     scene.add(toRend[1] );
   }
 
-  for (var p in platforms){
-    var pl = new platform(platforms[p]);
-    var cl = new ceiling(platforms[p]);
+  for (var p in horiz_bounds){
+    var pl = new platform(horiz_bounds[p]);
+    var cl = new ceiling(horiz_bounds[p]);
     ground.push(pl);
     ceil.push(cl);
     scene.add(new THREE.Mesh( pl.render(), material));
+    scene.add(new THREE.Mesh( cl.render(), material));
+  }
+
+  for(var p in platforms){
+    var pl = new platform(platforms[p]);
+    ground.push(pl);
+    scene.add(new THREE.Mesh( pl.render(), material));
+  }
+
+  for(var c in ceils){
+    var cl = new ceiling(ceils[c]);
+    ceil.push(cl);
     scene.add(new THREE.Mesh( cl.render(), material));
   }
 
@@ -161,12 +216,14 @@ function init() {
     scene.add(new THREE.Mesh(gr.render(), material));
   }
 
-  var slope = new ramp([new THREE.Vector3(100,100,0), new THREE.Vector3(100,100,100),
-                      new THREE.Vector3(0,0,100), new THREE.Vector3(0,0,0)]);
-  ramps.push(slope);
-  scene.add(new THREE.Mesh( slope.render(), material));
-  
+  for (var r in ramp_array){
+    var slope = new ramp(ramp_array[r]);
+    ground.push(slope);
+    ramps.push(slope);
+    scene.add(new THREE.Mesh( slope.render(), material));
+  }
 
+  console.log(ramps)
   // Lights
 
   var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );

@@ -2051,9 +2051,7 @@ var platform = class {
   }
 
   yAt(pos){
-    if(this.flat)
-      return this.points[0].y;
-    return this.baryCoords(pos);
+    return this.points[0].y;
   }
 
 };
@@ -2073,6 +2071,14 @@ var ramp = class {
     this.points = points;
 
     var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
+
+    //used for determining if a point is inside the range
+    tmp1.subVectors(points[1], points[0]);
+    this.AB = new THREE.Vector2(tmp1.x, tmp1.z);
+    this.AB_Sqared = this.AB.dot(this.AB);
+    tmp1.subVectors(points[3], points[0]);
+    this.AD = new THREE.Vector2(tmp1.x, tmp1.z);
+    this.AD_Sqared = this.AD.dot(this.AD);
 
     tmp1.subVectors(points[0], points[1]);
     tmp2.subVectors(points[0], points[2]);
@@ -2108,21 +2114,12 @@ var ramp = class {
    * and returns appropriate y
    */
   over(point){
-    //might actually work
-    var tmp2Vec = new THREE.Vector2(point.x-this.center.x, point.z-this.center.z); //put point relative to center
+    var AM = new THREE.Vector2(point.x - this.points[0].x, point.z - this.points[0].z),
+        AMdAB = AM.dot(this.AB),
+        AMdAD = AM.dot(this.AD);
 
-    var p_down = tmp2Vec.dot(this.down_ramp);//component down
-    if(Math.pow(p_down,2) > this.len_down)
-      return false;
-
-    var p_side = tmp2Vec.dot(this.side_ramp);//component down
-    if(Math.pow(p_side,2) > this.len_across)
-      return false;
-
-    var y = this.center.y + p_down * this.down_ramp.y;//need actual 3d y component for accuracy
-    console.log(y);
-    return y;
-
+    return ((0 < AMdAB) && (AMdAB < this.AB_Sqared) && (0 < AMdAD) && (AMdAD < this.AD_Sqared));
+  
   }
 
   render(){
@@ -2143,7 +2140,13 @@ var ramp = class {
   }
 
   yAt(pos){
-    
+    var tmp2Vec = new THREE.Vector3();
+    tmp2Vec.subVectors(pos, this.center);
+
+    var p_down = tmp2Vec.dot(this.down_ramp),
+        p_side = tmp2Vec.dot(this.side_ramp);//component sideways
+
+    return this.center.y + p_down * this.down_ramp.y;
   }
 
 };
@@ -2215,10 +2218,6 @@ var ceiling = class {
 };
 
 
-var triangleBd = class {
-  
-};
-
 var cEntity = class {
 
   constructor(pos) {
@@ -2284,19 +2283,22 @@ var cEntity = class {
       //walked off ledge or switching platforms
 
       //check if walked onto ramp here
-      for(var r in ramps){
-        var y = ramps[r].over(this.position);
-        if(y > new_y){
-          //switch to this new ramp as the ground
-          new_y = y;
-        }
 
+      for(var r in ramps){
+        if(ramps[r].over(this.position)){
+          var r_y = ramps[r].yAt(this.position);
+          if(Math.abs(new_y - r_y) < 5){//for slight error
+            this.ground = ramps[r];
+            new_y = r_y;
+          }
+        }
       }
 
       if(!this.ground.over(this.position)){
         console.log('falling')
         
         this.grounded = false;
+
         for(var g in ground){
           if(ground[g].over(this.position)){
             //changing platforms
@@ -2349,6 +2351,7 @@ var cEntity = class {
           }
         }
 
+        //ramps here too
         for(var g in ground){
           if(ground[g].over(this.position)){
             if(Math.abs(ground[g].yAt(this.position) - new_pos.y) < 3){
@@ -2650,21 +2653,41 @@ function init() {
     {ul : new THREE.Vector3(980,400,-1830), lr : new THREE.Vector3(980,0,-1450)},
     {ul : new THREE.Vector3(980,400,-1450), lr : new THREE.Vector3(1000,0,-1450)},
 
-    {ul : new THREE.Vector3(300,400,-1850), lr : new THREE.Vector3(-100,0,-1850)},
-    {ul : new THREE.Vector3(-100,400,-1850), lr : new THREE.Vector3(-100,0,-1000)},
+    {ul : new THREE.Vector3(200,400,-1850), lr : new THREE.Vector3(-100,0,-1850)},
+    {ul : new THREE.Vector3(-100,400,-1850), lr : new THREE.Vector3(-100,0,-1720)},
+    {ul : new THREE.Vector3(-100,200,-1720), lr : new THREE.Vector3(-100,0,-1420)},
+    {ul : new THREE.Vector3(-100,400,-1420), lr : new THREE.Vector3(-100,0,-1000)},
     {ul : new THREE.Vector3(-100,400,-1000), lr : new THREE.Vector3(200,0,-1000)},
     {ul : new THREE.Vector3(200,400,-1000), lr : new THREE.Vector3(200,0,-1020)},
     {ul : new THREE.Vector3(200,400,-1020), lr : new THREE.Vector3(-80,0,-1020)},
-    {ul : new THREE.Vector3(-80,400,-1020), lr : new THREE.Vector3(-80,0,-1830)},
+    {ul : new THREE.Vector3(-80,400,-1720), lr : new THREE.Vector3(-80,0,-1830)},
+    {ul : new THREE.Vector3(-80,200,-1420), lr : new THREE.Vector3(-80,0,-1720)},
+    {ul : new THREE.Vector3(-80,400,-1020), lr : new THREE.Vector3(-80,0,-1420)},
     {ul : new THREE.Vector3(-80,400,-1830), lr : new THREE.Vector3(200,0,-1830)},    
     {ul : new THREE.Vector3(200,400,-1830), lr : new THREE.Vector3(200,0,-1850)},
 
+    {ul : new THREE.Vector3(-80,400,-1420), lr : new THREE.Vector3(-100,200,-1420)},
+    {ul : new THREE.Vector3(-100,400,-1720), lr : new THREE.Vector3(-80,200,-1720)},
     {ul : new THREE.Vector3(500,400,-1850), lr : new THREE.Vector3(-100,200,-1850)},
     {ul : new THREE.Vector3(-100,400,-1830), lr : new THREE.Vector3(500,200,-1830)},
 
+    {ul : new THREE.Vector3(1000,300,-1020), lr : new THREE.Vector3(1000,0,-1450)},
+    {ul : new THREE.Vector3(980,300,-1020), lr : new THREE.Vector3(1000,0,-1020)},
+    {ul : new THREE.Vector3(980,300,-1450), lr : new THREE.Vector3(980,0,-1020)},
+    {ul : new THREE.Vector3(700,198,-1200), lr : new THREE.Vector3(700,0,-1450)},
+    {ul : new THREE.Vector3(680,198,-1200), lr : new THREE.Vector3(700,0,-1200)},
+    {ul : new THREE.Vector3(680,198,-1550), lr : new THREE.Vector3(680,0,-1200)},
+    {ul : new THREE.Vector3(980,198,-1550), lr : new THREE.Vector3(680,0,-1550)},
+
+    {ul : new THREE.Vector3(150,600,-1400), lr : new THREE.Vector3(250,0,-1400)},//150, 250  -1500,-1400
+    {ul : new THREE.Vector3(250,600,-1400), lr : new THREE.Vector3(250,0,-1500)},
+    {ul : new THREE.Vector3(250,600,-1500), lr : new THREE.Vector3(150,0,-1500)},
+    {ul : new THREE.Vector3(150,600,-1500), lr : new THREE.Vector3(150,0,-1400)},
   ];
 
-  var platforms = [
+  //specified cw
+  //holds boundaries for both platforms and ceilings
+  var horiz_bounds = [
     [new THREE.Vector3(250,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1000,floor1_h,0)],
     [new THREE.Vector3(1000,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1250,floor1_h,-750)],
     [new THREE.Vector3(1250,floor1_h,-750),new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(1000,floor1_h,0)],
@@ -2676,6 +2699,29 @@ function init() {
     [new THREE.Vector3(200,200,-1020),new THREE.Vector3(200,200,-1450),new THREE.Vector3(-80,200,-1020)],
   ];
 
+  var ramp_array = [
+    //ccw
+    //[new THREE.Vector3(100,100,0), new THREE.Vector3(100,100,100), new THREE.Vector3(0,0,100), new THREE.Vector3(0,0,0)],
+    [new THREE.Vector3(980,0,-1200), new THREE.Vector3(700,0,-1200), new THREE.Vector3(700,200,-1450), new THREE.Vector3(980,200,-1450)],
+  
+  ];
+
+  //strictly ceilings
+  var ceils = [
+    [new THREE.Vector3(200,200,-1850), new THREE.Vector3(500,200,-1850), new THREE.Vector3(500,200,-1830)],
+    [new THREE.Vector3(200,200,-1850), new THREE.Vector3(500,200,-1830), new THREE.Vector3(200,200,-1830)]
+  ];
+
+  //strictly floors
+  var platforms = [
+    [new THREE.Vector3(1000,300,-1450),new THREE.Vector3(1000,300,-1020),new THREE.Vector3(980,300,-1020)],
+    [new THREE.Vector3(1000,300,-1450),new THREE.Vector3(980,300,-1020),new THREE.Vector3(980,300,-1450)],
+    [new THREE.Vector3(700,198,-1450),new THREE.Vector3(700,198,-1200),new THREE.Vector3(680,198,-1200)],
+    [new THREE.Vector3(700,198,-1450),new THREE.Vector3(680,198,-1200),new THREE.Vector3(680,198,-1450)],
+    [new THREE.Vector3(-100,200,-1420),new THREE.Vector3(-80,200,-1420),new THREE.Vector3(-80,200,-1720)],
+    [new THREE.Vector3(-100,200,-1420),new THREE.Vector3(-80,200,-1720),new THREE.Vector3(-100,200,-1720)]
+  ];
+
   for (var b in building1){
     cw = new collisionWall(building1[b].ul, building1[b].lr);
     cw.addTo(boundaries);
@@ -2684,12 +2730,24 @@ function init() {
     scene.add(toRend[1] );
   }
 
-  for (var p in platforms){
-    var pl = new platform(platforms[p]);
-    var cl = new ceiling(platforms[p]);
+  for (var p in horiz_bounds){
+    var pl = new platform(horiz_bounds[p]);
+    var cl = new ceiling(horiz_bounds[p]);
     ground.push(pl);
     ceil.push(cl);
     scene.add(new THREE.Mesh( pl.render(), material));
+    scene.add(new THREE.Mesh( cl.render(), material));
+  }
+
+  for(var p in platforms){
+    var pl = new platform(platforms[p]);
+    ground.push(pl);
+    scene.add(new THREE.Mesh( pl.render(), material));
+  }
+
+  for(var c in ceils){
+    var cl = new ceiling(ceils[c]);
+    ceil.push(cl);
     scene.add(new THREE.Mesh( cl.render(), material));
   }
 
@@ -2699,12 +2757,14 @@ function init() {
     scene.add(new THREE.Mesh(gr.render(), material));
   }
 
-  var slope = new ramp([new THREE.Vector3(100,100,0), new THREE.Vector3(100,100,100),
-                      new THREE.Vector3(0,0,100), new THREE.Vector3(0,0,0)]);
-  ramps.push(slope);
-  scene.add(new THREE.Mesh( slope.render(), material));
-  
+  for (var r in ramp_array){
+    var slope = new ramp(ramp_array[r]);
+    ground.push(slope);
+    ramps.push(slope);
+    scene.add(new THREE.Mesh( slope.render(), material));
+  }
 
+  console.log(ramps)
   // Lights
 
   var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );
