@@ -2093,7 +2093,7 @@ var ramp = class {
     tmp1.multiplyScalar(0.25);
     this.center = tmp1;//average of all points
 
-    //assume first two points are largest for now
+    //assume first two points are lowest? for now
     tmp1 = new THREE.Vector3((points[2].x+points[3].x)*0.5 - this.center.x,points[2].y - this.center.y,(points[2].z+points[3].z)*0.5 - this.center.z)
     tmp1.normalize();
     this.down_ramp = tmp1;
@@ -2615,14 +2615,13 @@ function init() {
   
 
   var floor1_h = 160;
-  var building1 = [
+  var walls = [
     {ul : new THREE.Vector3(250,floor1_h,0), lr : new THREE.Vector3(250,0,50)},
     {ul : new THREE.Vector3(250,floor1_h,50), lr : new THREE.Vector3(280,0,50)},
     {ul : new THREE.Vector3(280,floor1_h,50), lr : new THREE.Vector3(280,0,10)},
     {ul : new THREE.Vector3(280,floor1_h,10), lr : new THREE.Vector3(1000,0,-730)},
     {ul : new THREE.Vector3(1000,floor1_h,-730), lr : new THREE.Vector3(1050,0,-730)},
     {ul : new THREE.Vector3(1050,floor1_h,-730), lr : new THREE.Vector3(1050,0,-750)},
-
     {ul : new THREE.Vector3(1000,floor1_h,-750), lr : new THREE.Vector3(250,0,0)},
     {ul : new THREE.Vector3(1050,floor1_h,-750), lr : new THREE.Vector3(1000,0,-750)},
     {ul : new THREE.Vector3(1250,floor1_h,-750), lr : new THREE.Vector3(1200,0,-750)},
@@ -2630,14 +2629,45 @@ function init() {
     {ul : new THREE.Vector3(1200,floor1_h,-730), lr : new THREE.Vector3(1250,0,-730)},
     {ul : new THREE.Vector3(1200,floor1_h,-750), lr : new THREE.Vector3(1050,floor1_h - 20,-750)},
     {ul : new THREE.Vector3(1050,floor1_h,-730), lr : new THREE.Vector3(1250,floor1_h - 20,-730)},
+    {ul : new THREE.Vector3(250,floor1_h,0), lr : new THREE.Vector3(250,floor1_h - 20,180)},
+    {ul : new THREE.Vector3(280,floor1_h,180), lr : new THREE.Vector3(280,floor1_h - 20,0)},
+    {ul : new THREE.Vector3(280,floor1_h,180), lr : new THREE.Vector3(250,0,180)},
+    {ul : new THREE.Vector3(250,floor1_h,180), lr : new THREE.Vector3(250,0,300)},
+    {ul : new THREE.Vector3(250,floor1_h,300), lr : new THREE.Vector3(400,0,300)},
+    {ul : new THREE.Vector3(400,floor1_h,300), lr : new THREE.Vector3(400,0,150)},//ramp goes about here
+    {ul : new THREE.Vector3(280,floor1_h,300), lr : new THREE.Vector3(280,0,180)},
+    {ul : new THREE.Vector3(380,floor1_h,300), lr : new THREE.Vector3(280,0,300)},
+    {ul : new THREE.Vector3(380,floor1_h,150), lr : new THREE.Vector3(380,0,300)},
+    {ul : new THREE.Vector3(710,floor1_h,150), lr : new THREE.Vector3(380,0,150)},
+    {ul : new THREE.Vector3(380,floor1_h,150), lr : new THREE.Vector3(710,0,150)},
+    {ul : new THREE.Vector3(710,floor1_h,300), lr : new THREE.Vector3(710,0,150)},
+    {ul : new THREE.Vector3(1250,floor1_h,300), lr : new THREE.Vector3(700,0,300)},
+    {ul : new THREE.Vector3(1300,600,600), lr : new THREE.Vector3(1000,0,300)},
+    {ul : new THREE.Vector3(1000,600,300), lr : new THREE.Vector3(700,0,300)},
+    {ul : new THREE.Vector3(700,600,300), lr : new THREE.Vector3(400,0,600)},
+    {ul : new THREE.Vector3(400,600,600), lr : new THREE.Vector3(400,0,900)},
+    {ul : new THREE.Vector3(400,600,900), lr : new THREE.Vector3(700,0,1200)},
+
+    //posts
+    {ul : new THREE.Vector3(410,200,-400), lr : new THREE.Vector3(400,0,-410)},
+    {ul : new THREE.Vector3(400,200,-410), lr : new THREE.Vector3(390,0,-400)},
+    {ul : new THREE.Vector3(390,200,-400), lr : new THREE.Vector3(400,0,-390)},
+    {ul : new THREE.Vector3(400,200,-390), lr : new THREE.Vector3(410,0,-400)},
+    {ul : new THREE.Vector3(510,200,-500), lr : new THREE.Vector3(500,0,-510)},
+    {ul : new THREE.Vector3(500,200,-510), lr : new THREE.Vector3(490,0,-500)},
+    {ul : new THREE.Vector3(490,200,-500), lr : new THREE.Vector3(500,0,-490)},
+    {ul : new THREE.Vector3(500,200,-490), lr : new THREE.Vector3(510,0,-500)},
+
 
     //wall
+    {ul : new THREE.Vector3(1250,400,800), lr : new THREE.Vector3(1250,0,1200)},
+    {ul : new THREE.Vector3(1250,400,400), lr : new THREE.Vector3(1250,0,800)},
+    {ul : new THREE.Vector3(1250,400,0), lr : new THREE.Vector3(1250,0,400)},
+    {ul : new THREE.Vector3(1250,400,-400), lr : new THREE.Vector3(1250,0,0)},
     {ul : new THREE.Vector3(1250,400,-800), lr : new THREE.Vector3(1250,0,-400)},
     {ul : new THREE.Vector3(1250,400,-1200), lr : new THREE.Vector3(1250,0,-800)},
     {ul : new THREE.Vector3(1250,400,-1600), lr : new THREE.Vector3(1250,0,-1200)},
     {ul : new THREE.Vector3(1250,400,-2000), lr : new THREE.Vector3(1250,0,-1600)},
-
-//render outlines in colwall as well
     {ul : new THREE.Vector3(1050,400,-2000), lr : new THREE.Vector3(1250,0,-2000)},
     {ul : new THREE.Vector3(850,400,-2000), lr : new THREE.Vector3(1050,0,-2000)},
     {ul : new THREE.Vector3(650,400,-2000), lr : new THREE.Vector3(850,0,-2000)},
@@ -2679,7 +2709,7 @@ function init() {
     {ul : new THREE.Vector3(680,198,-1550), lr : new THREE.Vector3(680,0,-1200)},
     {ul : new THREE.Vector3(980,198,-1550), lr : new THREE.Vector3(680,0,-1550)},
 
-    {ul : new THREE.Vector3(150,600,-1400), lr : new THREE.Vector3(250,0,-1400)},//150, 250  -1500,-1400
+    {ul : new THREE.Vector3(150,600,-1400), lr : new THREE.Vector3(250,0,-1400)},
     {ul : new THREE.Vector3(250,600,-1400), lr : new THREE.Vector3(250,0,-1500)},
     {ul : new THREE.Vector3(250,600,-1500), lr : new THREE.Vector3(150,0,-1500)},
     {ul : new THREE.Vector3(150,600,-1500), lr : new THREE.Vector3(150,0,-1400)},
@@ -2691,6 +2721,14 @@ function init() {
     [new THREE.Vector3(250,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1000,floor1_h,0)],
     [new THREE.Vector3(1000,floor1_h,0),new THREE.Vector3(1000,floor1_h,-750),new THREE.Vector3(1250,floor1_h,-750)],
     [new THREE.Vector3(1250,floor1_h,-750),new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(1000,floor1_h,0)],
+    [new THREE.Vector3(400,floor1_h,0),new THREE.Vector3(400,floor1_h,300),new THREE.Vector3(250,floor1_h,300)],
+    [new THREE.Vector3(400,floor1_h,0),new THREE.Vector3(250,floor1_h,300),new THREE.Vector3(250,floor1_h,0)],
+    [new THREE.Vector3(700,floor1_h,0),new THREE.Vector3(700,floor1_h,150),new THREE.Vector3(400,floor1_h,150)],
+    [new THREE.Vector3(700,floor1_h,0),new THREE.Vector3(400,floor1_h,150),new THREE.Vector3(400,floor1_h,0)],
+    [new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(1250,floor1_h,600),new THREE.Vector3(700,floor1_h,600)],
+    [new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(700,floor1_h,600),new THREE.Vector3(700,floor1_h,0)],
+    [new THREE.Vector3(390,200,-400),new THREE.Vector3(500,200,-510),new THREE.Vector3(610,200,-400)],
+    [new THREE.Vector3(390,200,-400),new THREE.Vector3(610,200,-400),new THREE.Vector3(500,200,-290)],
 
     //other building
     [new THREE.Vector3(980,200,-1830),new THREE.Vector3(980,200,-1450),new THREE.Vector3(-80,200,-1830)],
@@ -2703,6 +2741,7 @@ function init() {
     //ccw
     //[new THREE.Vector3(100,100,0), new THREE.Vector3(100,100,100), new THREE.Vector3(0,0,100), new THREE.Vector3(0,0,0)],
     [new THREE.Vector3(980,0,-1200), new THREE.Vector3(700,0,-1200), new THREE.Vector3(700,200,-1450), new THREE.Vector3(980,200,-1450)],
+    [new THREE.Vector3(700,floor1_h,150), new THREE.Vector3(700,floor1_h,550), new THREE.Vector3(450,0,550), new THREE.Vector3(450,0,150)],
   
   ];
 
@@ -2722,8 +2761,8 @@ function init() {
     [new THREE.Vector3(-100,200,-1420),new THREE.Vector3(-80,200,-1720),new THREE.Vector3(-100,200,-1720)]
   ];
 
-  for (var b in building1){
-    cw = new collisionWall(building1[b].ul, building1[b].lr);
+  for (var b in walls){
+    cw = new collisionWall(walls[b].ul, walls[b].lr);
     cw.addTo(boundaries);
     var toRend = cw.render(material);
     scene.add(toRend[0] );

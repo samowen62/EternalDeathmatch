@@ -301,7 +301,7 @@ var ramp = class {
     tmp1.multiplyScalar(0.25);
     this.center = tmp1;//average of all points
 
-    //assume first two points are largest for now
+    //assume first two points are lowest? for now
     tmp1 = new THREE.Vector3((points[2].x+points[3].x)*0.5 - this.center.x,points[2].y - this.center.y,(points[2].z+points[3].z)*0.5 - this.center.z)
     tmp1.normalize();
     this.down_ramp = tmp1;
