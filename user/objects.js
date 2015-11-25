@@ -503,6 +503,7 @@ var cEntity = class {
       }
 
       if(!this.ground.over(this.position)){
+        //happening here of course
         console.log('falling')
         
         this.grounded = false;
@@ -510,7 +511,7 @@ var cEntity = class {
         for(var g in ground){
           if(ground[g].over(this.position)){
             //changing platforms
-            if((this.position.y - ground[g].points[0].y) < 3){
+            if(Math.abs(this.position.y - ground[g].points[0].y) < 3){
               this.grounded = true;
               this.jumping = false;
               this.ground = ground[g];

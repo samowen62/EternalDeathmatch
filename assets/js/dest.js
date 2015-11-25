@@ -2295,6 +2295,7 @@ var cEntity = class {
       }
 
       if(!this.ground.over(this.position)){
+        //happening here of course
         console.log('falling')
         
         this.grounded = false;
@@ -2302,7 +2303,7 @@ var cEntity = class {
         for(var g in ground){
           if(ground[g].over(this.position)){
             //changing platforms
-            if((this.position.y - ground[g].points[0].y) < 3){
+            if(Math.abs(this.position.y - ground[g].points[0].y) < 3){
               this.grounded = true;
               this.jumping = false;
               this.ground = ground[g];
@@ -2727,8 +2728,8 @@ function init() {
     [new THREE.Vector3(700,floor1_h,0),new THREE.Vector3(400,floor1_h,150),new THREE.Vector3(400,floor1_h,0)],
     [new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(1250,floor1_h,600),new THREE.Vector3(700,floor1_h,600)],
     [new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(700,floor1_h,600),new THREE.Vector3(700,floor1_h,0)],
-    [new THREE.Vector3(390,200,-400),new THREE.Vector3(500,200,-510),new THREE.Vector3(610,200,-400)],
-    [new THREE.Vector3(390,200,-400),new THREE.Vector3(610,200,-400),new THREE.Vector3(500,200,-290)],
+    [new THREE.Vector3(390,200,-400),new THREE.Vector3(500,200,-510),new THREE.Vector3(710,200,-300)],
+    [new THREE.Vector3(390,200,-400),new THREE.Vector3(710,200,-300),new THREE.Vector3(510,200,-190)],
 
     //other building
     [new THREE.Vector3(980,200,-1830),new THREE.Vector3(980,200,-1450),new THREE.Vector3(-80,200,-1830)],
@@ -2809,19 +2810,17 @@ function init() {
   var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );
   scene.add( ambientLight );
 
-  var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
-  directionalLight.position.x = Math.random() - 0.5;
-  directionalLight.position.y = Math.random() - 0.5;
-  directionalLight.position.z = Math.random() - 0.5;
-  directionalLight.position.normalize();
-  scene.add( directionalLight );
+  var dir_colors = [ 0x008000, 0x0000ff, 0x0099cc0, 0xff0000, 0xdddddd, 0xffd700];
+  for(var i = 0; i < 6; i++){
+  var directionalLight = new THREE.DirectionalLight( dir_colors[i] );
+    directionalLight.position.x = (i % 3 == 0 ? (i - 1.5)/1.5 : 0);
+    directionalLight.position.y = (i % 3 == 1 ? (i - 2.5)/1.5 : 0);
+    directionalLight.position.z = (i % 3 == 2 ? (i - 3.5)/1.5 : 0);
+    directionalLight.position.normalize();
+    scene.add( directionalLight );
+  }
 
-  var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
-  directionalLight.position.x = Math.random() - 0.5;
-  directionalLight.position.y = Math.random() - 0.5;
-  directionalLight.position.z = Math.random() - 0.5;
-  directionalLight.position.normalize();
-  scene.add( directionalLight );
+  //can castShadow = true but expensive?
 
   renderer = new THREE.WebGLRenderer();
   renderer.setClearColor( 0xf0f0f0 );
