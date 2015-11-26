@@ -326,7 +326,12 @@ var ramp = class {
         AMdAB = AM.dot(this.AB),
         AMdAD = AM.dot(this.AD);
 
-    return ((0 < AMdAB) && (AMdAB < this.AB_Sqared) && (0 < AMdAD) && (AMdAD < this.AD_Sqared));
+    var ret = ((0 < AMdAB) && (AMdAB < this.AB_Sqared) && (0 < AMdAD) && (AMdAD < this.AD_Sqared));
+    //if(ret){
+     // console.log(point.y, this.points[0].y, this.above(point));
+
+    //}
+    return ret;
   
   }
 
@@ -354,7 +359,7 @@ var ramp = class {
     var p_down = tmp2Vec.dot(this.down_ramp),
         p_side = tmp2Vec.dot(this.side_ramp);//component sideways
 
-    return this.center.y + p_down * this.down_ramp.y;
+    return this.center.y + p_down * this.down_ramp.y + 3;
   }
 
 };
@@ -495,7 +500,7 @@ var cEntity = class {
       for(var r in ramps){
         if(ramps[r].over(this.position)){
           var r_y = ramps[r].yAt(this.position);
-          if(Math.abs(new_y - r_y) < 5){//for slight error
+          if(Math.abs(new_y - r_y) < 8){//for slight error. It was 5 but yAt is given an artificial offset of 3
             this.ground = ramps[r];
             new_y = r_y;
           }
@@ -504,7 +509,7 @@ var cEntity = class {
 
       if(!this.ground.over(this.position)){
         //happening here of course
-        console.log('falling')
+        console.log('falling');
         
         this.grounded = false;
 

@@ -117,6 +117,11 @@ function init() {
     {ul : new THREE.Vector3(490,200,-500), lr : new THREE.Vector3(500,0,-490)},
     {ul : new THREE.Vector3(500,200,-490), lr : new THREE.Vector3(510,0,-500)},
 
+    {ul : new THREE.Vector3(590,200,-200), lr : new THREE.Vector3(700,floor1_h,-310)},
+    {ul : new THREE.Vector3(700,200,-310), lr : new THREE.Vector3(630,floor1_h,-380)},
+    {ul : new THREE.Vector3(630,200,-380), lr : new THREE.Vector3(520,floor1_h,-270)},
+    {ul : new THREE.Vector3(520,200,-270), lr : new THREE.Vector3(590,floor1_h,-200)},
+
 
     //wall
     {ul : new THREE.Vector3(1250,400,800), lr : new THREE.Vector3(1250,0,1200)},
@@ -186,8 +191,8 @@ function init() {
     [new THREE.Vector3(700,floor1_h,0),new THREE.Vector3(400,floor1_h,150),new THREE.Vector3(400,floor1_h,0)],
     [new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(1250,floor1_h,600),new THREE.Vector3(700,floor1_h,600)],
     [new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(700,floor1_h,600),new THREE.Vector3(700,floor1_h,0)],
-    [new THREE.Vector3(390,200,-400),new THREE.Vector3(500,200,-510),new THREE.Vector3(710,200,-300)],
-    [new THREE.Vector3(390,200,-400),new THREE.Vector3(710,200,-300),new THREE.Vector3(510,200,-190)],
+    [new THREE.Vector3(390,200,-400),new THREE.Vector3(500,200,-510),new THREE.Vector3(700,200,-310)],
+    [new THREE.Vector3(390,200,-400),new THREE.Vector3(700,200,-310),new THREE.Vector3(590,200,-200)],
 
     //other building
     [new THREE.Vector3(980,200,-1830),new THREE.Vector3(980,200,-1450),new THREE.Vector3(-80,200,-1830)],

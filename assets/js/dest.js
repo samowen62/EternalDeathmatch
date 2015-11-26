@@ -2118,7 +2118,12 @@ var ramp = class {
         AMdAB = AM.dot(this.AB),
         AMdAD = AM.dot(this.AD);
 
-    return ((0 < AMdAB) && (AMdAB < this.AB_Sqared) && (0 < AMdAD) && (AMdAD < this.AD_Sqared));
+    var ret = ((0 < AMdAB) && (AMdAB < this.AB_Sqared) && (0 < AMdAD) && (AMdAD < this.AD_Sqared));
+    //if(ret){
+     // console.log(point.y, this.points[0].y, this.above(point));
+
+    //}
+    return ret;
   
   }
 
@@ -2146,7 +2151,7 @@ var ramp = class {
     var p_down = tmp2Vec.dot(this.down_ramp),
         p_side = tmp2Vec.dot(this.side_ramp);//component sideways
 
-    return this.center.y + p_down * this.down_ramp.y;
+    return this.center.y + p_down * this.down_ramp.y + 3;
   }
 
 };
@@ -2287,7 +2292,7 @@ var cEntity = class {
       for(var r in ramps){
         if(ramps[r].over(this.position)){
           var r_y = ramps[r].yAt(this.position);
-          if(Math.abs(new_y - r_y) < 5){//for slight error
+          if(Math.abs(new_y - r_y) < 8){//for slight error. It was 5 but yAt is given an artificial offset of 3
             this.ground = ramps[r];
             new_y = r_y;
           }
@@ -2296,7 +2301,7 @@ var cEntity = class {
 
       if(!this.ground.over(this.position)){
         //happening here of course
-        console.log('falling')
+        console.log('falling');
         
         this.grounded = false;
 
@@ -2659,6 +2664,11 @@ function init() {
     {ul : new THREE.Vector3(490,200,-500), lr : new THREE.Vector3(500,0,-490)},
     {ul : new THREE.Vector3(500,200,-490), lr : new THREE.Vector3(510,0,-500)},
 
+    {ul : new THREE.Vector3(590,200,-200), lr : new THREE.Vector3(700,floor1_h,-310)},
+    {ul : new THREE.Vector3(700,200,-310), lr : new THREE.Vector3(630,floor1_h,-380)},
+    {ul : new THREE.Vector3(630,200,-380), lr : new THREE.Vector3(520,floor1_h,-270)},
+    {ul : new THREE.Vector3(520,200,-270), lr : new THREE.Vector3(590,floor1_h,-200)},
+
 
     //wall
     {ul : new THREE.Vector3(1250,400,800), lr : new THREE.Vector3(1250,0,1200)},
@@ -2728,8 +2738,8 @@ function init() {
     [new THREE.Vector3(700,floor1_h,0),new THREE.Vector3(400,floor1_h,150),new THREE.Vector3(400,floor1_h,0)],
     [new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(1250,floor1_h,600),new THREE.Vector3(700,floor1_h,600)],
     [new THREE.Vector3(1250,floor1_h,0),new THREE.Vector3(700,floor1_h,600),new THREE.Vector3(700,floor1_h,0)],
-    [new THREE.Vector3(390,200,-400),new THREE.Vector3(500,200,-510),new THREE.Vector3(710,200,-300)],
-    [new THREE.Vector3(390,200,-400),new THREE.Vector3(710,200,-300),new THREE.Vector3(510,200,-190)],
+    [new THREE.Vector3(390,200,-400),new THREE.Vector3(500,200,-510),new THREE.Vector3(700,200,-310)],
+    [new THREE.Vector3(390,200,-400),new THREE.Vector3(700,200,-310),new THREE.Vector3(590,200,-200)],
 
     //other building
     [new THREE.Vector3(980,200,-1830),new THREE.Vector3(980,200,-1450),new THREE.Vector3(-80,200,-1830)],
