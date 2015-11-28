@@ -14,7 +14,7 @@ function init() {
 	container = document.createElement( 'div' );
 	document.body.appendChild( container );
 
-	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 5000 );
+	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 10000 );
 	camera.position.x = 0;
 	camera.position.y = 50;
 	camera.position.z = 0;
@@ -26,52 +26,17 @@ function init() {
 
   // Grid
 
-  var size = 2000, step = 200;
-  /*var geometry = new THREE.Geometry();
-
-  for ( var i = - size; i <= size; i += step ) {
-  	geometry.vertices.push( new THREE.Vector3( - size, 0, i ) );
-  	geometry.vertices.push( new THREE.Vector3(   size, 0, i ) );
-  	geometry.vertices.push( new THREE.Vector3( i, 0, - size ) );
-  	geometry.vertices.push( new THREE.Vector3( i, 0,   size ) );
-  }
-
-  var material = new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2 } );
-
-  var line = new THREE.Line( geometry, material, THREE.LinePieces );
-  scene.add( line );*/
-  var cw;
+  var size = 2000, step = 200, cw;
   scene.add(testSphere);
 
   var wallLength = 140,wxMax,wxMin,wzMax,wzMin
   var material = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, overdraw: 0.5 } );
-/*
-  for ( var i = 0; i < 100; i ++ ) {
-  	var x = 2000 * Math.cos(Math.PI * (i / 50.0))
-  	   ,z = 2000 * Math.sin(Math.PI * (i / 50.0))
-  	   ,y = Math.PI * ((75 - i) % 100 / 50);
 
-  	var wall_x = (wallLength / 2) * Math.cos(Math.PI * ((i + 25) % 100/ 50.0)),
-  		wall_z = (wallLength / 2) * Math.sin(Math.PI * ((i + 25) % 100/ 50.0));
-
-  	var lr = new THREE.Vector3(x + wall_x, 0, z + wall_z),
-  		ul = new THREE.Vector3(x - wall_x,  200, z - wall_z);
-
-  	var cw = new collisionWall(ul, lr),t = 2*sqThick;
-    //computes bounding box of wall in closest thickness sqThick*2
-
-    //add to 2d array of boundary arrays
-    cw.addTo(boundaries);//, t);
-    scene.add(new THREE.Mesh( cw.render(), material ));
-  }
-*/
   // Ground
   var grasses =[
     [new THREE.Vector3(2000,0,2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)],
     [new THREE.Vector3(-2000,0,-2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)],  
   ];
-
-  
 
   var floor1_h = 160;
   var walls = [
@@ -267,7 +232,6 @@ function init() {
     scene.add(new THREE.Mesh( slope.render(), material));
   }
 
-  console.log(ramps)
   // Lights
 
   var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );
@@ -275,7 +239,7 @@ function init() {
 
   var dir_colors = [ 0x008000, 0x0000ff, 0x0099cc0, 0xff0000, 0xdddddd, 0xffd700];
   for(var i = 0; i < 6; i++){
-  var directionalLight = new THREE.DirectionalLight( dir_colors[i] );
+    var directionalLight = new THREE.DirectionalLight( dir_colors[i] );
     directionalLight.position.x = (i % 3 == 0 ? (i - 1.5)/1.5 : 0);
     directionalLight.position.y = (i % 3 == 1 ? (i - 2.5)/1.5 : 0);
     directionalLight.position.z = (i % 3 == 2 ? (i - 3.5)/1.5 : 0);
@@ -284,6 +248,29 @@ function init() {
   }
 
   //can castShadow = true but expensive?
+
+  var imagePrefix = "images/dawnmountain-";
+  var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
+  var imageSuffix = ".png";
+  var skyGeometry = new THREE.CubeGeometry( 7000, 7000, 7000 ); 
+  
+  var materialArray = [];
+  for (var i = 0; i < 6; i++)
+    materialArray.push( new THREE.MeshBasicMaterial({
+      map: THREE.ImageUtils.loadTexture( imagePrefix + directions[i] + imageSuffix ),
+      side: THREE.BackSide
+    }));
+  var skyMaterial = new THREE.MeshFaceMaterial( materialArray );
+  var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+  scene.add( skyBox );
+
+  var ballTexture = THREE.ImageUtils.loadTexture( 'images/gun.png' );
+  
+  var ballMaterial = new THREE.SpriteMaterial( { map: ballTexture, useScreenCoordinates: true  } );
+  sprite = new THREE.Sprite( ballMaterial );
+  sprite.position.set( 150, 150, -150 );
+  sprite.scale.set( 100, 64, 1.0 ); // imageWidth, imageHeight
+  scene.add( sprite );
 
   renderer = new THREE.WebGLRenderer();
   renderer.setClearColor( 0xf0f0f0 );
@@ -311,11 +298,17 @@ function animate() {
 
 function render() {
     if(true){//for when the player is dead etc.
-    	//move();
+
       character.act();
-      //character.position.y += character.thickness.y;
       camera.position.copy(character.position);
       camera.position.y += character.thickness.y;
+
+
+      tmpVec.copy(pointed);
+      tmpVec.multiplyScalar(30);
+      sprite.position.copy(tmpVec.add(camera.position));
+      //plane.rotation.setFromRotationMatrix( camera.matrix );
+      
 
     	socket.emit('m', {
     		hash : p_hash,

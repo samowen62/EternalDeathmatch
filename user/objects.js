@@ -152,7 +152,7 @@ var collisionWall = class {
     return c && d;
   }
 
-//check bookmark and try alt implementation of collision
+  //check bookmark and try alt implementation of collision
   collides(pres, fut){
     var a = this.whichSide(pres) > 0,
     b = this.whichSide(fut) > 0;
@@ -223,7 +223,7 @@ var platform = class {
         b1 = this.sign(point, this.points[0], this.points[1]) < 0,
         b2 = this.sign(point, this.points[1], this.points[2]) < 0,
         b3 = this.sign(point, this.points[2], this.points[0]) < 0;
-//console.log(b1,b2,b3)
+
     return ((b1 == b2) && (b2 == b3));
   }
 
@@ -434,7 +434,8 @@ var ceiling = class {
 var cEntity = class {
 
   constructor(pos) {
-    this.thickness = new THREE.Vector3(45,45,45);
+    //should only have y component for testing ceiling collision
+    this.thickness = new THREE.Vector3(0,45,0);
     pos.y = this.thickness.y + 5;
     this.position = pos;
 
@@ -463,8 +464,7 @@ var cEntity = class {
     left.z = (-1) * pointed.x;
     left.normalize();
     pointed.applyAxisAngle (left,angleY);
-    tmpVec.addVectors(camera.position, pointed);
-    camera.lookAt(tmpVec);
+    camera.lookAt(tmpVec.addVectors(camera.position, pointed));
     lastMouse = [event.clientX, event.clientY];
   }
 
@@ -550,8 +550,8 @@ var cEntity = class {
 
         for(var c in ceil){
           if(ceil[c].over(this.position)){
-            var a = ceil[c].below(this.position);
-            var b = ceil[c].below(new_pos);
+            var a = ceil[c].below(tmpVec.addVectors(this.position, this.thickness));
+            var b = ceil[c].below(tmpVec.addVectors(new_pos, this.thickness));
 
             if((!a && b)||(a && !b)){
               var d = new Date();

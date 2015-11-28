@@ -16,6 +16,11 @@ app.get('/', function(req, res){
   res.sendfile('index.html');
 });
 
+app.get('/assets/css/*', function(req, res){
+  console.log( __dirname + req.originalUrl)
+  res.sendfile( __dirname + req.originalUrl);
+});
+
 app.get('/images/*', function(req, res){
   console.log( __dirname + req.originalUrl)
   res.sendfile( __dirname + req.originalUrl);
