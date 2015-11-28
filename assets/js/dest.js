@@ -2819,7 +2819,7 @@ function init() {
   sprite.scale.set( 100, 64, 1.0 ); // imageWidth, imageHeight
   scene.add( sprite );
 
-  renderer = new THREE.WebGLRenderer();
+  renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setClearColor( 0xf0f0f0 );
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
