@@ -26,8 +26,11 @@ var p_hash = null,
 	centY = winHeight / 2,
 	mouseSensitivity = 0.06,
 
+	mouseDown = 0,
+
 	BASE_STEP_FOOT = 10,
-	BASE_SPEED = 1;
+	BASE_SPEED = 1,
+	MAX_MAP_WIDTH = 2000;
 
 /* set collision detection spacial structure
  *
@@ -35,7 +38,7 @@ var p_hash = null,
  * The plane this is divided in is parallel to the y plane (i refers to x and j to z coordinates)
  * max extent is actually 2*sqThick beyond sqStart
  */ 
-var boundaries,sqSize = 23,sqThick = 100,sqStart = -2000
+var boundaries,sqSize = 23,sqThick = 100,sqStart = -MAX_MAP_WIDTH
 for(boundaries = [];boundaries.length < sqSize; boundaries.push([]));
 for(var i = 0; i < sqSize; i ++)
 	for(var j = 0; j < sqSize; j ++)

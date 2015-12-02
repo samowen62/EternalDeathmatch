@@ -20,8 +20,10 @@ var Controller = {
     },
 }
 
-var calcVec = new THREE.Vector3()
-var tmpPos = new THREE.Vector3()
+var calcVec = new THREE.Vector3(),
+    calcVec2 = new THREE.Vector3(),
+    tmpPos = new THREE.Vector3();
+
 var collisionWall = class {
 
   /*
@@ -51,9 +53,25 @@ var collisionWall = class {
     lowerRight.y = ly,
     this.verts = {ul : upperLeft, lr : lowerRight},
     this.verts.ll = new THREE.Vector3(upperLeft.x, ly, upperLeft.z),
-    this.verts.ur = new THREE.Vector3(lowerRight.x, upperLeft.y, lowerRight.z),
+    this.verts.ur = new THREE.Vector3(lowerRight.x, upperLeft.y, lowerRight.z);
 
-    this.normal_ul = new THREE.Vector3(tmp3.z,0,-tmp3.x),
+    if(this.verts.ul.x > this.verts.lr.x){
+      this.max_x = this.verts.ul.x;
+      this.min_x = this.verts.lr.x;
+    }else{
+      this.min_x = this.verts.ul.x;
+      this.max_x = this.verts.lr.x;
+    }
+
+    if(this.verts.ul.z > this.verts.lr.z){
+      this.max_z = this.verts.ul.z;
+      this.min_z = this.verts.lr.z;
+    }else{
+      this.min_z = this.verts.ul.z;
+      this.max_z = this.verts.lr.z;
+    }
+
+    this.normal_ul = new THREE.Vector3(tmp3.z,0,-tmp3.x);
     this.normal_lr = new THREE.Vector3(-tmp3.z,0,tmp3.x);
   }
 
@@ -84,14 +102,6 @@ var collisionWall = class {
 
 
     return [new THREE.Mesh(geometry, mat), new THREE.Line(lineGeo, lineMat)];
-  }
-
-  addNext(next) {
-  	this.next = next
-  }
-
-  addNext(prev) {
-  	this.prev = prev
   }
 
   /*
@@ -165,10 +175,36 @@ var collisionWall = class {
     return false;
   }
 
-  //statics take 2 objs as input
-  static distance(a, b) {
-    return 0
-   }
+  rayDetect(start, pointer){
+    var tmp = new THREE.Vector3();
+    tmp.subVectors(this.center, start);
+    var num = tmp.dot(this.normal),
+        den = pointer.dot(this.normal);
+
+    if(den != 0){
+      var dist = num / den;
+      var ray = new THREE.Vector3();
+      ray.copy(pointer);
+      ray.multiplyScalar(dist);
+      start.add(ray);
+
+      //this needs modification. It doesn't respect the boxes bounds (it's the y only I think)
+      if(Math.abs(start.y - this.center.y) < this.halfHeight){
+//      if(!(start.y > this.center.y + start.halfHeight || start.y < this.center.y - this.halfHeight )){
+        if(!(start.x > this.max_x || start.x < this.min_x)){
+          if(!(start.z > this.max_z || start.z < this.min_z)){
+
+            
+            return ({cw : this, spot: start});
+          }
+        }
+      }
+        
+      return null;
+      
+    }
+  }
+
 };
 
 //points in clockwise directions
@@ -468,6 +504,155 @@ var cEntity = class {
     lastMouse = [event.clientX, event.clientY];
   }
 
+  shoot(){
+    calcVec.addVectors(this.position, this.thickness);
+    var end_vec = new THREE.Vector3();
+    end_vec.copy(pointed);
+    end_vec.multiplyScalar(3*MAX_MAP_WIDTH);
+    end_vec.add(calcVec);
+
+
+    //this must detect the first wall that this ray hits
+    //need to do floors and ceilings as well in a later loop    
+
+    var wxStart,wxEnd,wzStart,wzEnd,t = 2*sqThick,
+
+    wxStart = calcVec.x;
+    wxEnd = end_vec.x;
+    wzStart = calcVec.z;
+    wzEnd = end_vec.z;
+
+    if(wxStart >= wxEnd){
+      wxStart = (wxStart - wxStart % t) + t;
+      wxEnd = (wxEnd - wxEnd % t) - t;
+    }else{
+      wxStart = (wxStart - wxStart % t) - t;
+      wxEnd = (wxEnd - wxEnd % t) + t;
+    }
+
+    if(wzStart >= wzEnd){
+      wzStart = (wzStart - wzStart % t) + t;
+      wzEnd = (wzEnd - wzEnd % t) - t;
+    }else{
+      wzStart = (wzStart - wzStart % t) - t;
+      wzEnd = (wzEnd - wzEnd % t) + t;
+    }
+
+    wxEnd = (wxEnd > MAX_MAP_WIDTH) ? MAX_MAP_WIDTH : (wxEnd < -MAX_MAP_WIDTH) ? -MAX_MAP_WIDTH : wxEnd;
+    wzEnd = (wzEnd > MAX_MAP_WIDTH) ? MAX_MAP_WIDTH : (wzEnd < -MAX_MAP_WIDTH) ? -MAX_MAP_WIDTH : wzEnd;
+
+    var start_Vec = new THREE.Vector3();
+    start_Vec.copy(calcVec);
+
+    /*  
+     *  I tried to make this next series of control statements as simple as 
+     *  possible. Of course there's a million other ways of doing this that are shorter, 
+     *  but I didn't want to make it confusing. Also this God awful language combined with
+     *  the unpredictable three.js library forced me to add ugly, odd looking code I feel
+     *  ashamed as a programmer for writing.
+     */
+    var pt, l, min_dist = MAX_MAP_WIDTH, min_wall = null, tmp_v = new THREE.Vector3();
+
+    if(wxStart >= wxEnd){
+      if(wzStart >= wzEnd){
+
+        for(var j=wxStart;j>=wxEnd;j-=t){
+          for(var k=wzStart;k>=wzEnd;k-=t){
+            for(var i in boundaries[j/t + 11][k/t + 11]){
+              calcVec.copy(start_Vec);
+              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
+              if(pt != null){
+                tmp_v.copy(pt.spot);
+                tmp_v.sub(start_Vec);
+                l = tmp_v.length();
+                if(l <= min_dist){
+                  min_dist = l;
+                  end_vec.copy(pt.spot);
+                }
+              }
+            }
+          }
+        }
+
+      }else{
+
+        for(var j=wxStart;j>=wxEnd;j-=t){
+          for(var k=wzStart;k<=wzEnd;k+=t){
+            for(var i in boundaries[j/t + 11][k/t + 11]){
+              calcVec.copy(start_Vec);
+              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
+              if(pt != null){
+                tmp_v.copy(pt.spot);
+                tmp_v.sub(start_Vec);
+                l = tmp_v.length();
+                if(l <= min_dist){
+                  min_dist = l;
+                  end_vec.copy(pt.spot);
+                }
+              }
+            
+            }
+          }
+        }
+
+      }
+    }else{
+      if(wzStart >= wzEnd){
+
+        for(var j=wxStart;j<=wxEnd;j+=t){
+          for(var k=wzStart;k>=wzEnd;k-=t){
+            for(var i in boundaries[j/t + 11][k/t + 11]){
+              calcVec.copy(start_Vec);
+              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
+              if(pt != null){
+                tmp_v.copy(pt.spot);
+                tmp_v.sub(start_Vec);
+                l = tmp_v.length();
+                if(l <= min_dist){
+                  min_dist = l;
+                  end_vec.copy(pt.spot);
+                }
+              }
+              
+            }
+          }
+        }
+
+      }else{
+
+        for(var j=wxStart;j<=wxEnd;j+=t){
+          for(var k=wzStart;k<=wzEnd;k+=t){
+            for(var i in boundaries[j/t + 11][k/t + 11]){
+              calcVec.copy(start_Vec);
+              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
+              if(pt != null){
+                tmp_v.copy(pt.spot);
+                tmp_v.sub(start_Vec);
+                l = tmp_v.length();
+                if(l <= min_dist){
+                  min_dist = l;
+                  end_vec.copy(pt.spot);
+                }
+              }
+               
+            }
+          }
+        }
+
+      }
+    }
+
+    var lineMat = new THREE.LineBasicMaterial({
+        color: 0x000000,
+        linewidth: 3,
+    });
+    var lineGeo = new THREE.Geometry();
+    lineGeo.vertices.push(start_Vec);
+    lineGeo.vertices.push(end_vec);
+
+    scene.add( new THREE.Line(lineGeo, lineMat));
+  }
+
   move(){
     if(!Controller)
       return
@@ -476,6 +661,10 @@ var cEntity = class {
     var diagS = s / Math.sqrt(2);
     this.position.y = isNaN(this.position.y) ? 0: this.position.y;
     var new_y = this.position.y;
+
+    if(mouseDown){
+      this.shoot();
+    }
 
     if(Controller.keyIsDown[32] && this.grounded){
       var d = new Date();
@@ -694,7 +883,7 @@ var cEntity = class {
     //only or all in ground if on HORIZON
     //if(!ground[0].above(this.position) || !ground[1].above(this.position)) console.log('underground')
 
-    var wxMax,wxMin,wzMax,wzMin,tiles = [],t = 2*sqThick,a,b
+    var wxMax,wxMin,wzMax,wzMin,t = 2*sqThick
 
     wxMax = Math.max(present.x,future.x)
     wxMin = Math.min(present.x,future.x)
@@ -705,22 +894,17 @@ var cEntity = class {
     wzMax = (wzMax - wzMax % t) + t
     wzMin = (wzMin - wzMin % t) - t
 
-    for(var j=wxMin;j<=wxMax;j+=t)
-      for(var k = wzMin;k<wzMax;k+=t)
-        tiles.push(boundaries[j/t + 11][k/t + 11]);
-        //maybe just examine here instead of loop again
-
-    for(t in tiles){
-      for(var i in tiles[t]){
-        if( tiles[t][i].collides(present, future)){
-          //later will want to subtract the 'bad' part of the vector so that the 
-          //user may 'slide' along the wall
-          return present;
+    for(var j=wxMin;j<=wxMax;j+=t){
+      for(var k = wzMin;k<wzMax;k+=t){
+        for(var i in boundaries[j/t + 11][k/t + 11]){
+          if( boundaries[j/t + 11][k/t + 11][i].collides(present, future)){
+            //later will want to subtract the 'bad' part of the vector so that the 
+            //user may 'slide' along the wall
+            return present;
+          }
         }
       }
     }
-    //lol check for the ground too
-
 
     return future
    }

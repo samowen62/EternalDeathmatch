@@ -26,7 +26,7 @@ function init() {
 
   // Grid
 
-  var size = 2000, step = 200, cw;
+  var size = MAX_MAP_WIDTH, step = 200, cw;
   scene.add(testSphere);
 
   var wallLength = 140,wxMax,wxMin,wzMax,wzMin

@@ -24,3 +24,9 @@ for(var i in keys){
       function () {})
 }
 
+document.body.onmousedown = function() { 
+  ++mouseDown;
+}
+document.body.onmouseup = function() {
+  --mouseDown;
+}
