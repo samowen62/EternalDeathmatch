@@ -11,6 +11,7 @@ gulp.task('scripts', function() {
     gulp.src(["js/three.min.js",
       "js/renderers/Projector.js",
       "js/libs/stats.min.js",
+     // "js/howler.js",
       "user/defs.js",
       "user/objects.js",
       "user/controls.js",

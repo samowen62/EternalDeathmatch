@@ -297,6 +297,9 @@ function animate() {
 }
 
 function render() {
+  if(shots)
+    shots.update();
+
     if(true){//for when the player is dead etc.
 
       character.act();

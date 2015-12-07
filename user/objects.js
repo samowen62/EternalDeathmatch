@@ -466,6 +466,46 @@ var ceiling = class {
 
 };
 
+var projectile_singleton = class {
+  constructor(){
+    this.bullets = [];
+
+  }
+
+  add(line, color, duration){
+    //in this function check the entity list for hits
+    var lineGeo = new THREE.Geometry();
+        lineGeo.vertices.push(line[0]);
+        lineGeo.vertices.push(line[1]);
+
+    var lineMat = new THREE.LineBasicMaterial({
+        color: color,
+        linewidth: 3,
+    });
+
+
+    var rend_line = new THREE.Line(lineGeo, lineMat);
+
+    scene.add( rend_line);
+
+    this.bullets.push({
+      'line' : rend_line,
+      'time_left' : duration
+    });
+  }
+
+  update(){
+    for(var b in this.bullets){
+      this.bullets[b]['time_left']--;
+      if(this.bullets[b]['time_left'] == 0){
+        scene.remove(this.bullets[b]['line']);  
+        this.bullets.splice(b, 1);
+      }
+    }
+  }
+}
+
+var shots = new projectile_singleton();
 
 var cEntity = class {
 
@@ -485,6 +525,10 @@ var cEntity = class {
     this.air_o = 0;
     this.air_v =  0;
     this.start_t = -1;
+
+    //to stop from firing too fast
+    this.last_shot = new Date().getTime();
+
   }
 
   act(){
@@ -505,6 +549,15 @@ var cEntity = class {
   }
 
   shoot(){
+    var curr_time = new Date().getTime();
+    if(curr_time - this.last_shot < 800){
+      return;
+    }else{
+      this.last_shot = curr_time;
+    }
+
+    effects['shotgun'].play();
+
     calcVec.addVectors(this.position, this.thickness);
     var end_vec = new THREE.Vector3();
     end_vec.copy(pointed);
@@ -642,15 +695,8 @@ var cEntity = class {
       }
     }
 
-    var lineMat = new THREE.LineBasicMaterial({
-        color: 0x000000,
-        linewidth: 3,
-    });
-    var lineGeo = new THREE.Geometry();
-    lineGeo.vertices.push(start_Vec);
-    lineGeo.vertices.push(end_vec);
+    shots.add([start_Vec, end_vec], 0xff0000, 8);
 
-    scene.add( new THREE.Line(lineGeo, lineMat));
   }
 
   move(){

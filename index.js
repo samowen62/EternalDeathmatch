@@ -26,6 +26,11 @@ app.get('/images/*', function(req, res){
   res.sendfile( __dirname + req.originalUrl);
 });
 
+app.get('/sounds/*', function(req, res){
+  console.log( __dirname + req.originalUrl)
+  res.sendfile( __dirname + req.originalUrl);
+});
+
 app.get('/app.js', function(req, res){
   res.sendfile('assets/js/dest.js');
 });

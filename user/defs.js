@@ -45,3 +45,7 @@ for(var i = 0; i < sqSize; i ++)
 		boundaries[i].push([])
 
 var ground = [],ceil = [], ramps = [], sprite;
+
+var effects = {
+	'shotgun' : document.getElementById('audiotag1')
+}
