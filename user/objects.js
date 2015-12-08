@@ -549,13 +549,14 @@ var cEntity = class {
   }
 
   shoot(){
+
     var curr_time = new Date().getTime();
-    if(curr_time - this.last_shot < 800){
+    if(curr_time - this.last_shot < 1500){
       return;
     }else{
       this.last_shot = curr_time;
     }
-
+  
     effects['shotgun'].play();
 
     calcVec.addVectors(this.position, this.thickness);
@@ -710,6 +711,7 @@ var cEntity = class {
 
     if(mouseDown){
       this.shoot();
+      mouseDown = 0;
     }
 
     if(Controller.keyIsDown[32] && this.grounded){

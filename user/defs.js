@@ -47,5 +47,10 @@ for(var i = 0; i < sqSize; i ++)
 var ground = [],ceil = [], ramps = [], sprite;
 
 var effects = {
-	'shotgun' : document.getElementById('audiotag1')
+	'die' : document.getElementById('audiotag1'),
+	'damage' : document.getElementById('doom-damage'),
+	'death' : document.getElementById('doom-death'),
+	'pistol' : document.getElementById('doom-pistol'),
+	'roar' : document.getElementById('doom-roar'),
+	'shotgun' : document.getElementById('doom-shotgun')
 }

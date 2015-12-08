@@ -1795,7 +1795,12 @@ for(var i = 0; i < sqSize; i ++)
 var ground = [],ceil = [], ramps = [], sprite;
 
 var effects = {
-	'shotgun' : document.getElementById('audiotag1')
+	'die' : document.getElementById('audiotag1'),
+	'damage' : document.getElementById('doom-damage'),
+	'death' : document.getElementById('doom-death'),
+	'pistol' : document.getElementById('doom-pistol'),
+	'roar' : document.getElementById('doom-roar'),
+	'shotgun' : document.getElementById('doom-shotgun')
 }
 
 var Controller = {
@@ -2349,13 +2354,14 @@ var cEntity = class {
   }
 
   shoot(){
+
     var curr_time = new Date().getTime();
-    if(curr_time - this.last_shot < 800){
+    if(curr_time - this.last_shot < 1500){
       return;
     }else{
       this.last_shot = curr_time;
     }
-
+  
     effects['shotgun'].play();
 
     calcVec.addVectors(this.position, this.thickness);
@@ -2510,6 +2516,7 @@ var cEntity = class {
 
     if(mouseDown){
       this.shoot();
+      mouseDown = 0;
     }
 
     if(Controller.keyIsDown[32] && this.grounded){
@@ -2768,9 +2775,11 @@ function onWindowResize() {
 }
 
 $("body").mousemove(function(e) {
-  //logic could go here
   character.aim(e)
+});
 
+$("body").click(function(e){
+  mouseDown = 1;
 });
 
 var character = new cEntity(new THREE.Vector3(45,45,45));
@@ -2782,12 +2791,6 @@ for(var i in keys){
       function () {})
 }
 
-document.body.onmousedown = function() { 
-  ++mouseDown;
-}
-document.body.onmouseup = function() {
-  --mouseDown;
-}
 
 var geometry = new THREE.SphereGeometry( 75, 32, 32 ); 
 var material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );

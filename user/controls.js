@@ -10,9 +10,11 @@ function onWindowResize() {
 }
 
 $("body").mousemove(function(e) {
-  //logic could go here
   character.aim(e)
+});
 
+$("body").click(function(e){
+  mouseDown = 1;
 });
 
 var character = new cEntity(new THREE.Vector3(45,45,45));
@@ -24,9 +26,3 @@ for(var i in keys){
       function () {})
 }
 
-document.body.onmousedown = function() { 
-  ++mouseDown;
-}
-document.body.onmouseup = function() {
-  --mouseDown;
-}
