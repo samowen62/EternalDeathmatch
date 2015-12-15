@@ -1804,32 +1804,75 @@ var effects = {
 }
 
 var Controller = {
-    keyIsDown: [],
+  keyIsDown: [],
     
-    add: function (key, down, up) {
-        $(document).keydown(function(e) {
-            if(e.keyCode === key && !Controller.keyIsDown[key]) {
-                    down()
-                Controller.keyIsDown[key] = true
-                return false
-            }
-        })
+  add: function (key, down, up) {
+    $(document).keydown(function(e) {
+      if(e.keyCode === key && !Controller.keyIsDown[key]) {
+        down();
+        Controller.keyIsDown[key] = true;
+        return false;
+      }
+    })
 
-        $(document).keyup(function(e) {
-            if(e.keyCode === key) {
-                if(up) up()
-                Controller.keyIsDown[key] = false
-                return false
-            }
-        })
-    },
+    $(document).keyup(function(e) {
+      if(e.keyCode === key) {
+        if(up) up();
+        Controller.keyIsDown[key] = false;
+        return false;
+      };
+    });
+  }
 }
 
 var calcVec = new THREE.Vector3(),
     calcVec2 = new THREE.Vector3(),
     tmpPos = new THREE.Vector3();
 
-var collisionWall = class {
+var collisionWall = function (upperLeft, lowerRight) {
+  var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
+  var ly = lowerRight.y;
+
+  tmp1.addVectors(upperLeft, lowerRight).multiplyScalar(0.5);
+  this.center = tmp1;
+
+  tmp2.subVectors(upperLeft, lowerRight);
+  this.halfHeight = (upperLeft.y - ly) / 2;
+  lowerRight.y = upperLeft.y;
+  tmp3.subVectors(upperLeft, lowerRight);
+  tmp3.crossVectors(tmp2, tmp3);
+  tmp3.normalize();
+
+  this.normal = tmp3;
+  this.next = null,this.prev = null;
+  
+
+  lowerRight.y = ly,
+  this.verts = {ul : upperLeft, lr : lowerRight},
+  this.verts.ll = new THREE.Vector3(upperLeft.x, ly, upperLeft.z),
+  this.verts.ur = new THREE.Vector3(lowerRight.x, upperLeft.y, lowerRight.z);
+
+  if(this.verts.ul.x > this.verts.lr.x){
+    this.max_x = this.verts.ul.x;
+    this.min_x = this.verts.lr.x;
+  }else{
+    this.min_x = this.verts.ul.x;
+    this.max_x = this.verts.lr.x;
+  }
+
+  if(this.verts.ul.z > this.verts.lr.z){
+    this.max_z = this.verts.ul.z;
+    this.min_z = this.verts.lr.z;
+  }else{
+    this.min_z = this.verts.ul.z;
+    this.max_z = this.verts.lr.z;
+  }
+
+  this.normal_ul = new THREE.Vector3(tmp3.z,0,-tmp3.x);
+  this.normal_lr = new THREE.Vector3(-tmp3.z,0,tmp3.x);
+}
+
+collisionWall.prototype = {
 
   /*
    * looking at normal this is upper left and lower right
@@ -1837,50 +1880,9 @@ var collisionWall = class {
    *
    * this will create a vertical collision wall
    */
-  constructor(upperLeft, lowerRight) {
-  	var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
-    var ly = lowerRight.y
+  constructor: collisionWall,
 
-    tmp1.addVectors(upperLeft, lowerRight).multiplyScalar(0.5)
-    this.center = tmp1
-
-    tmp2.subVectors(upperLeft, lowerRight);
-    this.halfHeight = (upperLeft.y - ly) / 2;
-    lowerRight.y = upperLeft.y;
-    tmp3.subVectors(upperLeft, lowerRight);
-    tmp3.crossVectors(tmp2, tmp3);
-    tmp3.normalize();
-
-    this.normal = tmp3
-    this.next = null,this.prev = null
-    
-
-    lowerRight.y = ly,
-    this.verts = {ul : upperLeft, lr : lowerRight},
-    this.verts.ll = new THREE.Vector3(upperLeft.x, ly, upperLeft.z),
-    this.verts.ur = new THREE.Vector3(lowerRight.x, upperLeft.y, lowerRight.z);
-
-    if(this.verts.ul.x > this.verts.lr.x){
-      this.max_x = this.verts.ul.x;
-      this.min_x = this.verts.lr.x;
-    }else{
-      this.min_x = this.verts.ul.x;
-      this.max_x = this.verts.lr.x;
-    }
-
-    if(this.verts.ul.z > this.verts.lr.z){
-      this.max_z = this.verts.ul.z;
-      this.min_z = this.verts.lr.z;
-    }else{
-      this.min_z = this.verts.ul.z;
-      this.max_z = this.verts.lr.z;
-    }
-
-    this.normal_ul = new THREE.Vector3(tmp3.z,0,-tmp3.x);
-    this.normal_lr = new THREE.Vector3(-tmp3.z,0,tmp3.x);
-  }
-
-  render(mat){
+  render: function (mat){
     var geometry = new THREE.Geometry();
 
     geometry.vertices.push( new THREE.Vector3( this.verts.ul.x,  this.verts.ul.y, this.verts.ul.z ) );
@@ -1907,14 +1909,14 @@ var collisionWall = class {
 
 
     return [new THREE.Mesh(geometry, mat), new THREE.Line(lineGeo, lineMat)];
-  }
+  },
 
   /*
    * adds collision wall to the necessary locations in the array of boundaries
    *
    * arr: 3d boundary array
    */
-  addTo(arr){
+  addTo: function (arr){
     var t = 2*sqThick,
     wxMax = Math.max(this.verts.ul.x,this.verts.lr.x),
     wxMin = Math.min(this.verts.ul.x,this.verts.lr.x),
@@ -1928,21 +1930,21 @@ var collisionWall = class {
     for(var j=wxMin;j<=wxMax;j+=t)
       for(var k = wzMin;k<wzMax;k+=t)
         boundaries[j/t + 11][k/t + 11].push(this);
-  }
+  },
 
   /*
 	 * returns positive values if 'inside' (side normal points to),
 	 * negative values if on the outside, and 0 if point is inline
 	 * with this boundary wall that extends to infinity in y
    */
-  whichSideAbsolute(point){
-  	calcVec.subVectors(point,this.center)
+  whichSideAbsolute: function (point){
+  	calcVec.subVectors(point,this.center);
   	return calcVec.dot(this.normal);// > 0 ? 'inside' : 'outside';
-  }
+  },
 
   //will return 0 if the point is above or below the wall
-  whichSide(point){
-    calcVec.subVectors(point,this.center)
+  whichSide: function (point){
+    calcVec.subVectors(point,this.center);
     //look at this line closer later
     
       //the real player center is on the ground so the equals sign is necessary on
@@ -1951,24 +1953,24 @@ var collisionWall = class {
         return 0;
       }
     return calcVec.dot(this.normal);// > 0 ? 'inside' : 'outside';
-  }
+  },
 
   /*
    * Sees if either of the two vectors are even in a position within the edges
    *
    * returns true if there is a collision
    */
-  inScope(a,b){
+  inScope: function (a,b){
     var c,d;
     calcVec.subVectors(a,this.verts.ul);
     c = calcVec.dot(this.normal_ul) > 0;
     calcVec.subVectors(a,this.verts.lr);
     d = calcVec.dot(this.normal_lr) > 0;
     return c && d;
-  }
+  },
 
   //check bookmark and try alt implementation of collision
-  collides(pres, fut){
+  collides: function (pres, fut){
     var a = this.whichSide(pres) > 0,
     b = this.whichSide(fut) > 0;
 
@@ -1978,9 +1980,9 @@ var collisionWall = class {
     }
 
     return false;
-  }
+  },
 
-  rayDetect(start, pointer){
+  rayDetect: function (start, pointer){
     var tmp = new THREE.Vector3();
     tmp.subVectors(this.center, start);
     var num = tmp.dot(this.normal),
@@ -1993,14 +1995,10 @@ var collisionWall = class {
       ray.multiplyScalar(dist);
       start.add(ray);
 
-      //this needs modification. It doesn't respect the boxes bounds (it's the y only I think)
       if(Math.abs(start.y - this.center.y) < this.halfHeight){
-//      if(!(start.y > this.center.y + start.halfHeight || start.y < this.center.y - this.halfHeight )){
         if(!(start.x > this.max_x || start.x < this.min_x)){
-          if(!(start.z > this.max_z || start.z < this.min_z)){
-
-            
-            return ({cw : this, spot: start});
+          if(!(start.z > this.max_z || start.z < this.min_z)){            
+            return ({cw : this, spot: start, len: Math.abs(dist)});
           }
         }
       }
@@ -2013,62 +2011,64 @@ var collisionWall = class {
 };
 
 //points in clockwise directions
-var platform = class {
+var platform = function(points) {
+  this.points = points;
+
+  //the following for generalized triangles
+  if(points.length != 3)
+    return;
+  this.flat = (points[0].y == points[1].y) && (points[1].y == points[2].y);
+  this.v0 = new THREE.Vector3(points[1].x - points[0].x,points[1].y - points[0].y,points[1].z - points[0].z);
+  this.v1 = new THREE.Vector3(points[2].x - points[0].x,points[2].y - points[0].y,points[2].z - points[0].z);
+  this.d00 = this.v0.dot(this.v0);
+  this.d01 = this.v1.dot(this.v0);
+  this.d11 = this.v1.dot(this.v1);
+  this.den = this.d00 * this.d11 - this.d01 * this.d01;
+  if(this.den == 0)
+    this.den = 1;//invalid
+
+
+  var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
+
+  tmp1.subVectors(points[0], points[1])
+  tmp2.subVectors(points[0], points[2])
+  tmp3.crossVectors(tmp2, tmp1)
+  tmp3.normalize()
+
+  if(tmp3.y < 0) tmp3.multiplyScalar(-1.0)
+
+  this.normal = tmp3, this.d = points[0].dot(tmp3)
+}
+
+platform.prototype = {
   
-  constructor(points) {
-    this.points = points;
+  constructor: platform,
 
-    //the following for generalized triangles
-    if(points.length != 3)
-      return;
-    this.flat = (points[0].y == points[1].y) && (points[1].y == points[2].y);
-    this.v0 = new THREE.Vector3(points[1].x - points[0].x,points[1].y - points[0].y,points[1].z - points[0].z);
-    this.v1 = new THREE.Vector3(points[2].x - points[0].x,points[2].y - points[0].y,points[2].z - points[0].z);
-    this.d00 = this.v0.dot(this.v0);
-    this.d01 = this.v1.dot(this.v0);
-    this.d11 = this.v1.dot(this.v1);
-    this.den = this.d00 * this.d11 - this.d01 * this.d01;
-    if(this.den == 0)
-      this.den = 1;//invalid
-  
-
-    var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
-
-    tmp1.subVectors(points[0], points[1])
-    tmp2.subVectors(points[0], points[2])
-    tmp3.crossVectors(tmp2, tmp1)
-    tmp3.normalize()
-
-    if(tmp3.y < 0) tmp3.multiplyScalar(-1.0)
-
-    this.normal = tmp3, this.d = points[0].dot(tmp3)
-  }
-
-  sign (p1,p2,p3)
+  sign: function (p1,p2,p3)
   {
     return ((p1.x - p3.x) * (p2.z - p3.z)) - ((p2.x - p3.x) * (p1.z - p3.z));
-  }
+  },
 
   //WONT WORK FOR SLANTED HILL PLATFORMS SINCE THE PLANE TAKES UP THE ENTIRE ENVIREONMENT
   //SO ONLY LOOK AT IT IF THE USER IS OVER IT
   //false if underneath
-  above(point){
+  above: function (point){
     return point.dot(this.normal) >= this.d;
-  }
+  },
 
   /*
    * Checks if we are even within the x/z triangle in question
    */
-  over(point){
+  over: function (point){
     var pt = {x : point.x, z: point.z},
         b1 = this.sign(point, this.points[0], this.points[1]) < 0,
         b2 = this.sign(point, this.points[1], this.points[2]) < 0,
         b3 = this.sign(point, this.points[2], this.points[0]) < 0;
 
     return ((b1 == b2) && (b2 == b3));
-  }
+  },
 
-  render(){
+  render: function (){
     var geometry = new THREE.Geometry();
 
     geometry.vertices.push( this.points[0]);
@@ -2082,9 +2082,9 @@ var platform = class {
     geometry.computeVertexNormals();
 
     return geometry;
-  }
+  },
 
-  baryCoords(pos){
+  baryCoords: function (pos){
     var v2 = new THREE.Vector3(0,0,0);
     v2.subVectors(pos,this.points[0]);
 
@@ -2097,72 +2097,98 @@ var platform = class {
 
     return u * this.points[0].y + v * this.points[1].y;
 
-  }
+  },
 
-  yAt(pos){
+  yAt: function (pos){
     return this.points[0].y;
+  },
+
+  rayDetect: function (start, pointer){
+    var tmp = new THREE.Vector3();
+    tmp.subVectors(this.points[0], start);
+    var num = tmp.dot(this.normal),
+        den = pointer.dot(this.normal);
+
+    if(den != 0){
+      var dist = num / den;
+      //console.log(dist);
+      if(dist < 0)
+        return null;
+
+      var ray = new THREE.Vector3();
+      ray.copy(pointer);
+      ray.multiplyScalar(dist);
+      start.add(ray);
+
+      if(this.over(start)){
+        return ({cw : this, spot: start, len: dist});
+      }      
+    }
+
+    return null;
   }
 
 };
 
-//var points = [new THREE.Vector3(2,10,4), new THREE.Vector3(5,10,0), new THREE.Vector3(1,0,-3), new THREE.Vector3(-2,0,1)]
-//like collision wall but up is in x/y plane and walkable
-var ramp = class {
+
+var ramp = function(points) {
+  if(points.length != 4)
+    return;
+  if(points[0].y != points[1].y || points[2].y != points[3].y)
+    return;
+  this.points = points;
+
+  var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
+
+  //used for determining if a point is inside the range
+  tmp1.subVectors(points[1], points[0]);
+  this.AB = new THREE.Vector2(tmp1.x, tmp1.z);
+  this.AB_Sqared = this.AB.dot(this.AB);
+  tmp1.subVectors(points[3], points[0]);
+  this.AD = new THREE.Vector2(tmp1.x, tmp1.z);
+  this.AD_Sqared = this.AD.dot(this.AD);
+
+  tmp1.subVectors(points[0], points[1]);
+  tmp2.subVectors(points[0], points[2]);
+  tmp3.crossVectors(tmp2, tmp1);
+  tmp3.normalize();
+  if(tmp3.y < 0) tmp3.multiplyScalar(-1.0);
+  this.normal = tmp3, this.d = points[0].dot(tmp3);
+
+  tmp1.addVectors(points[0],points[1]);
+  tmp2.addVectors(points[2], points[3]);
+  tmp1.add(tmp2);
+  tmp1.multiplyScalar(0.25);
+  this.center = tmp1;//average of all points
+
+  //assume first two points are lowest? for now
+  tmp1 = new THREE.Vector3((points[2].x+points[3].x)*0.5 - this.center.x,points[2].y - this.center.y,(points[2].z+points[3].z)*0.5 - this.center.z)
+  tmp1.normalize();
+  this.down_ramp = tmp1;
+  this.side_ramp = new THREE.Vector3(-this.down_ramp.z, 0,this.down_ramp.x);//90 deg ccw (+90)
+  //down/side and normal make ortho basis for this ramp
+
+  this.len_across = Math.pow(points[0].x-points[1].x,2)+Math.pow(points[0].z-points[1].z,2);
+  this.len_down = Math.pow(points[0].x-points[3].x,2)+Math.pow(points[0].z-points[3].z,2);
+
+}
+
+ramp.prototype = {
   /*
    * input in clockwise order
    * first and last two should have same y coordinate
   */
-  constructor(points) {
-    if(points.length != 4)
-      return;
-    if(points[0].y != points[1].y || points[2].y != points[3].y)
-      return;
-    this.points = points;
+  constructor: ramp,
 
-    var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
-
-    //used for determining if a point is inside the range
-    tmp1.subVectors(points[1], points[0]);
-    this.AB = new THREE.Vector2(tmp1.x, tmp1.z);
-    this.AB_Sqared = this.AB.dot(this.AB);
-    tmp1.subVectors(points[3], points[0]);
-    this.AD = new THREE.Vector2(tmp1.x, tmp1.z);
-    this.AD_Sqared = this.AD.dot(this.AD);
-
-    tmp1.subVectors(points[0], points[1]);
-    tmp2.subVectors(points[0], points[2]);
-    tmp3.crossVectors(tmp2, tmp1);
-    tmp3.normalize();
-    if(tmp3.y < 0) tmp3.multiplyScalar(-1.0);
-    this.normal = tmp3, this.d = points[0].dot(tmp3);
-
-    tmp1.addVectors(points[0],points[1]);
-    tmp2.addVectors(points[2], points[3]);
-    tmp1.add(tmp2);
-    tmp1.multiplyScalar(0.25);
-    this.center = tmp1;//average of all points
-
-    //assume first two points are lowest? for now
-    tmp1 = new THREE.Vector3((points[2].x+points[3].x)*0.5 - this.center.x,points[2].y - this.center.y,(points[2].z+points[3].z)*0.5 - this.center.z)
-    tmp1.normalize();
-    this.down_ramp = tmp1;
-    this.side_ramp = new THREE.Vector3(-this.down_ramp.z, 0,this.down_ramp.x);//90 deg ccw (+90)
-    //down/side and normal make ortho basis for this ramp
-
-    this.len_across = Math.pow(points[0].x-points[1].x,2)+Math.pow(points[0].z-points[1].z,2);
-    this.len_down = Math.pow(points[0].x-points[3].x,2)+Math.pow(points[0].z-points[3].z,2);
-  
-  }
-
-  above(point){
+  above: function (point){
     return point.dot(this.normal) >= this.d;
-  }
+  },
 
   /*
    * Checks if we are even within the x/z triangle in question
    * and returns appropriate y
    */
-  over(point){
+  over: function (point){
     var AM = new THREE.Vector2(point.x - this.points[0].x, point.z - this.points[0].z),
         AMdAB = AM.dot(this.AB),
         AMdAD = AM.dot(this.AD);
@@ -2174,9 +2200,9 @@ var ramp = class {
     //}
     return ret;
   
-  }
+  },
 
-  render(){
+  render: function (){
     var geometry = new THREE.Geometry();
 
     geometry.vertices.push( this.points[0]);
@@ -2191,9 +2217,9 @@ var ramp = class {
     geometry.computeVertexNormals();
 
     return geometry;
-  }
+  },
 
-  yAt(pos){
+  yAt: function (pos){
     var tmp2Vec = new THREE.Vector3();
     tmp2Vec.subVectors(pos, this.center);
 
@@ -2201,56 +2227,63 @@ var ramp = class {
         p_side = tmp2Vec.dot(this.side_ramp);//component sideways
 
     return this.center.y + p_down * this.down_ramp.y + 3;
+  },
+
+  /*
+   *  I'm just skipping this since it doesn't matter
+   */
+  rayDetect: function () {
+    return null;
   }
 
 };
 
+var ceiling = function(points) {
+  this.points = points;
 
+  //the following for generalized triangles
+  if(points.length != 3)
+    return;
 
-var ceiling = class {
+  var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
+
+  tmp1.subVectors(points[0], points[1]);
+  tmp2.subVectors(points[0], points[2]);
+  tmp3.crossVectors(tmp2, tmp1);
+  tmp3.normalize();
+
+  //normal is down not up
+  if(tmp3.y > 0) tmp3.multiplyScalar(-1.0);
+
+  this.normal = tmp3, this.d = points[0].dot(tmp3);
+}
+
+ceiling.prototype = {
   
-  constructor(points) {
-    this.points = points;
+  constructor: ceiling,
 
-    //the following for generalized triangles
-    if(points.length != 3)
-      return;
-
-    var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
-
-    tmp1.subVectors(points[0], points[1])
-    tmp2.subVectors(points[0], points[2])
-    tmp3.crossVectors(tmp2, tmp1)
-    tmp3.normalize()
-
-    //normal is down not up
-    if(tmp3.y > 0) tmp3.multiplyScalar(-1.0)
-
-    this.normal = tmp3, this.d = points[0].dot(tmp3)
-  }
-
-  sign (p1,p2,p3)
+  sign: function (p1,p2,p3)
   {
     return ((p1.x - p3.x) * (p2.z - p3.z)) - ((p2.x - p3.x) * (p1.z - p3.z));
-  }
+  },
 
   //true if below
-  below(point){
+  below: function (point){
     return point.dot(this.normal) > this.d;
-  }
+  },
 
   /*
    * Checks if we are even within the x/z triangle in question
    */
-  over(point){
+  over: function (point){
     var pt = {x : point.x, z: point.z},
         b1 = this.sign(point, this.points[0], this.points[1]) < 0,
         b2 = this.sign(point, this.points[1], this.points[2]) < 0,
         b3 = this.sign(point, this.points[2], this.points[0]) < 0;
     return ((b1 == b2) && (b2 == b3));
-  }
+  },
 
-  render(){
+  render: function (){
     var geometry = new THREE.Geometry();
 
     geometry.vertices.push( this.points[0]);
@@ -2263,21 +2296,22 @@ var ceiling = class {
     geometry.computeVertexNormals();
 
     return geometry;
-  }
+  },
 
-  yAt(pos){
+  yAt: function (pos){
     return this.points[0].y;
   }
 
 };
 
-var projectile_singleton = class {
-  constructor(){
-    this.bullets = [];
+var projectile_singleton = function(){
+  this.bullets = [];
+}
 
-  }
+projectile_singleton.prototype = {
+  constructor: projectile_singleton,
 
-  add(line, color, duration){
+  add: function (line, color, duration){
     //in this function check the entity list for hits
     var lineGeo = new THREE.Geometry();
         lineGeo.vertices.push(line[0]);
@@ -2297,9 +2331,9 @@ var projectile_singleton = class {
       'line' : rend_line,
       'time_left' : duration
     });
-  }
+  },
 
-  update(){
+  update: function (){
     for(var b in this.bullets){
       this.bullets[b]['time_left']--;
       if(this.bullets[b]['time_left'] == 0){
@@ -2312,35 +2346,37 @@ var projectile_singleton = class {
 
 var shots = new projectile_singleton();
 
-var cEntity = class {
+var cEntity = function(pos){
+  //should only have y component for testing ceiling collision
+  this.thickness = new THREE.Vector3(0,45,0);
+  pos.y = this.thickness.y + 5;
+  this.position = pos;
 
-  constructor(pos) {
-    //should only have y component for testing ceiling collision
-    this.thickness = new THREE.Vector3(0,45,0);
-    pos.y = this.thickness.y + 5;
-    this.position = pos;
+  this.stepFoot = BASE_STEP_FOOT;
+  this.speed = BASE_SPEED;
 
-    this.stepFoot = BASE_STEP_FOOT;
-    this.speed = BASE_SPEED;
+  //have to insert in mid-air?
+  this.grounded = false;
+  this.jumping = false;
 
-    //have to insert in mid-air?
-    this.grounded = false;
-    this.jumping = false;
+  this.air_o = 0;
+  this.air_v =  0;
+  this.start_t = -1;
 
-    this.air_o = 0;
-    this.air_v =  0;
-    this.start_t = -1;
+  //to stop from firing too fast
+  this.last_shot = new Date().getTime();
 
-    //to stop from firing too fast
-    this.last_shot = new Date().getTime();
+}
 
-  }
+cEntity.prototype = {
 
-  act(){
+  constructor: cEntity,
+
+  act: function (){
     this.move();
-  }
+  },
   
-  aim(event){
+  aim: function (event){
     var angleX = mouseSensitivity * (centX - event.clientX) / winWidth;
     var angleY = mouseSensitivity * (event.clientY - centY) / winHeight;
 
@@ -2351,9 +2387,9 @@ var cEntity = class {
     pointed.applyAxisAngle (left,angleY);
     camera.lookAt(tmpVec.addVectors(camera.position, pointed));
     lastMouse = [event.clientX, event.clientY];
-  }
+  },
 
-  shoot(){
+  shoot: function (){
 
     var curr_time = new Date().getTime();
     if(curr_time - this.last_shot < 1500){
@@ -2410,7 +2446,7 @@ var cEntity = class {
      *  the unpredictable three.js library forced me to add ugly, odd looking code I feel
      *  ashamed as a programmer for writing.
      */
-    var pt, l, min_dist = MAX_MAP_WIDTH, min_wall = null, tmp_v = new THREE.Vector3();
+    var pt, min_dist = MAX_MAP_WIDTH, min_wall = null, tmp_v = new THREE.Vector3();
 
     if(wxStart >= wxEnd){
       if(wzStart >= wzEnd){
@@ -2421,11 +2457,8 @@ var cEntity = class {
               calcVec.copy(start_Vec);
               pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
               if(pt != null){
-                tmp_v.copy(pt.spot);
-                tmp_v.sub(start_Vec);
-                l = tmp_v.length();
-                if(l <= min_dist){
-                  min_dist = l;
+                if(pt.len <= min_dist){
+                  min_dist = pt.len;
                   end_vec.copy(pt.spot);
                 }
               }
@@ -2441,11 +2474,8 @@ var cEntity = class {
               calcVec.copy(start_Vec);
               pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
               if(pt != null){
-                tmp_v.copy(pt.spot);
-                tmp_v.sub(start_Vec);
-                l = tmp_v.length();
-                if(l <= min_dist){
-                  min_dist = l;
+                if(pt.len <= min_dist){
+                  min_dist = pt.len;
                   end_vec.copy(pt.spot);
                 }
               }
@@ -2464,11 +2494,8 @@ var cEntity = class {
               calcVec.copy(start_Vec);
               pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
               if(pt != null){
-                tmp_v.copy(pt.spot);
-                tmp_v.sub(start_Vec);
-                l = tmp_v.length();
-                if(l <= min_dist){
-                  min_dist = l;
+                if(pt.len <= min_dist){
+                  min_dist = pt.len;
                   end_vec.copy(pt.spot);
                 }
               }
@@ -2485,11 +2512,8 @@ var cEntity = class {
               calcVec.copy(start_Vec);
               pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
               if(pt != null){
-                tmp_v.copy(pt.spot);
-                tmp_v.sub(start_Vec);
-                l = tmp_v.length();
-                if(l <= min_dist){
-                  min_dist = l;
+                if(pt.len <= min_dist){
+                  min_dist = pt.len;
                   end_vec.copy(pt.spot);
                 }
               }
@@ -2501,11 +2525,23 @@ var cEntity = class {
       }
     }
 
+    //check the ground too, but not ceilings
+    for(var g in ground){
+      calcVec.copy(start_Vec);
+      pt = ground[g].rayDetect(calcVec, pointed);
+      if(pt != null){
+        if(pt.len <= min_dist){
+          min_dist = pt.len;
+          end_vec.copy(pt.spot);
+        }
+      }
+    }
+
     shots.add([start_Vec, end_vec], 0xff0000, 8);
 
-  }
+  },
 
-  move(){
+  move: function (){
     if(!Controller)
       return
 
@@ -2521,7 +2557,7 @@ var cEntity = class {
 
     if(Controller.keyIsDown[32] && this.grounded){
       var d = new Date();
-      console.log('jumping')
+      console.log('jumping');
       this.jumping = true;
       this.grounded = false;
       this.ground = null; //redundant
@@ -2693,59 +2729,26 @@ var cEntity = class {
         camera.translateY(10);
     }
     
-
-
-    //only if move() is called
-    if(Controller.keyIsDown[89]){ //y
-      if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
-          if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen();
-          } else if (document.documentElement.msRequestFullscreen) {
-            document.documentElement.msRequestFullscreen();
-          } else if (document.documentElement.mozRequestFullScreen) {
-            document.documentElement.mozRequestFullScreen();
-          } else if (document.documentElement.webkitRequestFullscreen) {
-            document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-          }
-        } else {
-          if (document.exitFullscreen) {
-            document.exitFullscreen();
-          } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-          } else if (document.mozCancelFullScreen) {
-            document.mozCancelFullScreen();
-          } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-          }
-        }
-      }
-    
-    //if grounded look at the platform we are over in the future and calculate the y value
     tmpVec.y = new_y;
     tmpVec.copy(this.detectCol(tmpPos,tmpVec));
 
-
     this.position.copy(tmpVec);
-  }
+  },
 
-  detectCol(present,future){
+  detectCol: function (present,future){
     if (present.equals(future))
-      return present
+      return present;
 
-    //must detect ground clipping here
-    //only or all in ground if on HORIZON
-    //if(!ground[0].above(this.position) || !ground[1].above(this.position)) console.log('underground')
+    var wxMax,wxMin,wzMax,wzMin,t = 2*sqThick;
 
-    var wxMax,wxMin,wzMax,wzMin,t = 2*sqThick
-
-    wxMax = Math.max(present.x,future.x)
-    wxMin = Math.min(present.x,future.x)
-    wzMax = Math.max(present.z,future.z)
-    wzMin = Math.min(present.z,future.z)
-    wxMax = (wxMax - wxMax % t) + t
-    wxMin = (wxMin - wxMin % t) - t
-    wzMax = (wzMax - wzMax % t) + t
-    wzMin = (wzMin - wzMin % t) - t
+    wxMax = Math.max(present.x,future.x);
+    wxMin = Math.min(present.x,future.x);
+    wzMax = Math.max(present.z,future.z);
+    wzMin = Math.min(present.z,future.z);
+    wxMax = (wxMax - wxMax % t) + t;
+    wxMin = (wxMin - wxMin % t) - t;
+    wzMax = (wzMax - wzMax % t) + t;
+    wzMin = (wzMin - wzMin % t) - t;
 
     for(var j=wxMin;j<=wxMax;j+=t){
       for(var k = wzMin;k<wzMax;k+=t){
@@ -2759,7 +2762,7 @@ var cEntity = class {
       }
     }
 
-    return future
+    return future;
    }
 
 };
