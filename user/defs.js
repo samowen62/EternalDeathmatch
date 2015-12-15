@@ -24,7 +24,7 @@ var p_hash = null,
 	winWidth = $(window).width(),
 	centX = winWidth / 2,
 	centY = winHeight / 2,
-	mouseSensitivity = 0.06,
+	mouseSensitivity = 0.006,
 
 	mouseDown = 0,
 
@@ -52,5 +52,6 @@ var effects = {
 	'death' : document.getElementById('doom-death'),
 	'pistol' : document.getElementById('doom-pistol'),
 	'roar' : document.getElementById('doom-roar'),
-	'shotgun' : document.getElementById('doom-shotgun')
+	'shotgun' : document.getElementById('doom-shotgun'),
+	'intro' : document.getElementById('intro-rammstein')
 }

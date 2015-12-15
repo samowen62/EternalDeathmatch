@@ -559,7 +559,7 @@ var cEntity = function(pos){
   this.start_t = -1;
 
   //to stop from firing too fast
-  this.last_shot = new Date().getTime();
+  this.last_shot = new Date().getTime() + 3000;
 
 }
 
@@ -571,17 +571,24 @@ cEntity.prototype = {
     this.move();
   },
   
-  aim: function (event){
-    var angleX = mouseSensitivity * (centX - event.clientX) / winWidth;
-    var angleY = mouseSensitivity * (event.clientY - centY) / winHeight;
+  aim: function (e){
+    var movementX = e.movementX ||
+      e.mozMovementX          ||
+      e.webkitMovementX       ||
+      0;
 
-    pointed.applyAxisAngle (up,angleX);
+    var movementY = e.movementY ||
+        e.mozMovementY      ||
+        e.webkitMovementY   ||
+        0;
+
+
+    pointed.applyAxisAngle (up,-mouseSensitivity*movementX);
     left.x = pointed.z;
     left.z = (-1) * pointed.x;
     left.normalize();
-    pointed.applyAxisAngle (left,angleY);
+    pointed.applyAxisAngle (left,mouseSensitivity*movementY);
     camera.lookAt(tmpVec.addVectors(camera.position, pointed));
-    lastMouse = [event.clientX, event.clientY];
   },
 
   shoot: function (){

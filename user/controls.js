@@ -9,9 +9,6 @@ function onWindowResize() {
   renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
-$("body").mousemove(function(e) {
-  character.aim(e)
-});
 
 $("body").click(function(e){
   mouseDown = 1;
@@ -26,3 +23,47 @@ for(var i in keys){
       function () {})
 }
 
+container = document.createElement( 'div' );
+document.body.appendChild( container );
+
+container.requestPointerLock = container.requestPointerLock ||
+           container.mozRequestPointerLock ||
+           container.webkitRequestPointerLock;
+
+document.exitPointerLock = document.exitPointerLock ||
+         document.mozExitPointerLock ||
+         document.webkitExitPointerLock;
+
+function toggleFullScreen() {
+  if (container.requestFullscreen) {
+    container.requestFullscreen();
+  } else if (container.msRequestFullscreen) {
+    container.msRequestFullscreen();
+  } else if (container.mozRequestFullScreen) {
+    container.mozRequestFullScreen();
+  } else if (container.webkitRequestFullscreen) {
+    container.webkitRequestFullscreen();
+  }
+
+  effects['intro'].play();
+
+  container.requestPointerLock();
+}
+
+
+// Hook pointer lock state change events for different browsers
+document.addEventListener('pointerlockchange', lockChangeAlert, false);
+document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+document.addEventListener('webkitpointerlockchange', lockChangeAlert, false);
+
+function lockChangeAlert() {
+  if(document.pointerLockElement === container ||
+  document.mozPointerLockElement === container ||
+  document.webkitPointerLockElement === container) {
+    console.log('The pointer lock status is now locked');
+    document.addEventListener("mousemove", character.aim, false);
+  } else {
+    console.log('The pointer lock status is now unlocked');  
+    document.removeEventListener("mousemove", character.aim, false);
+  }
+}

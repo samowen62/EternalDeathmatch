@@ -4,6 +4,48 @@
 	box-sizing: border-box; 
 }
 
-canvas{
-	/* cursor: none; */
+@font-face{
+	font-family: death;
+	src: url(shallowgrave-bb/ShallowGraveBB.ttf);
+}
+
+.overlay{
+	position: fixed;
+    z-index: 50;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0,0,0,0.6);
+}
+
+.overlay .inner{
+	text-align: center;
+	margin-top: 50px;
+}
+
+.overlay .inner h2{
+	z-index: 60;
+	font-family: death;
+    font-size: 68px;
+    font-weight: 100;
+    color: #ddd;
+}
+
+.overlay .inner input{
+	z-index: 60;
+	font-family: arial;
+    color: white;
+    background-color: #222;
+    border: 0;
+    padding: 20px 30px;
+    margin-top: 20px;
+    font-size: 20px;
+}
+
+.overlay .inner img{
+	z-index: 55;
+	position: relative; 
+   	width: 100%;
+	width:250px;
 }

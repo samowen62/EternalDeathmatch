@@ -1772,7 +1772,7 @@ var p_hash = null,
 	winWidth = $(window).width(),
 	centX = winWidth / 2,
 	centY = winHeight / 2,
-	mouseSensitivity = 0.06,
+	mouseSensitivity = 0.006,
 
 	mouseDown = 0,
 
@@ -1800,7 +1800,8 @@ var effects = {
 	'death' : document.getElementById('doom-death'),
 	'pistol' : document.getElementById('doom-pistol'),
 	'roar' : document.getElementById('doom-roar'),
-	'shotgun' : document.getElementById('doom-shotgun')
+	'shotgun' : document.getElementById('doom-shotgun'),
+	'intro' : document.getElementById('intro-rammstein')
 }
 
 var Controller = {
@@ -2364,7 +2365,7 @@ var cEntity = function(pos){
   this.start_t = -1;
 
   //to stop from firing too fast
-  this.last_shot = new Date().getTime();
+  this.last_shot = new Date().getTime() + 3000;
 
 }
 
@@ -2376,17 +2377,24 @@ cEntity.prototype = {
     this.move();
   },
   
-  aim: function (event){
-    var angleX = mouseSensitivity * (centX - event.clientX) / winWidth;
-    var angleY = mouseSensitivity * (event.clientY - centY) / winHeight;
+  aim: function (e){
+    var movementX = e.movementX ||
+      e.mozMovementX          ||
+      e.webkitMovementX       ||
+      0;
 
-    pointed.applyAxisAngle (up,angleX);
+    var movementY = e.movementY ||
+        e.mozMovementY      ||
+        e.webkitMovementY   ||
+        0;
+
+
+    pointed.applyAxisAngle (up,-mouseSensitivity*movementX);
     left.x = pointed.z;
     left.z = (-1) * pointed.x;
     left.normalize();
-    pointed.applyAxisAngle (left,angleY);
+    pointed.applyAxisAngle (left,mouseSensitivity*movementY);
     camera.lookAt(tmpVec.addVectors(camera.position, pointed));
-    lastMouse = [event.clientX, event.clientY];
   },
 
   shoot: function (){
@@ -2777,9 +2785,6 @@ function onWindowResize() {
   renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
-$("body").mousemove(function(e) {
-  character.aim(e)
-});
 
 $("body").click(function(e){
   mouseDown = 1;
@@ -2794,7 +2799,50 @@ for(var i in keys){
       function () {})
 }
 
+container = document.createElement( 'div' );
+document.body.appendChild( container );
 
+container.requestPointerLock = container.requestPointerLock ||
+           container.mozRequestPointerLock ||
+           container.webkitRequestPointerLock;
+
+document.exitPointerLock = document.exitPointerLock ||
+         document.mozExitPointerLock ||
+         document.webkitExitPointerLock;
+
+function toggleFullScreen() {
+  if (container.requestFullscreen) {
+    container.requestFullscreen();
+  } else if (container.msRequestFullscreen) {
+    container.msRequestFullscreen();
+  } else if (container.mozRequestFullScreen) {
+    container.mozRequestFullScreen();
+  } else if (container.webkitRequestFullscreen) {
+    container.webkitRequestFullscreen();
+  }
+
+  effects['intro'].play();
+
+  container.requestPointerLock();
+}
+
+
+// Hook pointer lock state change events for different browsers
+document.addEventListener('pointerlockchange', lockChangeAlert, false);
+document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+document.addEventListener('webkitpointerlockchange', lockChangeAlert, false);
+
+function lockChangeAlert() {
+  if(document.pointerLockElement === container ||
+  document.mozPointerLockElement === container ||
+  document.webkitPointerLockElement === container) {
+    console.log('The pointer lock status is now locked');
+    document.addEventListener("mousemove", character.aim, false);
+  } else {
+    console.log('The pointer lock status is now unlocked');  
+    document.removeEventListener("mousemove", character.aim, false);
+  }
+}
 var geometry = new THREE.SphereGeometry( 75, 32, 32 ); 
 var material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
 var testSphere = new THREE.Mesh( geometry, material ); 
@@ -2807,9 +2855,6 @@ init();
 animate();
 
 function init() {
-
-	container = document.createElement( 'div' );
-	document.body.appendChild( container );
 
 	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 10000 );
 	camera.position.x = 0;
