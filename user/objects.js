@@ -42,29 +42,51 @@ var collisionWall = function (upperLeft, lowerRight) {
   this.next = null,this.prev = null;
   
 
-  lowerRight.y = ly,
-  this.verts = {ul : upperLeft, lr : lowerRight},
-  this.verts.ll = new THREE.Vector3(upperLeft.x, ly, upperLeft.z),
-  this.verts.ur = new THREE.Vector3(lowerRight.x, upperLeft.y, lowerRight.z);
+  lowerRight.y = ly;
+  var verts = {ul : upperLeft, lr : lowerRight};
+  verts.ll = new THREE.Vector3(upperLeft.x, ly, upperLeft.z),
+  verts.ur = new THREE.Vector3(lowerRight.x, upperLeft.y, lowerRight.z);
 
-  if(this.verts.ul.x > this.verts.lr.x){
-    this.max_x = this.verts.ul.x;
-    this.min_x = this.verts.lr.x;
+  if(verts.ul.x > verts.lr.x){
+    this.max_x = verts.ul.x;
+    this.min_x = verts.lr.x;
   }else{
-    this.min_x = this.verts.ul.x;
-    this.max_x = this.verts.lr.x;
+    this.min_x = verts.ul.x;
+    this.max_x = verts.lr.x;
   }
 
-  if(this.verts.ul.z > this.verts.lr.z){
-    this.max_z = this.verts.ul.z;
-    this.min_z = this.verts.lr.z;
+  if(verts.ul.z > verts.lr.z){
+    this.max_z = verts.ul.z;
+    this.min_z = verts.lr.z;
   }else{
-    this.min_z = this.verts.ul.z;
-    this.max_z = this.verts.lr.z;
+    this.min_z = verts.ul.z;
+    this.max_z = verts.lr.z;
   }
 
-  this.normal_ul = new THREE.Vector3(tmp3.z,0,-tmp3.x);
-  this.normal_lr = new THREE.Vector3(-tmp3.z,0,tmp3.x);
+  this.line_verts = verts;
+
+  var ul = new THREE.Vector3(tmp3.z,0,-tmp3.x);
+  var lr = new THREE.Vector3(-tmp3.z,0,tmp3.x);
+
+  this.normal_ul = ul;
+  this.normal_lr = lr;
+
+  ul.multiplyScalar(3);
+  lr.multiplyScalar(3);
+
+  this.verts = {};
+
+  this.verts.ul = (new THREE.Vector3()).copy(verts.ul);
+  this.verts.ll = (new THREE.Vector3()).copy(verts.ll);
+  this.verts.ur = (new THREE.Vector3()).copy(verts.ur);
+  this.verts.lr = (new THREE.Vector3()).copy(verts.lr);
+
+
+  this.verts.ul.add(lr);
+  this.verts.ll.add(lr);
+  this.verts.ur.add(ul);
+  this.verts.lr.add(ul);
+
 }
 
 collisionWall.prototype = {
@@ -80,10 +102,10 @@ collisionWall.prototype = {
   render: function (mat){
     var geometry = new THREE.Geometry();
 
-    geometry.vertices.push( new THREE.Vector3( this.verts.ul.x,  this.verts.ul.y, this.verts.ul.z ) );
-    geometry.vertices.push( new THREE.Vector3( this.verts.ll.x,  this.verts.ll.y, this.verts.ll.z ) );
-    geometry.vertices.push( new THREE.Vector3( this.verts.lr.x,  this.verts.lr.y, this.verts.lr.z ) );
-    geometry.vertices.push( new THREE.Vector3( this.verts.ur.x,  this.verts.ur.y, this.verts.ur.z ) );
+    geometry.vertices.push( new THREE.Vector3( this.line_verts.ul.x,  this.line_verts.ul.y, this.line_verts.ul.z ) );
+    geometry.vertices.push( new THREE.Vector3( this.line_verts.ll.x,  this.line_verts.ll.y, this.line_verts.ll.z ) );
+    geometry.vertices.push( new THREE.Vector3( this.line_verts.lr.x,  this.line_verts.lr.y, this.line_verts.lr.z ) );
+    geometry.vertices.push( new THREE.Vector3( this.line_verts.ur.x,  this.line_verts.ur.y, this.line_verts.ur.z ) );
 
     geometry.faces.push( new THREE.Face3( 0, 1, 2 ) ); // counter-clockwise winding order
     geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
@@ -96,11 +118,11 @@ collisionWall.prototype = {
         linewidth: 3,
     });
     var lineGeo = new THREE.Geometry();
-    lineGeo.vertices.push(this.verts.ul);
-    lineGeo.vertices.push(this.verts.ur);
-    lineGeo.vertices.push(this.verts.lr);
-    lineGeo.vertices.push(this.verts.ll);
-    lineGeo.vertices.push(this.verts.ul);
+    lineGeo.vertices.push(this.line_verts.ul);
+    lineGeo.vertices.push(this.line_verts.ur);
+    lineGeo.vertices.push(this.line_verts.lr);
+    lineGeo.vertices.push(this.line_verts.ll);
+    lineGeo.vertices.push(this.line_verts.ul);
 
 
     return [new THREE.Mesh(geometry, mat), new THREE.Line(lineGeo, lineMat)];
