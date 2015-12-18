@@ -55,7 +55,7 @@ io.sockets.on('connection', function(socket){
   socket.join(socket.room)
 
   socket.on('disconnect', function() {
-    console.log('Got disconnect!');
+    console.log('User disconnected');
     socket.leave(socket.room)
   });
 

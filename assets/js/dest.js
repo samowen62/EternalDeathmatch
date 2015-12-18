@@ -2934,7 +2934,7 @@ function init() {
     {ul : new THREE.Vector3(1000,600,300), lr : new THREE.Vector3(700,0,300)},
     {ul : new THREE.Vector3(700,600,300), lr : new THREE.Vector3(400,0,600)},
     {ul : new THREE.Vector3(400,600,600), lr : new THREE.Vector3(400,0,900)},
-    {ul : new THREE.Vector3(400,600,900), lr : new THREE.Vector3(700,0,1200)},
+    
 
     //posts
     {ul : new THREE.Vector3(410,200,-400), lr : new THREE.Vector3(400,0,-410)},
@@ -2966,6 +2966,17 @@ function init() {
     {ul : new THREE.Vector3(450,400,-2000), lr : new THREE.Vector3(650,0,-2000)},
     {ul : new THREE.Vector3(200,400,-2000), lr : new THREE.Vector3(450,0,-2000)},
     {ul : new THREE.Vector3(200,400,-1850), lr : new THREE.Vector3(200,0,-2000)},
+
+    {ul : new THREE.Vector3(400,200,700), lr : new THREE.Vector3(-100,0,700)},
+    {ul : new THREE.Vector3(-100,450,850), lr : new THREE.Vector3(-100,0,200)},
+    {ul : new THREE.Vector3(-100,450,200), lr : new THREE.Vector3(-120,0,200)},
+    {ul : new THREE.Vector3(-120,450,200), lr : new THREE.Vector3(-120,0,600)},
+    {ul : new THREE.Vector3(-120,450,600), lr : new THREE.Vector3(-700,0,600)},
+    {ul : new THREE.Vector3(-700,450,600), lr : new THREE.Vector3(-700,0,-150)},
+    {ul : new THREE.Vector3(-500,450,220), lr : new THREE.Vector3(-350,0,220)},
+    {ul : new THREE.Vector3(-350,450,220), lr : new THREE.Vector3(-350,0,-250)},
+    {ul : new THREE.Vector3(-350,450,-250), lr : new THREE.Vector3(-500,0,-250)},
+    {ul : new THREE.Vector3(-500,450,-250), lr : new THREE.Vector3(-500,0,220)},
 
 
     //another building
@@ -3008,6 +3019,7 @@ function init() {
     {ul : new THREE.Vector3(-700,400,-1300), lr : new THREE.Vector3(-700,0,-1000)},
     {ul : new THREE.Vector3(-700,400,-1000), lr : new THREE.Vector3(-400,0,-1000)},
     {ul : new THREE.Vector3(-950,400,-800), lr : new THREE.Vector3(-950,0,-1500)},
+    {ul : new THREE.Vector3(-700,400,-150), lr : new THREE.Vector3(-950,0,-800)},
   ];
 
   //specified cw
@@ -3031,7 +3043,9 @@ function init() {
     [new THREE.Vector3(-400,200,-1450),new THREE.Vector3(-400,200,-1020),new THREE.Vector3(200,200,-1450)],
     [new THREE.Vector3(200,200,-1020),new THREE.Vector3(200,200,-1450),new THREE.Vector3(-400,200,-1020)],
     [new THREE.Vector3(-400,200,-1420),new THREE.Vector3(-80,200,-1420),new THREE.Vector3(-80,200,-1720)],
-    [new THREE.Vector3(-400,200,-1420),new THREE.Vector3(-80,200,-1720),new THREE.Vector3(-400,200,-1720)]
+    [new THREE.Vector3(-400,200,-1420),new THREE.Vector3(-80,200,-1720),new THREE.Vector3(-400,200,-1720)],
+    [new THREE.Vector3(-700,200,850),new THREE.Vector3(-100,200,850),new THREE.Vector3(-100,200,200)],
+    [new THREE.Vector3(-700,200,850),new THREE.Vector3(-100,200,200),new THREE.Vector3(-700,200,200)]
   ];
 
   var ramp_array = [
@@ -3039,7 +3053,8 @@ function init() {
     [new THREE.Vector3(980,0,-1200), new THREE.Vector3(700,0,-1200), new THREE.Vector3(700,200,-1450), new THREE.Vector3(980,200,-1450)],
     [new THREE.Vector3(700,floor1_h,150), new THREE.Vector3(700,floor1_h,550), new THREE.Vector3(450,0,550), new THREE.Vector3(450,0,150)],
     [new THREE.Vector3(-400,200,-1500), new THREE.Vector3(-400,200,-1300), new THREE.Vector3(-700,0,-1300), new THREE.Vector3(-700,0,-1500)],
-  
+    [new THREE.Vector3(-500,200,200), new THREE.Vector3(-700,200,200), new THREE.Vector3(-700,0,-150), new THREE.Vector3(-500,0,-150)],
+
   ];
 
   //strictly ceilings
