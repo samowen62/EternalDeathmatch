@@ -1,5 +1,5 @@
-var num_rooms = 2;
-var room_size = 2;
+var num_rooms = 1;
+var room_size = 8;
 
 var app = require('express')();
 var http = require('http').Server(app);
@@ -63,14 +63,30 @@ io.sockets.on('connection', function(socket){
     id : newId
   });
 
-  //need to change this so that we respect room size
-  var choice = Math.floor(num_rooms*Math.random());
+  var choice, trys = 1000;
+
+  while(trys > 0){
+    choice = Math.floor(num_rooms*Math.random());
+
+    if(Object.keys(rooms[choice].members).length < room_size)
+      break;
+    trys--;
+  }
+
+  //TODO: if trys == 0 disconnect and try again
+
+  console.log('user connected');
+
   socket.room_id = choice;
 
+  //so far host doesn't really have a purpose
+  if(rooms[socket.room_id].host == '')
+    rooms[socket.room_id].host = newId;
+  rooms[socket.room_id].members[newId] = {};
 
+  
   socket.iter = 0;
   socket.latency = BASE_LATENCY;
-
   socket.room = rooms[socket.room_id].id;
   socket.join(socket.room);
  
@@ -84,38 +100,25 @@ io.sockets.on('connection', function(socket){
       var keys = Object.keys(rooms[socket.room_id].members);
       rooms[socket.room_id].host = keys.length == 0 ? '' : keys[0];
     }
-    
-    console.log(rooms);
-    //could dynamically alter who is host based on latency
+        //could dynamically alter who is host based on latency
     socket.leave(socket.room_id);
   });
-
-  console.log('user connected');
-
-  if(rooms[socket.room_id].host == '')
-    rooms[socket.room_id].host = newId;
-  rooms[socket.room_id].members[newId] = {};
-
-  console.log(rooms);
 
   socket.on('m', function(msg){
     socket.iter = socket.iter + 1;
 
     rooms[socket.room_id].members[socket.uniq_id]['msg'] = msg;
-    //console.log(socket.room.members, socket.room.host);
     
     /*
       optimize per socket latency later to respond more frequently
       to faster clients that demand more and vice-versa
     */
-    /*if(socket.iter == socket.latency){
+    if(socket.iter == socket.latency){
       socket.iter = 0;
-      socket.broadcast.to(socket.room).emit('o', { 
-        x : msg.x,
-        y : msg.y,
-        z : msg.z
-      });
-    }*/
+      socket.emit('o', 
+        rooms[socket.room_id].members
+      );
+    }
     //broadcast.to doesn't emit to sender while
     //io.sockets.in(room).emit() emits to all
     

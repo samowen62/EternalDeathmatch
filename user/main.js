@@ -1,8 +1,8 @@
 socket.on('o', function (data) {
-  console.log("rec'd")//
-  testSphere.position.setX(data.x)
-  testSphere.position.setY(data.y)
-  testSphere.position.setZ(data.z)
+  //testSphere.position.setX(data.x)
+  //testSphere.position.setY(data.y)
+  //testSphere.position.setZ(data.z)
+  console.log(data);
 });
 
 socket.on('id', function (data) {
