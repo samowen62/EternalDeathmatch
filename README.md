@@ -7,9 +7,12 @@ Gulp precompiles the assets and running <pre>node index.js</pre> on the root run
 
 ##TODO
 * Handle players who've left by broadcasting the disconnect serverside
-* Actually implement multiple players moving around on a server killing each other.
 * Add more non-collideable scenery to the map.
 * Add sprites.
 * More weapons.
 * More sounds on special events.
 * Fix multiple sound issue (maybe just use howler).
+* The corner clipping issue is still persisting
+
+#BIG TODO
+* Migrate all the code to the server side except button pushes to avoid hacking
