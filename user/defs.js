@@ -3,7 +3,7 @@
  */
 var p_hash = null,
 	socket = io(),
-	players=[],
+	players={},
 	
 	container, 
 	stats, 

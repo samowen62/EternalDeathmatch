@@ -1751,7 +1751,7 @@ a+"px",m=b,r=0);return b},update:function(){l=this.end()}}};
  */
 var p_hash = null,
 	socket = io(),
-	players=[],
+	players={},
 	
 	container, 
 	stats, 
@@ -2796,6 +2796,21 @@ cEntity.prototype = {
    }
 
 };
+
+var pEntity = function(hash){
+  this.id = hash;
+
+  this.geo = new THREE.Mesh( player_geometry, player_material );
+
+}
+
+pEntity.prototype = {
+
+  position: function(pos){
+    this.geo.position.copy(pos);
+  },
+  
+}
 function onWindowResize() {
 
   camera.left = window.innerWidth / - 2;
@@ -2865,9 +2880,8 @@ function lockChangeAlert() {
     document.removeEventListener("mousemove", character.aim, false);
   }
 }
-var geometry = new THREE.SphereGeometry( 75, 32, 32 ); 
-var material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
-var testSphere = new THREE.Mesh( geometry, material ); 
+var player_geometry = new THREE.SphereGeometry( 75, 32, 32 ); 
+var player_material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
 
 //not working right now
 var concrete = new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture('images/concrete.jpg') } );
@@ -2891,8 +2905,6 @@ function init() {
   // Grid
 
   var size = MAX_MAP_WIDTH, step = 200, cw;
-  scene.add(testSphere);
-
   var wallLength = 140,wxMax,wxMin,wzMax,wzMin
   var material = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, overdraw: 0.5 } );
 
@@ -3195,7 +3207,7 @@ function render() {
       
 
     	socket.emit('m', {
-    		hash : p_hash,
+    	//	hash : p_hash,
     		x : character.position.x,
     		y : character.position.y,
     		z : character.position.z
@@ -3204,15 +3216,25 @@ function render() {
     renderer.render( scene, camera );
 }
 socket.on('o', function (data) {
-  //testSphere.position.setX(data.x)
-  //testSphere.position.setY(data.y)
-  //testSphere.position.setZ(data.z)
-  console.log(data);
+
+  for(var k in data){
+  	if(k == p_hash)//self
+  		continue;
+
+  	if(players[k] && data[k].pos){
+  		players[k].position(new THREE.Vector3(data[k].pos.x ,data[k].pos.y, data[k].pos.z));
+  	}
+  	else{
+  		console.log("new player");
+  		players[k] = new pEntity(k); 
+  		scene.add(players[k].geo);
+  	}
+  }
 });
 
 socket.on('id', function (data) {
   if(p_hash == null)
-    p_hash = data.id
+    p_hash = data.id;
 });
 
 //coll. pg 87 for lines & a bit before for rays is a good resource for triangle collisions

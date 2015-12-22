@@ -990,3 +990,18 @@ cEntity.prototype = {
    }
 
 };
+
+var pEntity = function(hash){
+  this.id = hash;
+
+  this.geo = new THREE.Mesh( player_geometry, player_material );
+
+}
+
+pEntity.prototype = {
+
+  position: function(pos){
+    this.geo.position.copy(pos);
+  },
+  
+}

@@ -105,20 +105,17 @@ io.sockets.on('connection', function(socket){
   });
 
   socket.on('m', function(msg){
-    socket.iter = socket.iter + 1;
 
-    rooms[socket.room_id].members[socket.uniq_id]['msg'] = msg;
+    rooms[socket.room_id].members[socket.uniq_id]['pos'] = msg;
     
     /*
       optimize per socket latency later to respond more frequently
       to faster clients that demand more and vice-versa
     */
-    if(socket.iter == socket.latency){
-      socket.iter = 0;
-      socket.emit('o', 
-        rooms[socket.room_id].members
-      );
-    }
+    socket.emit('o', 
+      rooms[socket.room_id].members
+    );
+
     //broadcast.to doesn't emit to sender while
     //io.sockets.in(room).emit() emits to all
     

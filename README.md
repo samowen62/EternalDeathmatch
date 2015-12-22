@@ -6,8 +6,7 @@ Gulp precompiles the assets and running <pre>node index.js</pre> on the root run
 ![screenshot](https://github.com/samowen62/webGLnetGame/blob/master/images/game.png)
 
 ##TODO
-* Fix rooms to a set size.
-* Allow fullscreen and mouse capture (if possible).
+* Handle players who've left by broadcasting the disconnect serverside
 * Actually implement multiple players moving around on a server killing each other.
 * Add more non-collideable scenery to the map.
 * Add sprites.

@@ -1,6 +1,5 @@
-var geometry = new THREE.SphereGeometry( 75, 32, 32 ); 
-var material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
-var testSphere = new THREE.Mesh( geometry, material ); 
+var player_geometry = new THREE.SphereGeometry( 75, 32, 32 ); 
+var player_material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
 
 //not working right now
 var concrete = new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture('images/concrete.jpg') } );
@@ -24,8 +23,6 @@ function init() {
   // Grid
 
   var size = MAX_MAP_WIDTH, step = 200, cw;
-  scene.add(testSphere);
-
   var wallLength = 140,wxMax,wxMin,wzMax,wzMin
   var material = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, overdraw: 0.5 } );
 
@@ -328,7 +325,7 @@ function render() {
       
 
     	socket.emit('m', {
-    		hash : p_hash,
+    	//	hash : p_hash,
     		x : character.position.x,
     		y : character.position.y,
     		z : character.position.z
