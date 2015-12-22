@@ -20,6 +20,12 @@ function init() {
 
 	scene = new THREE.Scene();
 
+  //add weapons
+  weapons['shotgun'] = new weapon("shotgun", ["images/gun.png"], 1000, effects['shotgun']);
+  weapons['fist'] = new weapon("shotgun", ["images/fist-1.png","images/fist-2.png","images/fist-3.png","images/fist-4.png"], 700, effects['roar']);//get pistol sound
+
+  var character = new cEntity(new THREE.Vector3(45,45,45));
+
   // Grid
 
   var size = MAX_MAP_WIDTH, step = 200, cw;
@@ -275,14 +281,6 @@ function init() {
   var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
   scene.add( skyBox );
 
-  var ballTexture = THREE.ImageUtils.loadTexture( 'images/gun.png' );
-  
-  var ballMaterial = new THREE.SpriteMaterial( { map: ballTexture, useScreenCoordinates: true  } );
-  sprite = new THREE.Sprite( ballMaterial );
-  sprite.position.set( 150, 150, -150 );
-  sprite.scale.set( 100, 64, 1.0 ); // imageWidth, imageHeight
-  scene.add( sprite );
-
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setClearColor( 0xf0f0f0 );
   renderer.setPixelRatio( window.devicePixelRatio );
@@ -294,7 +292,8 @@ function init() {
   stats.domElement.style.top = '0px';
   container.appendChild( stats.domElement );
 
-  window.addEventListener( 'resize', onWindowResize, false );
+  window.addEventListener( 'resize', onWindowResize, false );  
+
 }
 
 
@@ -320,7 +319,12 @@ function render() {
 
       tmpVec.copy(pointed);
       tmpVec.multiplyScalar(30);
-      sprite.position.copy(tmpVec.add(camera.position));
+
+      if(character.weapon){
+        character.weapon.position(tmpVec.add(camera.position));
+      }else{
+        character.setWeapon(weapons['fist']);
+      }
       //plane.rotation.setFromRotationMatrix( camera.matrix );
       
 

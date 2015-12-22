@@ -4,6 +4,7 @@
 var p_hash = null,
 	socket = io(),
 	players={},
+	weapons={},
 	
 	container, 
 	stats, 
@@ -44,7 +45,7 @@ for(var i = 0; i < sqSize; i ++)
 	for(var j = 0; j < sqSize; j ++)
 		boundaries[i].push([])
 
-var ground = [],ceil = [], ramps = [], sprite;
+var ground = [],ceil = [], ramps = [], weapon;
 
 var effects = {
 	'die' : document.getElementById('audiotag1'),

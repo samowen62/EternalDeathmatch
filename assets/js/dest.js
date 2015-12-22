@@ -1752,6 +1752,7 @@ a+"px",m=b,r=0);return b},update:function(){l=this.end()}}};
 var p_hash = null,
 	socket = io(),
 	players={},
+	weapons={},
 	
 	container, 
 	stats, 
@@ -1792,7 +1793,7 @@ for(var i = 0; i < sqSize; i ++)
 	for(var j = 0; j < sqSize; j ++)
 		boundaries[i].push([])
 
-var ground = [],ceil = [], ramps = [], sprite;
+var ground = [],ceil = [], ramps = [], weapon;
 
 var effects = {
 	'die' : document.getElementById('audiotag1'),
@@ -1829,6 +1830,73 @@ var Controller = {
 var calcVec = new THREE.Vector3(),
 calcVec2 = new THREE.Vector3(),
 tmpPos = new THREE.Vector3();
+
+
+//images go in order of animation
+var weapon = function(name, images, duration, effect){
+  this.duration = duration;
+  this.name = name;
+  this.effect = effect;
+  this.sprites = [];
+
+  for( var i in images){
+    var ballTexture = THREE.ImageUtils.loadTexture( images[i] );
+    
+    var ballMaterial = new THREE.SpriteMaterial( { map: ballTexture, useScreenCoordinates: true  } );
+    var sprite = new THREE.Sprite( ballMaterial );
+    sprite.position.set( 150, 150, -150 );
+    sprite.scale.set( 100, 64, 1.0 ); // imageWidth, imageHeight
+    sprite.visible = false;
+    scene.add( sprite );
+    
+    this.sprites.push(sprite);
+  }
+}
+
+weapon.prototype = {
+
+  constructor: weapon,
+
+  position: function(vec){
+    for( var s in this.sprites)
+      this.sprites[s].position.copy(vec);
+  },
+
+  open: function(){
+    this.sprites[0].visible = true;
+  },
+
+  close: function(){
+    this.sprites[0].visible = false;
+  },
+
+  animate: function(){
+    this.effect.play();
+
+    var num_s = this.sprites.length;
+    if(num_s == 1)
+      return;
+
+    //time for each frame
+    var seg = this.duration / (num_s - 1);
+
+    for( var s = 1; s <= num_s; s++){
+      setTimeout(this.swapFrames, (s - 1) * seg, s, this.sprites);
+    }
+
+    this.sprites[this.sprites.length - 1].visible = false;
+    this.sprites[0].visible = true;
+  },
+
+  swapFrames: function(frame, sprites){
+    var first = (frame - 1) % sprites.length;
+    frame = frame % sprites.length;
+    
+    sprites[first].visible = false;
+    sprites[frame].visible = true;
+  }
+}
+
 
 var collisionWall = function (upperLeft, lowerRight) {
   var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
@@ -2386,6 +2454,8 @@ var cEntity = function(pos){
   this.air_v =  0;
   this.start_t = -1;
 
+  this.weapon = null;
+
   //to stop from firing too fast
   this.last_shot = new Date().getTime() + 3000;
 
@@ -2428,7 +2498,7 @@ cEntity.prototype = {
       this.last_shot = curr_time;
     }
 
-    effects['shotgun'].play();
+    this.weapon.animate();
 
     calcVec.addVectors(this.position, this.thickness);
     var end_vec = new THREE.Vector3();
@@ -2581,6 +2651,11 @@ cEntity.prototype = {
 
     shots.add([start_Vec, end_vec], 0xff0000, 8);
 
+  },
+
+  setWeapon: function(weapon){
+    this.weapon = (weapon);
+    this.weapon.sprites[0].visible = true;
   },
 
   kill: function(){
@@ -2832,6 +2907,8 @@ var pEntity = function(hash){
 
 pEntity.prototype = {
 
+  constructor: pEntity,
+
   position: function(pos){
     this.geo.position.copy(pos);
   },
@@ -2857,6 +2934,7 @@ pEntity.prototype = {
   }
   
 }
+
 function onWindowResize() {
 
   camera.left = window.innerWidth / - 2;
@@ -2947,6 +3025,12 @@ function init() {
 	camera.lookAt(tmpVec);
 
 	scene = new THREE.Scene();
+
+  //add weapons
+  weapons['shotgun'] = new weapon("shotgun", ["images/gun.png"], 1000, effects['shotgun']);
+  weapons['fist'] = new weapon("shotgun", ["images/fist-1.png","images/fist-2.png","images/fist-3.png","images/fist-4.png"], 700, effects['roar']);//get pistol sound
+
+  var character = new cEntity(new THREE.Vector3(45,45,45));
 
   // Grid
 
@@ -3203,14 +3287,6 @@ function init() {
   var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
   scene.add( skyBox );
 
-  var ballTexture = THREE.ImageUtils.loadTexture( 'images/gun.png' );
-  
-  var ballMaterial = new THREE.SpriteMaterial( { map: ballTexture, useScreenCoordinates: true  } );
-  sprite = new THREE.Sprite( ballMaterial );
-  sprite.position.set( 150, 150, -150 );
-  sprite.scale.set( 100, 64, 1.0 ); // imageWidth, imageHeight
-  scene.add( sprite );
-
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setClearColor( 0xf0f0f0 );
   renderer.setPixelRatio( window.devicePixelRatio );
@@ -3222,7 +3298,8 @@ function init() {
   stats.domElement.style.top = '0px';
   container.appendChild( stats.domElement );
 
-  window.addEventListener( 'resize', onWindowResize, false );
+  window.addEventListener( 'resize', onWindowResize, false );  
+
 }
 
 
@@ -3248,7 +3325,12 @@ function render() {
 
       tmpVec.copy(pointed);
       tmpVec.multiplyScalar(30);
-      sprite.position.copy(tmpVec.add(camera.position));
+
+      if(character.weapon){
+        character.weapon.position(tmpVec.add(camera.position));
+      }else{
+        character.setWeapon(weapons['fist']);
+      }
       //plane.rotation.setFromRotationMatrix( camera.matrix );
       
 

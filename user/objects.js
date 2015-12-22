@@ -24,6 +24,73 @@ var calcVec = new THREE.Vector3(),
 calcVec2 = new THREE.Vector3(),
 tmpPos = new THREE.Vector3();
 
+
+//images go in order of animation
+var weapon = function(name, images, duration, effect){
+  this.duration = duration;
+  this.name = name;
+  this.effect = effect;
+  this.sprites = [];
+
+  for( var i in images){
+    var ballTexture = THREE.ImageUtils.loadTexture( images[i] );
+    
+    var ballMaterial = new THREE.SpriteMaterial( { map: ballTexture, useScreenCoordinates: true  } );
+    var sprite = new THREE.Sprite( ballMaterial );
+    sprite.position.set( 150, 150, -150 );
+    sprite.scale.set( 100, 64, 1.0 ); // imageWidth, imageHeight
+    sprite.visible = false;
+    scene.add( sprite );
+    
+    this.sprites.push(sprite);
+  }
+}
+
+weapon.prototype = {
+
+  constructor: weapon,
+
+  position: function(vec){
+    for( var s in this.sprites)
+      this.sprites[s].position.copy(vec);
+  },
+
+  open: function(){
+    this.sprites[0].visible = true;
+  },
+
+  close: function(){
+    this.sprites[0].visible = false;
+  },
+
+  animate: function(){
+    this.effect.play();
+
+    var num_s = this.sprites.length;
+    if(num_s == 1)
+      return;
+
+    //time for each frame
+    var seg = this.duration / (num_s - 1);
+
+    for( var s = 1; s <= num_s; s++){
+      setTimeout(this.swapFrames, (s - 1) * seg, s, this.sprites);
+    }
+
+    this.sprites[this.sprites.length - 1].visible = false;
+    this.sprites[0].visible = true;
+  },
+
+  swapFrames: function(frame, sprites){
+    var first = (frame - 1) % sprites.length;
+    frame = frame % sprites.length;
+    
+    sprites[first].visible = false;
+    sprites[frame].visible = true;
+  }
+}
+
+
 var collisionWall = function (upperLeft, lowerRight) {
   var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
   var ly = lowerRight.y;
@@ -580,6 +647,8 @@ var cEntity = function(pos){
   this.air_v =  0;
   this.start_t = -1;
 
+  this.weapon = null;
+
   //to stop from firing too fast
   this.last_shot = new Date().getTime() + 3000;
 
@@ -622,7 +691,7 @@ cEntity.prototype = {
       this.last_shot = curr_time;
     }
 
-    effects['shotgun'].play();
+    this.weapon.animate();
 
     calcVec.addVectors(this.position, this.thickness);
     var end_vec = new THREE.Vector3();
@@ -775,6 +844,11 @@ cEntity.prototype = {
 
     shots.add([start_Vec, end_vec], 0xff0000, 8);
 
+  },
+
+  setWeapon: function(weapon){
+    this.weapon = (weapon);
+    this.weapon.sprites[0].visible = true;
   },
 
   kill: function(){
@@ -1025,6 +1099,8 @@ var pEntity = function(hash){
 }
 
 pEntity.prototype = {
+
+  constructor: pEntity,
 
   position: function(pos){
     this.geo.position.copy(pos);
