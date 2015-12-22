@@ -1,4 +1,4 @@
-var player_geometry = new THREE.SphereGeometry( 75, 32, 32 ); 
+var player_geometry = new THREE.SphereGeometry( 45, 32, 32 ); 
 var player_material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
 
 //not working right now
@@ -323,6 +323,13 @@ function render() {
       sprite.position.copy(tmpVec.add(camera.position));
       //plane.rotation.setFromRotationMatrix( camera.matrix );
       
+
+      if(Math.abs(character.position.x) > 2000 || Math.abs(character.position.y) > 2000 || Math.abs(character.position.z) > 2000){
+        socket.emit('death', {
+          hash : p_hash
+        });
+        character.kill();
+      }
 
     	socket.emit('m', {
     	//	hash : p_hash,

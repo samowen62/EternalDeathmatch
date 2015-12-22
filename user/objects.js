@@ -1,6 +1,6 @@
 var Controller = {
   keyIsDown: [],
-    
+
   add: function (key, down, up) {
     $(document).keydown(function(e) {
       if(e.keyCode === key && !Controller.keyIsDown[key]) {
@@ -21,8 +21,8 @@ var Controller = {
 }
 
 var calcVec = new THREE.Vector3(),
-    calcVec2 = new THREE.Vector3(),
-    tmpPos = new THREE.Vector3();
+calcVec2 = new THREE.Vector3(),
+tmpPos = new THREE.Vector3();
 
 var collisionWall = function (upperLeft, lowerRight) {
   var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
@@ -97,9 +97,9 @@ collisionWall.prototype = {
    *
    * this will create a vertical collision wall
    */
-  constructor: collisionWall,
+   constructor: collisionWall,
 
-  render: function (mat){
+   render: function (mat){
     var geometry = new THREE.Geometry();
 
     geometry.vertices.push( new THREE.Vector3( this.line_verts.ul.x,  this.line_verts.ul.y, this.line_verts.ul.z ) );
@@ -114,8 +114,8 @@ collisionWall.prototype = {
     geometry.computeVertexNormals();
 
     var lineMat = new THREE.LineBasicMaterial({
-        color: 0x000000,
-        linewidth: 3,
+      color: 0x000000,
+      linewidth: 3,
     });
     var lineGeo = new THREE.Geometry();
     lineGeo.vertices.push(this.line_verts.ul);
@@ -133,7 +133,7 @@ collisionWall.prototype = {
    *
    * arr: 3d boundary array
    */
-  addTo: function (arr){
+   addTo: function (arr){
     var t = 2*sqThick,
     wxMax = Math.max(this.verts.ul.x,this.verts.lr.x),
     wxMin = Math.min(this.verts.ul.x,this.verts.lr.x),
@@ -147,13 +147,13 @@ collisionWall.prototype = {
     for(var j=wxMin;j<=wxMax;j+=t)
       for(var k = wzMin;k<wzMax;k+=t)
         boundaries[j/t + 11][k/t + 11].push(this);
-  },
+    },
 
   /*
 	 * returns positive values if 'inside' (side normal points to),
 	 * negative values if on the outside, and 0 if point is inline
 	 * with this boundary wall that extends to infinity in y
-   */
+  */
   whichSideAbsolute: function (point){
   	calcVec.subVectors(point,this.center);
   	return calcVec.dot(this.normal);// > 0 ? 'inside' : 'outside';
@@ -177,7 +177,7 @@ collisionWall.prototype = {
    *
    * returns true if there is a collision
    */
-  inScope: function (a,b){
+   inScope: function (a,b){
     var c,d;
     calcVec.subVectors(a,this.verts.ul);
     c = calcVec.dot(this.normal_ul) > 0;
@@ -203,7 +203,7 @@ collisionWall.prototype = {
     var tmp = new THREE.Vector3();
     tmp.subVectors(this.center, start);
     var num = tmp.dot(this.normal),
-        den = pointer.dot(this.normal);
+    den = pointer.dot(this.normal);
 
     if(den != 0){
       var dist = num / den;
@@ -219,7 +219,7 @@ collisionWall.prototype = {
           }
         }
       }
-        
+
       return null;
       
     }
@@ -254,11 +254,11 @@ var platform = function(points) {
 
   if(tmp3.y < 0) tmp3.multiplyScalar(-1.0)
 
-  this.normal = tmp3, this.d = points[0].dot(tmp3)
+    this.normal = tmp3, this.d = points[0].dot(tmp3)
 }
 
 platform.prototype = {
-  
+
   constructor: platform,
 
   sign: function (p1,p2,p3)
@@ -276,11 +276,11 @@ platform.prototype = {
   /*
    * Checks if we are even within the x/z triangle in question
    */
-  over: function (point){
+   over: function (point){
     var pt = {x : point.x, z: point.z},
-        b1 = this.sign(point, this.points[0], this.points[1]) < 0,
-        b2 = this.sign(point, this.points[1], this.points[2]) < 0,
-        b3 = this.sign(point, this.points[2], this.points[0]) < 0;
+    b1 = this.sign(point, this.points[0], this.points[1]) < 0,
+    b2 = this.sign(point, this.points[1], this.points[2]) < 0,
+    b3 = this.sign(point, this.points[2], this.points[0]) < 0;
 
     return ((b1 == b2) && (b2 == b3));
   },
@@ -306,11 +306,11 @@ platform.prototype = {
     v2.subVectors(pos,this.points[0]);
 
     var d20 = v2.dot(this.v0),
-        d21 = v2.dot(this.v1);
-        
+    d21 = v2.dot(this.v1);
+
     //u,v bary for points 0 and 1
     var v = (this.d11 * d20 - this.d01 * d21) / this.den,
-        u = 1 - v - ((this.d00 * d21 - this.d01 * d20) / this.den);
+    u = 1 - v - ((this.d00 * d21 - this.d01 * d20) / this.den);
 
     return u * this.points[0].y + v * this.points[1].y;
 
@@ -324,7 +324,7 @@ platform.prototype = {
     var tmp = new THREE.Vector3();
     tmp.subVectors(this.points[0], start);
     var num = tmp.dot(this.normal),
-        den = pointer.dot(this.normal);
+    den = pointer.dot(this.normal);
 
     if(den != 0){
       var dist = num / den;
@@ -394,10 +394,10 @@ ramp.prototype = {
   /*
    * input in clockwise order
    * first and last two should have same y coordinate
-  */
-  constructor: ramp,
+   */
+   constructor: ramp,
 
-  above: function (point){
+   above: function (point){
     return point.dot(this.normal) >= this.d;
   },
 
@@ -405,10 +405,10 @@ ramp.prototype = {
    * Checks if we are even within the x/z triangle in question
    * and returns appropriate y
    */
-  over: function (point){
+   over: function (point){
     var AM = new THREE.Vector2(point.x - this.points[0].x, point.z - this.points[0].z),
-        AMdAB = AM.dot(this.AB),
-        AMdAD = AM.dot(this.AD);
+    AMdAB = AM.dot(this.AB),
+    AMdAD = AM.dot(this.AD);
 
     var ret = ((0 < AMdAB) && (AMdAB < this.AB_Sqared) && (0 < AMdAD) && (AMdAD < this.AD_Sqared));
     //if(ret){
@@ -416,7 +416,7 @@ ramp.prototype = {
 
     //}
     return ret;
-  
+
   },
 
   render: function (){
@@ -443,13 +443,13 @@ ramp.prototype = {
     var p_down = tmp2Vec.dot(this.down_ramp),
         p_side = tmp2Vec.dot(this.side_ramp);//component sideways
 
-    return this.center.y + p_down * this.down_ramp.y + 3;
-  },
+        return this.center.y + p_down * this.down_ramp.y + 3;
+      },
 
   /*
    *  I'm just skipping this since it doesn't matter
    */
-  rayDetect: function () {
+   rayDetect: function () {
     return null;
   }
 
@@ -476,7 +476,7 @@ var ceiling = function(points) {
 }
 
 ceiling.prototype = {
-  
+
   constructor: ceiling,
 
   sign: function (p1,p2,p3)
@@ -492,11 +492,11 @@ ceiling.prototype = {
   /*
    * Checks if we are even within the x/z triangle in question
    */
-  over: function (point){
+   over: function (point){
     var pt = {x : point.x, z: point.z},
-        b1 = this.sign(point, this.points[0], this.points[1]) < 0,
-        b2 = this.sign(point, this.points[1], this.points[2]) < 0,
-        b3 = this.sign(point, this.points[2], this.points[0]) < 0;
+    b1 = this.sign(point, this.points[0], this.points[1]) < 0,
+    b2 = this.sign(point, this.points[1], this.points[2]) < 0,
+    b3 = this.sign(point, this.points[2], this.points[0]) < 0;
     return ((b1 == b2) && (b2 == b3));
   },
 
@@ -531,12 +531,12 @@ projectile_singleton.prototype = {
   add: function (line, color, duration){
     //in this function check the entity list for hits
     var lineGeo = new THREE.Geometry();
-        lineGeo.vertices.push(line[0]);
-        lineGeo.vertices.push(line[1]);
+    lineGeo.vertices.push(line[0]);
+    lineGeo.vertices.push(line[1]);
 
     var lineMat = new THREE.LineBasicMaterial({
-        color: color,
-        linewidth: 3,
+      color: color,
+      linewidth: 3,
     });
 
 
@@ -595,14 +595,14 @@ cEntity.prototype = {
   
   aim: function (e){
     var movementX = e.movementX ||
-      e.mozMovementX          ||
-      e.webkitMovementX       ||
-      0;
+    e.mozMovementX          ||
+    e.webkitMovementX       ||
+    0;
 
     var movementY = e.movementY ||
-        e.mozMovementY      ||
-        e.webkitMovementY   ||
-        0;
+    e.mozMovementY      ||
+    e.webkitMovementY   ||
+    0;
 
 
     pointed.applyAxisAngle (up,-mouseSensitivity*movementX);
@@ -621,7 +621,7 @@ cEntity.prototype = {
     }else{
       this.last_shot = curr_time;
     }
-  
+
     effects['shotgun'].play();
 
     calcVec.addVectors(this.position, this.thickness);
@@ -670,9 +670,9 @@ cEntity.prototype = {
      *  the unpredictable three.js library forced me to add ugly, odd looking code I feel
      *  ashamed as a programmer for writing.
      */
-    var pt, min_dist = MAX_MAP_WIDTH, min_wall = null, tmp_v = new THREE.Vector3();
+     var pt, min_dist = MAX_MAP_WIDTH, min_wall = null, tmp_v = new THREE.Vector3();
 
-    if(wxStart >= wxEnd){
+     if(wxStart >= wxEnd){
       if(wzStart >= wzEnd){
 
         for(var j=wxStart;j>=wxEnd;j-=t){
@@ -680,11 +680,10 @@ cEntity.prototype = {
             for(var i in boundaries[j/t + 11][k/t + 11]){
               calcVec.copy(start_Vec);
               pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
-              if(pt != null){
-                if(pt.len <= min_dist){
-                  min_dist = pt.len;
-                  end_vec.copy(pt.spot);
-                }
+              if(pt != null && pt.len <= min_dist){
+                min_dist = pt.len;
+                end_vec.copy(pt.spot);
+                
               }
             }
           }
@@ -697,13 +696,12 @@ cEntity.prototype = {
             for(var i in boundaries[j/t + 11][k/t + 11]){
               calcVec.copy(start_Vec);
               pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
-              if(pt != null){
-                if(pt.len <= min_dist){
-                  min_dist = pt.len;
-                  end_vec.copy(pt.spot);
-                }
+              if(pt != null && pt.len <= min_dist){
+                min_dist = pt.len;
+                end_vec.copy(pt.spot);
+                
               }
-            
+
             }
           }
         }
@@ -717,11 +715,10 @@ cEntity.prototype = {
             for(var i in boundaries[j/t + 11][k/t + 11]){
               calcVec.copy(start_Vec);
               pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
-              if(pt != null){
-                if(pt.len <= min_dist){
-                  min_dist = pt.len;
-                  end_vec.copy(pt.spot);
-                }
+              if(pt != null && pt.len <= min_dist){
+                min_dist = pt.len;
+                end_vec.copy(pt.spot);
+                
               }
               
             }
@@ -735,13 +732,12 @@ cEntity.prototype = {
             for(var i in boundaries[j/t + 11][k/t + 11]){
               calcVec.copy(start_Vec);
               pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
-              if(pt != null){
-                if(pt.len <= min_dist){
-                  min_dist = pt.len;
-                  end_vec.copy(pt.spot);
-                }
+              if(pt != null && pt.len <= min_dist){
+                min_dist = pt.len;
+                end_vec.copy(pt.spot);
+                
               }
-               
+
             }
           }
         }
@@ -753,16 +749,43 @@ cEntity.prototype = {
     for(var g in ground){
       calcVec.copy(start_Vec);
       pt = ground[g].rayDetect(calcVec, pointed);
-      if(pt != null){
-        if(pt.len <= min_dist){
+      if(pt != null && pt.len <= min_dist){
+        min_dist = pt.len;
+        end_vec.copy(pt.spot);
+        
+      }
+    }
+
+    //check the players to see if we've hit any
+    for(var p in players){
+      calcVec.copy(start_Vec);
+      pt = players[p].rayDetect(calcVec, pointed);
+      if(pt != null && pt.len <= min_dist){
           min_dist = pt.len;
           end_vec.copy(pt.spot);
-        }
+
+          //shot someone
+
+          //eventually this should be server side since this is easily hacked
+          socket.emit('death', {
+            hash : pt.cw.id
+          });        
       }
     }
 
     shots.add([start_Vec, end_vec], 0xff0000, 8);
 
+  },
+
+  kill: function(){
+    //just for fun lol
+    effects['die'].play();
+    //effects['death'].play();
+
+    //do a timed death sequence here
+
+    //respawn point
+    this.position.copy(new THREE.Vector3(45,45,45));
   },
 
   move: function (){
@@ -889,14 +912,14 @@ cEntity.prototype = {
         for(var g in ground){
           if(ground[g].over(this.position)){
 
-              var a = ground[g].above(this.position), b = ground[g].above(new_pos);
-              if((!a && b)||(a && !b)){
-                new_y = ground[g].yAt(this.position);
-                this.grounded = true;
-                this.jumping = false;
-                this.ground = ground[g];
-                break;
-              }
+            var a = ground[g].above(this.position), b = ground[g].above(new_pos);
+            if((!a && b)||(a && !b)){
+              new_y = ground[g].yAt(this.position);
+              this.grounded = true;
+              this.jumping = false;
+              this.ground = ground[g];
+              break;
+            }
 
           }
         }
@@ -931,26 +954,26 @@ cEntity.prototype = {
       tmpVec.z += diagS * (pointed.x - pointed.z);
     }
     else if(Controller.keyIsDown[87]){ //w
-        tmpVec.x += s * pointed.x;
-        tmpVec.z += s * pointed.z;
+      tmpVec.x += s * pointed.x;
+      tmpVec.z += s * pointed.z;
     }
     else if(Controller.keyIsDown[65]){ //a
-        tmpVec.x += s * pointed.z;
-        tmpVec.z -= s * pointed.x;
+      tmpVec.x += s * pointed.z;
+      tmpVec.z -= s * pointed.x;
     }
     else if(Controller.keyIsDown[83]){ //s
-        tmpVec.x -= s * pointed.x;
-        tmpVec.z -= s * pointed.z;
+      tmpVec.x -= s * pointed.x;
+      tmpVec.z -= s * pointed.z;
     }
     else if(Controller.keyIsDown[68]){ //d
-        tmpVec.x -= s * pointed.z;
-        tmpVec.z += s * pointed.x;
+      tmpVec.x -= s * pointed.z;
+      tmpVec.z += s * pointed.x;
     }
     else if(Controller.keyIsDown[90]){ //z
-        camera.translateY(-10);
+      camera.translateY(-10);
     }
     else if(Controller.keyIsDown[88]){ //x
-        camera.translateY(10);
+      camera.translateY(10);
     }
     
     tmpVec.y = new_y;
@@ -987,13 +1010,16 @@ cEntity.prototype = {
     }
 
     return future;
-   }
+  }
+
+
 
 };
 
 var pEntity = function(hash){
   this.id = hash;
-
+  this.radius = 45;
+  this.thickness = new THREE.Vector3(0, this.radius, 0);
   this.geo = new THREE.Mesh( player_geometry, player_material );
 
 }
@@ -1003,5 +1029,25 @@ pEntity.prototype = {
   position: function(pos){
     this.geo.position.copy(pos);
   },
+
+  rayDetect: function (start, pointer){
+    var ray = new THREE.Vector3();
+    ray.subVectors(start, this.geo.position);
+
+    var ray_comp = pointer.dot(ray);
+    var discriminant = ray_comp * ray_comp - ray.dot(ray) + (this.radius * this.radius);
+
+    if(discriminant > 0){
+      var end = new THREE.Vector3(),
+      scalar = -ray_comp - Math.sqrt(discriminant);
+      end.copy(pointer);
+      end.multiplyScalar(scalar);
+      start.add(end);
+
+      return ({cw : this, spot: start, len: scalar});
+    }
+
+    return null;
+  }
   
 }

@@ -14,7 +14,6 @@ for(var i = 0; i < num_rooms; i++){
     id : makeid(8),
     members : {},
     host : ''
-
   });
 }
 
@@ -45,9 +44,11 @@ app.get('/sounds/*', function(req, res){
 app.get('/app.js', function(req, res){
   res.sendFile(__dirname +  '/assets/js/dest.js');
 });
+
 app.get('/jquery.js', function(req, res){
   res.sendFile(__dirname +  '/assets/js/jquery-1.11.1.js');
 });
+
 app.get('/socket.js', function(req, res){
   res.sendFile( __dirname + '/assets/js/socket.io-1.2.0.js');
 });
@@ -58,7 +59,6 @@ io.sockets.on('connection', function(socket){
   socket.uniq_id = newId;
 
   //transmit initial data to client
-  //might not need
   socket.emit('id', { 
     id : newId
   });
@@ -104,8 +104,9 @@ io.sockets.on('connection', function(socket){
     socket.leave(socket.room_id);
   });
 
-  socket.on('m', function(msg){
 
+
+  socket.on('m', function(msg){
     rooms[socket.room_id].members[socket.uniq_id]['pos'] = msg;
     
     /*
@@ -114,12 +115,17 @@ io.sockets.on('connection', function(socket){
     */
     socket.emit('o', 
       rooms[socket.room_id].members
-    );
-
-    //broadcast.to doesn't emit to sender while
-    //io.sockets.in(room).emit() emits to all
-    
+    );    
   });
+
+
+
+  socket.on('death', function(data){
+    io.to(socket.room).emit('kill', 
+      { id: data.hash }
+    );
+  });
+
 });
 
 http.listen(process.env.PORT || 8080, function(){

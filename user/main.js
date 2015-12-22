@@ -1,7 +1,8 @@
 socket.on('o', function (data) {
 
   for(var k in data){
-  	if(k == p_hash)//self
+
+  	if(k == p_hash)
   		continue;
 
   	if(players[k] && data[k].pos){
@@ -18,6 +19,15 @@ socket.on('o', function (data) {
 socket.on('id', function (data) {
   if(p_hash == null)
     p_hash = data.id;
+});
+
+socket.on('kill', function (data) {
+	//server says player is dead
+	console.log(data, p_hash);
+	if(data.id == p_hash){
+	  	console.log("you died >:)");
+  		character.kill();
+  	}
 });
 
 //coll. pg 87 for lines & a bit before for rays is a good resource for triangle collisions
