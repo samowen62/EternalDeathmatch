@@ -685,7 +685,7 @@ cEntity.prototype = {
   shoot: function (){
 
     var curr_time = new Date().getTime();
-    if(curr_time - this.last_shot < 1500){
+    if(curr_time - this.last_shot < this.weapon.duration){
       return;
     }else{
       this.last_shot = curr_time;

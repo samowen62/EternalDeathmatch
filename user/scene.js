@@ -21,8 +21,11 @@ function init() {
 	scene = new THREE.Scene();
 
   //add weapons
-  weapons['shotgun'] = new weapon("shotgun", ["images/gun.png"], 1000, effects['shotgun']);
-  weapons['fist'] = new weapon("shotgun", ["images/fist-1.png","images/fist-2.png","images/fist-3.png","images/fist-4.png"], 700, effects['roar']);//get pistol sound
+  weapons['shotgun'] = new weapon("shotgun", ["images/gun.png"], 850, effects['shotgun']);
+  weapons['pistol'] = new weapon("shotgun", ["images/pistol.png","images/pistol-fire.png"], 600, effects['pistol']);
+
+  //need to make the begining of the sound a little longer
+  weapons['fist'] = new weapon("shotgun", ["images/fist-1.png","images/fist-2.png","images/fist-3.png","images/fist-4.png"], 700, effects['fist']);//get pistol sound
 
   var character = new cEntity(new THREE.Vector3(45,45,45));
 
@@ -323,7 +326,7 @@ function render() {
       if(character.weapon){
         character.weapon.position(tmpVec.add(camera.position));
       }else{
-        character.setWeapon(weapons['fist']);
+        character.setWeapon(weapons['shotgun']);
       }
       //plane.rotation.setFromRotationMatrix( camera.matrix );
       
