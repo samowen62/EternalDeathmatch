@@ -1806,6 +1806,10 @@ var effects = {
 	'intro' : document.getElementById('intro-rammstein')
 }
 
+/*
+ * UI elements
+ */
+var ui_health = document.getElementById("health");
 var Controller = {
   keyIsDown: [],
 
@@ -2456,7 +2460,7 @@ var cEntity = function(pos){
   this.start_t = -1;
 
   this.weapon = null;
-
+  this.health = 100;
   //to stop from firing too fast
   this.last_shot = new Date().getTime() + 3000;
 
@@ -2501,11 +2505,107 @@ cEntity.prototype = {
 
     this.weapon.animate();
 
+    var end_vec = new THREE.Vector3(),
+        start_Vec = new THREE.Vector3();
     calcVec.addVectors(this.position, this.thickness);
-    var end_vec = new THREE.Vector3();
+    start_Vec.copy(calcVec);
     end_vec.copy(pointed);
     end_vec.multiplyScalar(3*MAX_MAP_WIDTH);
-    end_vec.add(calcVec);
+    end_vec.add(calcVec);    
+    
+
+
+    if(this.weapon.name == "pistol"){
+
+      var ray_hit = this.rayShoot(start_Vec, end_vec, pointed);
+      //check the players to see if we've hit any
+      for(var p in players){
+        calcVec.copy(start_Vec);
+        var pt = players[p].rayDetect(calcVec, pointed);
+        if(pt != null && pt.len <= ray_hit.len){
+            //shot someone
+
+            //eventually this should be server side since this is easily hacked
+            /*socket.emit('death', {
+              hash : pt.cw.id
+            });*/    
+            socket.emit('damage', {
+              hash : pt.cw.id,
+              amount : 20
+            });    
+        }
+      }
+
+      shots.add([start_Vec, ray_hit.end], 0x222222, 8);
+
+    }else if(this.weapon.name == "shotgun"){
+
+      var left_ray = new THREE.Vector3(),
+          middle_ray = new THREE.Vector3(),
+          right_ray = new THREE.Vector3(),
+          left_end = new THREE.Vector3(),
+          right_end = new THREE.Vector3();
+      
+      left_ray.copy(pointed);
+      middle_ray.copy(pointed);
+      right_ray.copy(pointed);
+
+      left_ray.applyAxisAngle(up, 0.075);
+      left_end.copy(left_ray);
+      left_end.multiplyScalar(3*MAX_MAP_WIDTH);
+      left_end.add(calcVec);   
+
+      right_ray.applyAxisAngle(up, -0.075);
+      right_end.copy(right_ray);
+      right_end.multiplyScalar(3*MAX_MAP_WIDTH);
+      right_end.add(calcVec);   
+      
+
+      var ray_hit = this.rayShoot(start_Vec, end_vec, pointed),
+          left_ray_hit = this.rayShoot(start_Vec, left_end, left_ray),
+          right_ray_hit = this.rayShoot(start_Vec, right_end, right_ray);
+      
+      //array of DEATH!!!
+      var hashes = [];
+
+      //find min dist here
+      for(var p in players){
+        calcVec.copy(start_Vec);
+        var pt = players[p].rayDetect(calcVec, middle_ray);
+        if(pt != null && pt.len <= ray_hit.len && hashes.indexOf(pt.cw.id) == -1){
+          hashes.push(pt.cw.id);      
+        }
+
+        calcVec.copy(start_Vec);
+        var pt = players[p].rayDetect(calcVec, left_ray);
+        if(pt != null && pt.len <= left_ray_hit.len && hashes.indexOf(pt.cw.id) == -1){
+          hashes.push(pt.cw.id);        
+        }
+
+        calcVec.copy(start_Vec);
+        var pt = players[p].rayDetect(calcVec, right_ray);
+        if(pt != null && pt.len <= right_ray_hit.len && hashes.indexOf(pt.cw.id) == -1){
+          hashes.push(pt.cw.id);           
+        }
+      }
+
+      for(var h in hashes){
+        socket.emit('damage', {
+          hash : hashes[h],
+          amount : 40
+        }); 
+      }
+
+      shots.add([start_Vec, ray_hit.end], 0x222222, 8);
+      shots.add([start_Vec, left_ray_hit.end], 0x222222, 8);
+      shots.add([start_Vec, right_ray_hit.end], 0x222222, 8);
+
+    }
+
+  },
+
+  rayShoot: function(start_Vec, end_vec, pointer){
+
 
 
     //this must detect the first wall that this ray hits
@@ -2537,8 +2637,7 @@ cEntity.prototype = {
     wxEnd = (wxEnd > MAX_MAP_WIDTH) ? MAX_MAP_WIDTH : (wxEnd < -MAX_MAP_WIDTH) ? -MAX_MAP_WIDTH : wxEnd;
     wzEnd = (wzEnd > MAX_MAP_WIDTH) ? MAX_MAP_WIDTH : (wzEnd < -MAX_MAP_WIDTH) ? -MAX_MAP_WIDTH : wzEnd;
 
-    var start_Vec = new THREE.Vector3();
-    start_Vec.copy(calcVec);
+    
 
     /*  
      *  I tried to make this next series of control statements as simple as 
@@ -2556,7 +2655,7 @@ cEntity.prototype = {
           for(var k=wzStart;k>=wzEnd;k-=t){
             for(var i in boundaries[j/t + 11][k/t + 11]){
               calcVec.copy(start_Vec);
-              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
+              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointer);
               if(pt != null && pt.len <= min_dist){
                 min_dist = pt.len;
                 end_vec.copy(pt.spot);
@@ -2572,7 +2671,7 @@ cEntity.prototype = {
           for(var k=wzStart;k<=wzEnd;k+=t){
             for(var i in boundaries[j/t + 11][k/t + 11]){
               calcVec.copy(start_Vec);
-              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
+              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointer);
               if(pt != null && pt.len <= min_dist){
                 min_dist = pt.len;
                 end_vec.copy(pt.spot);
@@ -2591,7 +2690,7 @@ cEntity.prototype = {
           for(var k=wzStart;k>=wzEnd;k-=t){
             for(var i in boundaries[j/t + 11][k/t + 11]){
               calcVec.copy(start_Vec);
-              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
+              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointer);
               if(pt != null && pt.len <= min_dist){
                 min_dist = pt.len;
                 end_vec.copy(pt.spot);
@@ -2608,7 +2707,7 @@ cEntity.prototype = {
           for(var k=wzStart;k<=wzEnd;k+=t){
             for(var i in boundaries[j/t + 11][k/t + 11]){
               calcVec.copy(start_Vec);
-              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointed);
+              pt = boundaries[j/t + 11][k/t + 11][i].rayDetect(calcVec, pointer);
               if(pt != null && pt.len <= min_dist){
                 min_dist = pt.len;
                 end_vec.copy(pt.spot);
@@ -2625,7 +2724,7 @@ cEntity.prototype = {
     //check the ground too, but not ceilings
     for(var g in ground){
       calcVec.copy(start_Vec);
-      pt = ground[g].rayDetect(calcVec, pointed);
+      pt = ground[g].rayDetect(calcVec, pointer);
       if(pt != null && pt.len <= min_dist){
         min_dist = pt.len;
         end_vec.copy(pt.spot);
@@ -2633,30 +2732,23 @@ cEntity.prototype = {
       }
     }
 
-    //check the players to see if we've hit any
-    for(var p in players){
-      calcVec.copy(start_Vec);
-      pt = players[p].rayDetect(calcVec, pointed);
-      if(pt != null && pt.len <= min_dist){
-          min_dist = pt.len;
-          end_vec.copy(pt.spot);
-
-          //shot someone
-
-          //eventually this should be server side since this is easily hacked
-          socket.emit('death', {
-            hash : pt.cw.id
-          });        
-      }
-    }
-
-    shots.add([start_Vec, end_vec], 0xff0000, 8);
-
+    return { len : min_dist, end : end_vec};
   },
 
   setWeapon: function(weapon){
     this.weapon = (weapon);
     this.weapon.sprites[0].visible = true;
+  },
+
+  damage: function(amount){
+    this.health -= amount;
+
+    if(this.health <= 0){
+      socket.emit('death', {
+        hash : p_hash
+      });
+    }
+
   },
 
   kill: function(){
@@ -2668,6 +2760,10 @@ cEntity.prototype = {
 
     //respawn point
     this.position.copy(new THREE.Vector3(45,45,45));
+
+    //reset everything
+    this.health = 100;
+    ui_health.innerHTML = 100;
   },
 
   move: function (){
@@ -3029,10 +3125,10 @@ function init() {
 
   //add weapons
   weapons['shotgun'] = new weapon("shotgun", ["images/gun.png"], 850, effects['shotgun']);
-  weapons['pistol'] = new weapon("shotgun", ["images/pistol.png","images/pistol-fire.png"], 600, effects['pistol']);
+  weapons['pistol'] = new weapon("pistol", ["images/pistol.png","images/pistol-fire.png"], 600, effects['pistol']);
 
   //need to make the begining of the sound a little longer
-  weapons['fist'] = new weapon("shotgun", ["images/fist-1.png","images/fist-2.png","images/fist-3.png","images/fist-4.png"], 700, effects['fist']);//get pistol sound
+  weapons['fist'] = new weapon("fist", ["images/fist-1.png","images/fist-2.png","images/fist-3.png","images/fist-4.png"], 700, effects['fist']);//get pistol sound
 
   var character = new cEntity(new THREE.Vector3(45,45,45));
 
@@ -3355,7 +3451,6 @@ function render() {
     renderer.render( scene, camera );
 }
 socket.on('o', function (data) {
-
   for(var k in data){
 
   	if(k == p_hash)
@@ -3364,7 +3459,7 @@ socket.on('o', function (data) {
   	if(players[k] && data[k].pos){
   		players[k].position(new THREE.Vector3(data[k].pos.x ,data[k].pos.y, data[k].pos.z));
   	}
-  	else{
+  	else if(!players[k]){
   		console.log("new player");
   		players[k] = new pEntity(k); 
   		scene.add(players[k].geo);
@@ -3377,9 +3472,17 @@ socket.on('id', function (data) {
     p_hash = data.id;
 });
 
+socket.on('damage', function (data) {
+	//server says player has been damaged
+
+	if(data.id == p_hash){
+  		character.damage(data.amount);
+  		ui_health.innerHTML = character.health <= 0 ? 0 : character.health;
+  	}
+});
+
 socket.on('kill', function (data) {
 	//server says player is dead
-	console.log(data, p_hash);
 	if(data.id == p_hash){
 	  	console.log("you died >:)");
   		character.kill();

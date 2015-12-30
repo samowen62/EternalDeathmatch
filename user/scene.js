@@ -22,10 +22,10 @@ function init() {
 
   //add weapons
   weapons['shotgun'] = new weapon("shotgun", ["images/gun.png"], 850, effects['shotgun']);
-  weapons['pistol'] = new weapon("shotgun", ["images/pistol.png","images/pistol-fire.png"], 600, effects['pistol']);
+  weapons['pistol'] = new weapon("pistol", ["images/pistol.png","images/pistol-fire.png"], 600, effects['pistol']);
 
   //need to make the begining of the sound a little longer
-  weapons['fist'] = new weapon("shotgun", ["images/fist-1.png","images/fist-2.png","images/fist-3.png","images/fist-4.png"], 700, effects['fist']);//get pistol sound
+  weapons['fist'] = new weapon("fist", ["images/fist-1.png","images/fist-2.png","images/fist-3.png","images/fist-4.png"], 700, effects['fist']);//get pistol sound
 
   var character = new cEntity(new THREE.Vector3(45,45,45));
 

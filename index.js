@@ -118,7 +118,11 @@ io.sockets.on('connection', function(socket){
     );    
   });
 
-
+  socket.on('damage', function(data){
+    io.to(socket.room).emit('damage', 
+      { id: data.hash, amount: data.amount }
+    );
+  });
 
   socket.on('death', function(data){
     io.to(socket.room).emit('kill', 

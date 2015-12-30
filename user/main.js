@@ -1,5 +1,4 @@
 socket.on('o', function (data) {
-
   for(var k in data){
 
   	if(k == p_hash)
@@ -8,7 +7,7 @@ socket.on('o', function (data) {
   	if(players[k] && data[k].pos){
   		players[k].position(new THREE.Vector3(data[k].pos.x ,data[k].pos.y, data[k].pos.z));
   	}
-  	else{
+  	else if(!players[k]){
   		console.log("new player");
   		players[k] = new pEntity(k); 
   		scene.add(players[k].geo);
@@ -21,9 +20,17 @@ socket.on('id', function (data) {
     p_hash = data.id;
 });
 
+socket.on('damage', function (data) {
+	//server says player has been damaged
+
+	if(data.id == p_hash){
+  		character.damage(data.amount);
+  		ui_health.innerHTML = character.health <= 0 ? 0 : character.health;
+  	}
+});
+
 socket.on('kill', function (data) {
 	//server says player is dead
-	console.log(data, p_hash);
 	if(data.id == p_hash){
 	  	console.log("you died >:)");
   		character.kill();

@@ -52,7 +52,13 @@ var effects = {
 	'damage' : document.getElementById('doom-damage'),
 	'death' : document.getElementById('doom-death'),
 	'pistol' : document.getElementById('doom-pistol'),
+	'fist' : document.getElementById('doom-fist'),
 	'roar' : document.getElementById('doom-roar'),
 	'shotgun' : document.getElementById('doom-shotgun'),
 	'intro' : document.getElementById('intro-rammstein')
 }
+
+/*
+ * UI elements
+ */
+var ui_health = document.getElementById("health");
