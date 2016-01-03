@@ -1752,7 +1752,7 @@ a+"px",m=b,r=0);return b},update:function(){l=this.end()}}};
 var p_hash = null,
 	socket = io(),
 	players={},
-	weapons={},
+	weapons=[],
 	
 	container, 
 	stats, 
@@ -1761,6 +1761,7 @@ var p_hash = null,
 	renderer,
 	
 	lastMouse = [winWidth/2,winHeight/2],
+	current_sprite,
 	//from currPos to view point
  	pointed = new THREE.Vector3( 1, 0, 0),
     currPos = new THREE.Vector3( 0, 50, 0),
@@ -1773,12 +1774,13 @@ var p_hash = null,
 	winWidth = $(window).width(),
 	centX = winWidth / 2,
 	centY = winHeight / 2,
-	mouseSensitivity = 0.006,
+	mouseSensitivity = 0.006,//tweak based on fps
 
 	mouseDown = 0,
 
 	BASE_STEP_FOOT = 10,
 	BASE_SPEED = 1,
+	BUTTON_PRESS_TIME = 1500,
 	MAX_MAP_WIDTH = 2000;
 
 /* set collision detection spacial structure
@@ -1838,41 +1840,29 @@ tmpPos = new THREE.Vector3();
 
 
 //images go in order of animation
-var weapon = function(name, images, duration, effect){
+var weapon = function(name, sprites, duration, effect){
   this.duration = duration;
   this.name = name;
   this.effect = effect;
-  this.sprites = [];
-
-  for( var i in images){
-    var ballTexture = THREE.ImageUtils.loadTexture( images[i] );
-    
-    var ballMaterial = new THREE.SpriteMaterial( { map: ballTexture, useScreenCoordinates: true  } );
-    var sprite = new THREE.Sprite( ballMaterial );
-    sprite.position.set( 150, 150, -150 );
-    sprite.scale.set( 100, 64, 1.0 ); // imageWidth, imageHeight
-    sprite.visible = false;
-    scene.add( sprite );
-    
-    this.sprites.push(sprite);
-  }
+  this.sprites = sprites;
 }
 
 weapon.prototype = {
 
   constructor: weapon,
 
+/*
   position: function(vec){
     for( var s in this.sprites)
       this.sprites[s].position.copy(vec);
   },
-
+*/
   open: function(){
-    this.sprites[0].visible = true;
+    this.sprites[0].style.display = "block";
   },
 
   close: function(){
-    this.sprites[0].visible = false;
+    this.sprites[0].style.display = "none";
   },
 
   animate: function(){
@@ -1889,16 +1879,16 @@ weapon.prototype = {
       setTimeout(this.swapFrames, (s - 1) * seg, s, this.sprites);
     }
 
-    this.sprites[this.sprites.length - 1].visible = false;
-    this.sprites[0].visible = true;
+    this.sprites[this.sprites.length - 1].style.display = "none";
+    this.sprites[0].style.display = "block";
   },
 
   swapFrames: function(frame, sprites){
     var first = (frame - 1) % sprites.length;
     frame = frame % sprites.length;
     
-    sprites[first].visible = false;
-    sprites[frame].visible = true;
+    sprites[first].style.display = "none";
+    sprites[frame].style.display = "block";
   }
 }
 
@@ -2462,7 +2452,12 @@ var cEntity = function(pos){
   this.weapon = null;
   this.health = 100;
   //to stop from firing too fast
-  this.last_shot = new Date().getTime() + 3000;
+  var curr_time = new Date().getTime() + 3000;
+
+  this.last_shot = curr_time;
+  this.weapon_index = 0;
+
+  this.last_pressed_r = curr_time;
 
 }
 
@@ -2736,13 +2731,22 @@ cEntity.prototype = {
   },
 
   setWeapon: function(weapon){
-    this.weapon = (weapon);
-    this.weapon.sprites[0].visible = true;
+    current_sprite = weapon.sprites[0];
+    current_sprite.style.display = "block";
+
+    this.weapon = weapon;
+  },
+
+  rotateWeapon: function(){
+    if(current_sprite) current_sprite.style.display = "none";
+    this.weapon_index = (this.weapon_index + 1) % weapons.length;
+    this.setWeapon(weapons[this.weapon_index]); 
   },
 
   damage: function(amount){
     this.health -= amount;
 
+    //you died
     if(this.health <= 0){
       socket.emit('death', {
         hash : p_hash
@@ -2764,6 +2768,9 @@ cEntity.prototype = {
     //reset everything
     this.health = 100;
     ui_health.innerHTML = 100;
+
+    this.setWeapon(weapons['shotgun']);
+    this.weapon_index = 0;
   },
 
   move: function (){
@@ -2908,6 +2915,13 @@ cEntity.prototype = {
     tmpVec.copy(this.position);
     tmpPos.copy(this.position);
 
+    var curr_time = new Date().getTime();
+
+    if(Controller.keyIsDown[82] && (curr_time - this.last_pressed_r > BUTTON_PRESS_TIME)){
+      this.last_pressed_r = curr_time;
+      this.rotateWeapon();
+    }
+
 
     if((Controller.keyIsDown[87] && Controller.keyIsDown[83]) || (Controller.keyIsDown[68] && Controller.keyIsDown[65]))
       1
@@ -2994,6 +3008,8 @@ cEntity.prototype = {
 
 };
 
+//will need these functions
+//plane.rotation.setFromRotationMatrix( camera.matrix );
 var pEntity = function(hash){
   this.id = hash;
   this.radius = 45;
@@ -3050,7 +3066,7 @@ $("body").click(function(e){
 
 var character = new cEntity(new THREE.Vector3(45,45,45));
 
-var keys = [65, 68, 83, 87, 88, 89, 90, 32];
+var keys = [65, 68, 82, 83, 87, 88, 89, 90, 32];
 for(var i in keys){
   Controller.add(keys[i],
       function () {},
@@ -3067,6 +3083,39 @@ container.requestPointerLock = container.requestPointerLock ||
 document.exitPointerLock = document.exitPointerLock ||
          document.mozExitPointerLock ||
          document.webkitExitPointerLock;
+
+container.appendChild($('.health-box')[0]);
+
+var img_dom_objs = [];
+var weapon_objs = {
+  "fist" : [],
+  "pistol" : [],
+  "shotgun" : []
+};
+
+$.each(document.getElementsByClassName('sprite-img'), function(k, v){
+  
+  switch(v.dataset.weapon){
+    case "fist":
+      weapon_objs["fist"].push(v);
+      break;
+    case "pistol":
+      weapon_objs["pistol"].push(v);
+      break;
+    case "shotgun":
+      weapon_objs["shotgun"].push(v);
+      break;
+
+    default:
+      console.log("invalid data-weapon attribute");
+  }
+
+  img_dom_objs.push(v);
+});
+
+$.each(img_dom_objs, function(k, v){
+  container.appendChild(v);
+});
 
 function toggleFullScreen() {
   if (container.requestFullscreen) {
@@ -3124,12 +3173,13 @@ function init() {
 	scene = new THREE.Scene();
 
   //add weapons
-  weapons['shotgun'] = new weapon("shotgun", ["images/gun.png"], 850, effects['shotgun']);
-  weapons['pistol'] = new weapon("pistol", ["images/pistol.png","images/pistol-fire.png"], 600, effects['pistol']);
+  weapons.push(new weapon("shotgun", weapon_objs["shotgun"], 850, effects['shotgun']));
+  weapons.push(new weapon("pistol", weapon_objs["pistol"], 600, effects['pistol']));
 
   //need to make the begining of the sound a little longer
-  weapons['fist'] = new weapon("fist", ["images/fist-1.png","images/fist-2.png","images/fist-3.png","images/fist-4.png"], 700, effects['fist']);//get pistol sound
+  weapons.push(new weapon("fist", weapon_objs["fist"], 700, effects['fist']));//get pistol sound
 
+  //this is a singleton class
   var character = new cEntity(new THREE.Vector3(45,45,45));
 
   // Grid
@@ -3427,11 +3477,10 @@ function render() {
       tmpVec.multiplyScalar(30);
 
       if(character.weapon){
-        character.weapon.position(tmpVec.add(camera.position));
+        0//character.weapon.position(tmpVec.add(camera.position));
       }else{
-        character.setWeapon(weapons['shotgun']);
+        character.setWeapon(weapons[0]);
       }
-      //plane.rotation.setFromRotationMatrix( camera.matrix );
       
 
       if(Math.abs(character.position.x) > 2000 || Math.abs(character.position.y) > 2000 || Math.abs(character.position.z) > 2000){

@@ -16,7 +16,7 @@ $("body").click(function(e){
 
 var character = new cEntity(new THREE.Vector3(45,45,45));
 
-var keys = [65, 68, 83, 87, 88, 89, 90, 32];
+var keys = [65, 68, 82, 83, 87, 88, 89, 90, 32];
 for(var i in keys){
   Controller.add(keys[i],
       function () {},
@@ -33,6 +33,39 @@ container.requestPointerLock = container.requestPointerLock ||
 document.exitPointerLock = document.exitPointerLock ||
          document.mozExitPointerLock ||
          document.webkitExitPointerLock;
+
+container.appendChild($('.health-box')[0]);
+
+var img_dom_objs = [];
+var weapon_objs = {
+  "fist" : [],
+  "pistol" : [],
+  "shotgun" : []
+};
+
+$.each(document.getElementsByClassName('sprite-img'), function(k, v){
+  
+  switch(v.dataset.weapon){
+    case "fist":
+      weapon_objs["fist"].push(v);
+      break;
+    case "pistol":
+      weapon_objs["pistol"].push(v);
+      break;
+    case "shotgun":
+      weapon_objs["shotgun"].push(v);
+      break;
+
+    default:
+      console.log("invalid data-weapon attribute");
+  }
+
+  img_dom_objs.push(v);
+});
+
+$.each(img_dom_objs, function(k, v){
+  container.appendChild(v);
+});
 
 function toggleFullScreen() {
   if (container.requestFullscreen) {

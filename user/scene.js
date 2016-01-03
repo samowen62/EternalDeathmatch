@@ -21,12 +21,13 @@ function init() {
 	scene = new THREE.Scene();
 
   //add weapons
-  weapons['shotgun'] = new weapon("shotgun", ["images/gun.png"], 850, effects['shotgun']);
-  weapons['pistol'] = new weapon("pistol", ["images/pistol.png","images/pistol-fire.png"], 600, effects['pistol']);
+  weapons.push(new weapon("shotgun", weapon_objs["shotgun"], 850, effects['shotgun']));
+  weapons.push(new weapon("pistol", weapon_objs["pistol"], 600, effects['pistol']));
 
   //need to make the begining of the sound a little longer
-  weapons['fist'] = new weapon("fist", ["images/fist-1.png","images/fist-2.png","images/fist-3.png","images/fist-4.png"], 700, effects['fist']);//get pistol sound
+  weapons.push(new weapon("fist", weapon_objs["fist"], 700, effects['fist']));//get pistol sound
 
+  //this is a singleton class
   var character = new cEntity(new THREE.Vector3(45,45,45));
 
   // Grid
@@ -324,11 +325,10 @@ function render() {
       tmpVec.multiplyScalar(30);
 
       if(character.weapon){
-        character.weapon.position(tmpVec.add(camera.position));
+        0//character.weapon.position(tmpVec.add(camera.position));
       }else{
-        character.setWeapon(weapons['shotgun']);
+        character.setWeapon(weapons[0]);
       }
-      //plane.rotation.setFromRotationMatrix( camera.matrix );
       
 
       if(Math.abs(character.position.x) > 2000 || Math.abs(character.position.y) > 2000 || Math.abs(character.position.z) > 2000){

@@ -4,7 +4,7 @@
 var p_hash = null,
 	socket = io(),
 	players={},
-	weapons={},
+	weapons=[],
 	
 	container, 
 	stats, 
@@ -13,6 +13,7 @@ var p_hash = null,
 	renderer,
 	
 	lastMouse = [winWidth/2,winHeight/2],
+	current_sprite,
 	//from currPos to view point
  	pointed = new THREE.Vector3( 1, 0, 0),
     currPos = new THREE.Vector3( 0, 50, 0),
@@ -25,12 +26,13 @@ var p_hash = null,
 	winWidth = $(window).width(),
 	centX = winWidth / 2,
 	centY = winHeight / 2,
-	mouseSensitivity = 0.006,
+	mouseSensitivity = 0.006,//tweak based on fps
 
 	mouseDown = 0,
 
 	BASE_STEP_FOOT = 10,
 	BASE_SPEED = 1,
+	BUTTON_PRESS_TIME = 1500,
 	MAX_MAP_WIDTH = 2000;
 
 /* set collision detection spacial structure

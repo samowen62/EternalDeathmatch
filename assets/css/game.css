@@ -60,3 +60,9 @@
     border: 3px solid #ee1111;
 
 }
+
+.sprite-img{
+	position: fixed;
+    width:100%;
+    display: none;
+}

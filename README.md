@@ -13,6 +13,8 @@ Gulp precompiles the assets and running <pre>node index.js</pre> on the root run
 * More sounds on special events.
 * Fix multiple sound issue (maybe just use howler).
 * The corner clipping issue is still persisting
+* Convert character and shot array to singletons
+* Implement weapons as html elements not sprites
 
 #BIG TODO
 * Migrate all the code to the server side except button pushes to avoid hacking
