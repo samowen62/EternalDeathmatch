@@ -2390,14 +2390,11 @@ ceiling.prototype = {
 
 };
 
-var projectile_singleton = function(){
-  this.bullets = [];
-}
+//test to see if it really is that slow
+function projectile_singleton(){
+  var bullets = [];
 
-projectile_singleton.prototype = {
-  constructor: projectile_singleton,
-
-  add: function (line, color, duration){
+  this.add = function (line, color, duration){
     //in this function check the entity list for hits
     var lineGeo = new THREE.Geometry();
     lineGeo.vertices.push(line[0]);
@@ -2413,18 +2410,18 @@ projectile_singleton.prototype = {
 
     scene.add( rend_line);
 
-    this.bullets.push({
+    bullets.push({
       'line' : rend_line,
       'time_left' : duration
     });
   },
 
-  update: function (){
-    for(var b in this.bullets){
-      this.bullets[b]['time_left']--;
-      if(this.bullets[b]['time_left'] == 0){
-        scene.remove(this.bullets[b]['line']);  
-        this.bullets.splice(b, 1);
+  this.update = function (){
+    for(var b in bullets){
+      bullets[b]['time_left']--;
+      if(bullets[b]['time_left'] == 0){
+        scene.remove(bullets[b]['line']);  
+        bullets.splice(b, 1);
       }
     }
   }
