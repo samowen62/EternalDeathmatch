@@ -1,3 +1,6 @@
+
+//main.js
+
 socket.on('o', function (data) {
   for(var k in data){
 
@@ -8,9 +11,9 @@ socket.on('o', function (data) {
   		players[k].position(new THREE.Vector3(data[k].pos.x ,data[k].pos.y, data[k].pos.z));
   	}
   	else if(!players[k]){
-  		console.log("new player");
+  		console.log("new player "+k+"entered");
   		players[k] = new pEntity(k); 
-  		scene.add(players[k].geo);
+  		scene.add(players[k].current_sprite);
   	}
   }
 });
@@ -34,6 +37,8 @@ socket.on('kill', function (data) {
 	if(data.id == p_hash){
 	  	console.log("you died >:)");
   		character.kill();
+  	}else{
+  		;//play sprite death sequence
   	}
 });
 

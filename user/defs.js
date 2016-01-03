@@ -1,4 +1,6 @@
 /*
+ * defs.js
+ *
  * In this file store all global variables shared between files
  */
 var p_hash = null,
@@ -32,6 +34,7 @@ var p_hash = null,
 
 	BASE_STEP_FOOT = 10,
 	BASE_SPEED = 1,
+	BASE_JUMP_POWER = 100,
 	BUTTON_PRESS_TIME = 1500,
 	MAX_MAP_WIDTH = 2000;
 
@@ -60,6 +63,23 @@ var effects = {
 	'intro' : document.getElementById('intro-rammstein')
 }
 
+var sprite_list = [
+	'images/player/playa1.png',
+	'images/player/playa2.png',
+	'images/player/playa3.png',
+	'images/player/playa4.png',
+	'images/player/playa5.png',
+	'images/player/playe1.png',
+	'images/player/playe2.png',
+	'images/player/playe3.png',
+	'images/player/playe4.png',
+	'images/player/playe5.png',
+	'images/player/playf1.png',
+	'images/player/playf2.png',
+	'images/player/playf3.png',
+	'images/player/playf4.png',
+	'images/player/playf5.png'
+];
 /*
  * UI elements
  */

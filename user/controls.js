@@ -1,3 +1,6 @@
+
+//controls.js
+
 function onWindowResize() {
 
   camera.left = window.innerWidth / - 2;

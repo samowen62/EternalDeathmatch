@@ -107,7 +107,8 @@ io.sockets.on('connection', function(socket){
 
 
   socket.on('m', function(msg){
-    rooms[socket.room_id].members[socket.uniq_id]['pos'] = msg;
+    rooms[socket.room_id].members[socket.uniq_id]['pos'] = msg['pos'];
+    rooms[socket.room_id].members[socket.uniq_id]['pnt'] = msg['pnt'];
     
     /*
       optimize per socket latency later to respond more frequently

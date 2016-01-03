@@ -1747,6 +1747,8 @@ k.id="msText";k.style.cssText="color:#0f0;font-family:Helvetica,Arial,sans-serif
 a+"px",m=b,r=0);return b},update:function(){l=this.end()}}};
 
 /*
+ * defs.js
+ *
  * In this file store all global variables shared between files
  */
 var p_hash = null,
@@ -1780,6 +1782,7 @@ var p_hash = null,
 
 	BASE_STEP_FOOT = 10,
 	BASE_SPEED = 1,
+	BASE_JUMP_POWER = 100,
 	BUTTON_PRESS_TIME = 1500,
 	MAX_MAP_WIDTH = 2000;
 
@@ -1808,10 +1811,30 @@ var effects = {
 	'intro' : document.getElementById('intro-rammstein')
 }
 
+var sprite_list = [
+	'images/player/playa1.png',
+	'images/player/playa2.png',
+	'images/player/playa3.png',
+	'images/player/playa4.png',
+	'images/player/playa5.png',
+	'images/player/playe1.png',
+	'images/player/playe2.png',
+	'images/player/playe3.png',
+	'images/player/playe4.png',
+	'images/player/playe5.png',
+	'images/player/playf1.png',
+	'images/player/playf2.png',
+	'images/player/playf3.png',
+	'images/player/playf4.png',
+	'images/player/playf5.png'
+];
 /*
  * UI elements
  */
 var ui_health = document.getElementById("health");
+
+//objects.js
+
 var Controller = {
   keyIsDown: [],
 
@@ -2429,16 +2452,24 @@ function projectile_singleton(){
 
 var shots = new projectile_singleton();
 
+/*
+ *  This class is for the main player and his controls.
+ *  It is actually a singleton but to my knowledge implementing it with
+ *  prototyping is faster. Just DON'T make another cEntity since there is 
+ *  no reason. The aim() method actually refers to the singleton character
+ *  rather than its own instance for special reasons.
+ */
 var cEntity = function(pos){
   //should only have y component for testing ceiling collision
   this.thickness = new THREE.Vector3(0,45,0);
   pos.y = this.thickness.y + 5;
   this.position = pos;
+  this.pointed = new THREE.Vector3();
+  this.pointed.copy(pointed);
 
   this.stepFoot = BASE_STEP_FOOT;
   this.speed = BASE_SPEED;
 
-  //have to insert in mid-air?
   this.grounded = false;
   this.jumping = false;
 
@@ -2478,12 +2509,12 @@ cEntity.prototype = {
     0;
 
 
-    pointed.applyAxisAngle (up,-mouseSensitivity*movementX);
-    left.x = pointed.z;
-    left.z = (-1) * pointed.x;
+    character.pointed.applyAxisAngle (up,-mouseSensitivity*movementX);
+    left.x = character.pointed.z;
+    left.z = (-1) * character.pointed.x;
     left.normalize();
-    pointed.applyAxisAngle (left,mouseSensitivity*movementY);
-    camera.lookAt(tmpVec.addVectors(camera.position, pointed));
+    character.pointed.applyAxisAngle (left,mouseSensitivity*movementY);
+    camera.lookAt(tmpVec.addVectors(camera.position, character.pointed));
   },
 
   shoot: function (){
@@ -2501,7 +2532,7 @@ cEntity.prototype = {
         start_Vec = new THREE.Vector3();
     calcVec.addVectors(this.position, this.thickness);
     start_Vec.copy(calcVec);
-    end_vec.copy(pointed);
+    end_vec.copy(this.pointed);
     end_vec.multiplyScalar(3*MAX_MAP_WIDTH);
     end_vec.add(calcVec);    
     
@@ -2509,11 +2540,11 @@ cEntity.prototype = {
 
     if(this.weapon.name == "pistol"){
 
-      var ray_hit = this.rayShoot(start_Vec, end_vec, pointed);
+      var ray_hit = this.rayShoot(start_Vec, end_vec, this.pointed);
       //check the players to see if we've hit any
       for(var p in players){
         calcVec.copy(start_Vec);
-        var pt = players[p].rayDetect(calcVec, pointed);
+        var pt = players[p].rayDetect(calcVec, this.pointed);
         if(pt != null && pt.len <= ray_hit.len){
             //shot someone
 
@@ -2538,9 +2569,9 @@ cEntity.prototype = {
           left_end = new THREE.Vector3(),
           right_end = new THREE.Vector3();
       
-      left_ray.copy(pointed);
-      middle_ray.copy(pointed);
-      right_ray.copy(pointed);
+      left_ray.copy(this.pointed);
+      middle_ray.copy(this.pointed);
+      right_ray.copy(this.pointed);
 
       left_ray.applyAxisAngle(up, 0.075);
       left_end.copy(left_ray);
@@ -2553,7 +2584,7 @@ cEntity.prototype = {
       right_end.add(calcVec);   
       
 
-      var ray_hit = this.rayShoot(start_Vec, end_vec, pointed),
+      var ray_hit = this.rayShoot(start_Vec, end_vec, this.pointed),
           left_ray_hit = this.rayShoot(start_Vec, left_end, left_ray),
           right_ray_hit = this.rayShoot(start_Vec, right_end, right_ray);
       
@@ -2741,6 +2772,7 @@ cEntity.prototype = {
   },
 
   damage: function(amount){
+
     this.health -= amount;
 
     //you died
@@ -2748,6 +2780,8 @@ cEntity.prototype = {
       socket.emit('death', {
         hash : p_hash
       });
+    }else{
+      effects['damage'].play();
     }
 
   },
@@ -2791,7 +2825,7 @@ cEntity.prototype = {
       this.grounded = false;
       this.ground = null; //redundant
 
-      this.air_v = 100;
+      this.air_v = BASE_JUMP_POWER;
       this.start_t = d.getTime();
       this.air_o = this.position.y;
       s *= 0.4;
@@ -2924,39 +2958,39 @@ cEntity.prototype = {
       1
     else if(Controller.keyIsDown[87] && Controller.keyIsDown[65]) //w + a
     {
-      tmpVec.x += diagS * (pointed.z + pointed.x);
-      tmpVec.z += diagS * (pointed.z - pointed.x);
+      tmpVec.x += diagS * (this.pointed.z + this.pointed.x);
+      tmpVec.z += diagS * (this.pointed.z - this.pointed.x);
     }
     else if(Controller.keyIsDown[87] && Controller.keyIsDown[68]) //w + d
     {
-      tmpVec.x += diagS * (pointed.x - pointed.z);
-      tmpVec.z += diagS * (pointed.x + pointed.z);
+      tmpVec.x += diagS * (this.pointed.x - this.pointed.z);
+      tmpVec.z += diagS * (this.pointed.x + this.pointed.z);
     }
     else if(Controller.keyIsDown[83] && Controller.keyIsDown[65]) //s + a
     {
-      tmpVec.x += diagS * (pointed.z - pointed.x);
-      tmpVec.z += diagS * ( -1 * pointed.x - pointed.z);
+      tmpVec.x += diagS * (this.pointed.z - this.pointed.x);
+      tmpVec.z += diagS * ( -1 * this.pointed.x - this.pointed.z);
     }
     else if(Controller.keyIsDown[83] && Controller.keyIsDown[68]) //s + d
     {
-      tmpVec.x += diagS * (pointed.z - pointed.x);
-      tmpVec.z += diagS * (pointed.x - pointed.z);
+      tmpVec.x += diagS * (this.pointed.z - this.pointed.x);
+      tmpVec.z += diagS * (this.pointed.x - this.pointed.z);
     }
     else if(Controller.keyIsDown[87]){ //w
-      tmpVec.x += s * pointed.x;
-      tmpVec.z += s * pointed.z;
+      tmpVec.x += s * this.pointed.x;
+      tmpVec.z += s * this.pointed.z;
     }
     else if(Controller.keyIsDown[65]){ //a
-      tmpVec.x += s * pointed.z;
-      tmpVec.z -= s * pointed.x;
+      tmpVec.x += s * this.pointed.z;
+      tmpVec.z -= s * this.pointed.x;
     }
     else if(Controller.keyIsDown[83]){ //s
-      tmpVec.x -= s * pointed.x;
-      tmpVec.z -= s * pointed.z;
+      tmpVec.x -= s * this.pointed.x;
+      tmpVec.z -= s * this.pointed.z;
     }
     else if(Controller.keyIsDown[68]){ //d
-      tmpVec.x -= s * pointed.z;
-      tmpVec.z += s * pointed.x;
+      tmpVec.x -= s * this.pointed.z;
+      tmpVec.z += s * this.pointed.x;
     }
     else if(Controller.keyIsDown[90]){ //z
       camera.translateY(-10);
@@ -3005,14 +3039,30 @@ cEntity.prototype = {
 
 };
 
-//will need these functions
+///will need these functions
 //plane.rotation.setFromRotationMatrix( camera.matrix );
 var pEntity = function(hash){
   this.id = hash;
   this.radius = 45;
-  this.thickness = new THREE.Vector3(0, this.radius, 0);
-  this.geo = new THREE.Mesh( player_geometry, player_material );
 
+  this.sprites = [];
+  
+  for(var s in sprite_list){
+    var sprite = new THREE.Sprite( new THREE.SpriteMaterial({
+      map: THREE.ImageUtils.loadTexture( sprite_list[s] ), 
+      useScreenCoordinates: true 
+    }));
+
+    sprite.position.set( 0, this.radius + 50, 0 );
+    sprite.scale.set( 64, 64, 1.0 ); // imageWidth, imageHeight
+    sprite.visible = false;
+    
+    this.sprites.push(sprite);
+    scene.add( sprite );
+  }
+
+  this.current_sprite = this.sprites[0];
+  this.current_sprite.visible = true;
 }
 
 pEntity.prototype = {
@@ -3020,7 +3070,19 @@ pEntity.prototype = {
   constructor: pEntity,
 
   position: function(pos){
-    this.geo.position.copy(pos);
+    this.current_sprite.position.copy(pos);
+  },
+
+  //pose set is 0..2 so far sets of 5 sprites
+  //later incorporate angle
+  setSprite: function(pose_set, angle){
+    var index = 5*pose_set + angle;
+
+    this.current_sprite.visible = false;
+    this.sprites[index].position.copy(this.current_sprite.position);
+    
+    this.current_sprite = this.sprites[index];
+    this.current_sprite.visible = true;
   },
 
   rayDetect: function (start, pointer){
@@ -3044,6 +3106,9 @@ pEntity.prototype = {
   }
   
 }
+
+
+//controls.js
 
 function onWindowResize() {
 
@@ -3147,6 +3212,9 @@ function lockChangeAlert() {
     document.removeEventListener("mousemove", character.aim, false);
   }
 }
+
+//scene.js
+
 var player_geometry = new THREE.SphereGeometry( 45, 32, 32 ); 
 var player_material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
 
@@ -3159,11 +3227,12 @@ animate();
 
 function init() {
 
+  //set up initial camera
+  //later this is character based
 	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 10000 );
 	camera.position.x = 0;
 	camera.position.y = 50;
 	camera.position.z = 0;
-
 	tmpVec.addVectors(camera.position, pointed);
 	camera.lookAt(tmpVec);
 
@@ -3470,7 +3539,7 @@ function render() {
       camera.position.y += character.thickness.y;
 
 
-      tmpVec.copy(pointed);
+      tmpVec.copy(character.pointed);
       tmpVec.multiplyScalar(30);
 
       if(character.weapon){
@@ -3487,15 +3556,25 @@ function render() {
         character.kill();
       }
 
-    	socket.emit('m', {
-    	//	hash : p_hash,
-    		x : character.position.x,
-    		y : character.position.y,
-    		z : character.position.z
-    	});
+      socket.emit('m', {
+        pos : {
+          x : character.position.x,
+          y : character.position.y,
+          z : character.position.z
+        },
+        pnt : {
+          x : character.pointed.x,
+          y : character.pointed.y,
+          z : character.pointed.z
+        }
+      });
+
     }
     renderer.render( scene, camera );
 }
+
+//main.js
+
 socket.on('o', function (data) {
   for(var k in data){
 
@@ -3506,9 +3585,9 @@ socket.on('o', function (data) {
   		players[k].position(new THREE.Vector3(data[k].pos.x ,data[k].pos.y, data[k].pos.z));
   	}
   	else if(!players[k]){
-  		console.log("new player");
+  		console.log("new player "+k+"entered");
   		players[k] = new pEntity(k); 
-  		scene.add(players[k].geo);
+  		scene.add(players[k].current_sprite);
   	}
   }
 });
@@ -3532,6 +3611,8 @@ socket.on('kill', function (data) {
 	if(data.id == p_hash){
 	  	console.log("you died >:)");
   		character.kill();
+  	}else{
+  		;//play sprite death sequence
   	}
 });
 

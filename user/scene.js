@@ -1,3 +1,6 @@
+
+//scene.js
+
 var player_geometry = new THREE.SphereGeometry( 45, 32, 32 ); 
 var player_material = new THREE.MeshLambertMaterial( { color: 0x0099cc, shading: THREE.FlatShading, overdraw: 0.5 } );
 
@@ -10,11 +13,12 @@ animate();
 
 function init() {
 
+  //set up initial camera
+  //later this is character based
 	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 10000 );
 	camera.position.x = 0;
 	camera.position.y = 50;
 	camera.position.z = 0;
-
 	tmpVec.addVectors(camera.position, pointed);
 	camera.lookAt(tmpVec);
 
@@ -321,7 +325,7 @@ function render() {
       camera.position.y += character.thickness.y;
 
 
-      tmpVec.copy(pointed);
+      tmpVec.copy(character.pointed);
       tmpVec.multiplyScalar(30);
 
       if(character.weapon){
@@ -338,12 +342,19 @@ function render() {
         character.kill();
       }
 
-    	socket.emit('m', {
-    	//	hash : p_hash,
-    		x : character.position.x,
-    		y : character.position.y,
-    		z : character.position.z
-    	});
+      socket.emit('m', {
+        pos : {
+          x : character.position.x,
+          y : character.position.y,
+          z : character.position.z
+        },
+        pnt : {
+          x : character.pointed.x,
+          y : character.pointed.y,
+          z : character.pointed.z
+        }
+      });
+
     }
     renderer.render( scene, camera );
 }
