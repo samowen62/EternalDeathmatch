@@ -8,7 +8,10 @@ socket.on('o', function (data) {
   		continue;
 
   	if(players[k] && data[k].pos){
-  		players[k].position(new THREE.Vector3(data[k].pos.x ,data[k].pos.y, data[k].pos.z));
+  		players[k].position(
+  			new THREE.Vector3(data[k].pos.x ,data[k].pos.y, data[k].pos.z),
+  			new THREE.Vector2(data[k].pnt.x ,data[k].pnt.z).normalize()
+  		);
   	}
   	else if(!players[k]){
   		console.log("new player "+k+"entered");

@@ -345,7 +345,6 @@ function render() {
       socket.emit('m', {
         pos : {
           x : character.position.x,
-          y : character.position.y,
           z : character.position.z
         },
         pnt : {

@@ -1817,6 +1817,9 @@ var sprite_list = [
 	'images/player/playa3.png',
 	'images/player/playa4.png',
 	'images/player/playa5.png',
+	'images/player/playa6.png',
+	'images/player/playa7.png',
+	'images/player/playa8.png',
 	'images/player/playe1.png',
 	'images/player/playe2.png',
 	'images/player/playe3.png',
@@ -3044,7 +3047,7 @@ cEntity.prototype = {
 var pEntity = function(hash){
   this.id = hash;
   this.radius = 45;
-
+  this.index = 0;
   this.sprites = [];
   
   for(var s in sprite_list){
@@ -3061,7 +3064,7 @@ var pEntity = function(hash){
     scene.add( sprite );
   }
 
-  this.current_sprite = this.sprites[0];
+  this.current_sprite = this.sprites[this.index];
   this.current_sprite.visible = true;
 }
 
@@ -3069,20 +3072,41 @@ pEntity.prototype = {
 
   constructor: pEntity,
 
-  position: function(pos){
+  position: function(pos, pnt){
+    console.log(pos);
     this.current_sprite.position.copy(pos);
+
+    var c_pnt = new THREE.Vector2(character.pointed.x, character.pointed.z).normalize();
+    var num = (c_pnt.x*pnt.x + c_pnt.y*pnt.y);
+    num = num < 0 ? -num * num : num*num;
+
+    var cos_2 = (c_pnt.x*c_pnt.x + c_pnt.y*c_pnt.y) * (pnt.x*pnt.x + pnt.y*pnt.y);
+    cos_2 = num / cos_2;
+    
+    //gave offset here (pi/8)^2
+    cos_2 = parseInt(2*(cos_2 + 1.1542126));
+
+    var side = c_pnt.x*pnt.y - c_pnt.y*pnt.x < 0;
+
+    if(!side)
+      cos_2 = 7 - cos_2;
+
+    this.setSprite(cos_2);    
+
   },
 
   //pose set is 0..2 so far sets of 5 sprites
   //later incorporate angle
-  setSprite: function(pose_set, angle){
-    var index = 5*pose_set + angle;
-
-    this.current_sprite.visible = false;
-    this.sprites[index].position.copy(this.current_sprite.position);
+  setSprite: function(index){
+    if(index != this.index){
+      this.current_sprite.visible = false;
+      this.sprites[index].position.copy(this.current_sprite.position);
     
-    this.current_sprite = this.sprites[index];
-    this.current_sprite.visible = true;
+      this.current_sprite = this.sprites[index];
+      this.current_sprite.visible = true;
+      
+      this.index = index;
+    }
   },
 
   rayDetect: function (start, pointer){
@@ -3559,7 +3583,6 @@ function render() {
       socket.emit('m', {
         pos : {
           x : character.position.x,
-          y : character.position.y,
           z : character.position.z
         },
         pnt : {
@@ -3582,7 +3605,10 @@ socket.on('o', function (data) {
   		continue;
 
   	if(players[k] && data[k].pos){
-  		players[k].position(new THREE.Vector3(data[k].pos.x ,data[k].pos.y, data[k].pos.z));
+  		players[k].position(
+  			new THREE.Vector3(data[k].pos.x ,data[k].pos.y, data[k].pos.z),
+  			new THREE.Vector2(data[k].pnt.x ,data[k].pnt.z).normalize()
+  		);
   	}
   	else if(!players[k]){
   		console.log("new player "+k+"entered");
