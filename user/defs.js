@@ -28,7 +28,7 @@ var p_hash = null,
 	winWidth = $(window).width(),
 	centX = winWidth / 2,
 	centY = winHeight / 2,
-	mouseSensitivity = 0.006,//tweak based on fps
+	mouseSensitivity = 0.004,//tweak based on fps
 
 	mouseDown = 0,
 
@@ -36,7 +36,8 @@ var p_hash = null,
 	BASE_SPEED = 1,
 	BASE_JUMP_POWER = 100,
 	BUTTON_PRESS_TIME = 1500,
-	MAX_MAP_WIDTH = 2000;
+	MAX_MAP_WIDTH = 2000,
+	PLAYER_HEIGHT = 26;
 
 /* set collision detection spacial structure
  *

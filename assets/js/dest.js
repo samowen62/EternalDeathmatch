@@ -1776,7 +1776,7 @@ var p_hash = null,
 	winWidth = $(window).width(),
 	centX = winWidth / 2,
 	centY = winHeight / 2,
-	mouseSensitivity = 0.006,//tweak based on fps
+	mouseSensitivity = 0.004,//tweak based on fps
 
 	mouseDown = 0,
 
@@ -1784,7 +1784,8 @@ var p_hash = null,
 	BASE_SPEED = 1,
 	BASE_JUMP_POWER = 100,
 	BUTTON_PRESS_TIME = 1500,
-	MAX_MAP_WIDTH = 2000;
+	MAX_MAP_WIDTH = 2000,
+	PLAYER_HEIGHT = 26;
 
 /* set collision detection spacial structure
  *
@@ -1866,9 +1867,10 @@ tmpPos = new THREE.Vector3();
 
 
 //images go in order of animation
-var weapon = function(name, sprites, duration, effect){
+var weapon = function(name, range, sprites, duration, effect){
   this.duration = duration;
   this.name = name;
+  this.range = range;
   this.effect = effect;
   this.sprites = sprites;
 }
@@ -2416,8 +2418,8 @@ ceiling.prototype = {
 
 };
 
-//test to see if it really is that slow
-function projectile_singleton(){
+
+function projectiles(){
   var bullets = [];
 
   this.add = function (line, color, duration){
@@ -2453,7 +2455,7 @@ function projectile_singleton(){
   }
 }
 
-var shots = new projectile_singleton();
+var shots = new projectiles();
 
 /*
  *  This class is for the main player and his controls.
@@ -2464,7 +2466,7 @@ var shots = new projectile_singleton();
  */
 var cEntity = function(pos){
   //should only have y component for testing ceiling collision
-  this.thickness = new THREE.Vector3(0,45,0);
+  this.thickness = new THREE.Vector3(0,PLAYER_HEIGHT,0);
   pos.y = this.thickness.y + 5;
   this.position = pos;
   this.pointed = new THREE.Vector3();
@@ -2536,12 +2538,12 @@ cEntity.prototype = {
     calcVec.addVectors(this.position, this.thickness);
     start_Vec.copy(calcVec);
     end_vec.copy(this.pointed);
-    end_vec.multiplyScalar(3*MAX_MAP_WIDTH);
+    end_vec.multiplyScalar(this.weapon.range);
     end_vec.add(calcVec);    
     
 
 
-    if(this.weapon.name == "pistol"){
+    if(this.weapon.name == "pistol" || this.weapon.name == "fist"){
 
       var ray_hit = this.rayShoot(start_Vec, end_vec, this.pointed);
       //check the players to see if we've hit any
@@ -2555,6 +2557,8 @@ cEntity.prototype = {
             /*socket.emit('death', {
               hash : pt.cw.id
             });*/    
+            console.log("struck a player");
+
             socket.emit('damage', {
               hash : pt.cw.id,
               amount : 20
@@ -2565,6 +2569,8 @@ cEntity.prototype = {
       shots.add([start_Vec, ray_hit.end], 0x222222, 8);
 
     }else if(this.weapon.name == "shotgun"){
+      //make shotgun shorter range
+
 
       var left_ray = new THREE.Vector3(),
           middle_ray = new THREE.Vector3(),
@@ -2616,6 +2622,7 @@ cEntity.prototype = {
       }
 
       for(var h in hashes){
+        console.log("struck a player");
         socket.emit('damage', {
           hash : hashes[h],
           amount : 40
@@ -2639,9 +2646,9 @@ cEntity.prototype = {
 
     var wxStart,wxEnd,wzStart,wzEnd,t = 2*sqThick,
 
-    wxStart = calcVec.x;
+    wxStart = start_Vec.x;
     wxEnd = end_vec.x;
-    wzStart = calcVec.z;
+    wzStart = start_Vec.z;
     wzEnd = end_vec.z;
 
     if(wxStart >= wxEnd){
@@ -2660,8 +2667,8 @@ cEntity.prototype = {
       wzEnd = (wzEnd - wzEnd % t) + t;
     }
 
-    wxEnd = (wxEnd > MAX_MAP_WIDTH) ? MAX_MAP_WIDTH : (wxEnd < -MAX_MAP_WIDTH) ? -MAX_MAP_WIDTH : wxEnd;
-    wzEnd = (wzEnd > MAX_MAP_WIDTH) ? MAX_MAP_WIDTH : (wzEnd < -MAX_MAP_WIDTH) ? -MAX_MAP_WIDTH : wzEnd;
+    wxEnd = (wxEnd > this.weapon.range) ? this.weapon.range : (wxEnd < -this.weapon.range) ? -this.weapon.range : wxEnd;
+    wzEnd = (wzEnd > this.weapon.range) ? this.weapon.range : (wzEnd < -this.weapon.range) ? -this.weapon.range : wzEnd;
 
     
 
@@ -2672,7 +2679,7 @@ cEntity.prototype = {
      *  the unpredictable three.js library forced me to add ugly, odd looking code I feel
      *  ashamed as a programmer for writing.
      */
-     var pt, min_dist = MAX_MAP_WIDTH, min_wall = null, tmp_v = new THREE.Vector3();
+     var pt, min_dist = this.weapon.range, min_wall = null, tmp_v = new THREE.Vector3();
 
      if(wxStart >= wxEnd){
       if(wzStart >= wzEnd){
@@ -2797,7 +2804,7 @@ cEntity.prototype = {
     //do a timed death sequence here
 
     //respawn point
-    this.position.copy(new THREE.Vector3(45,45,45));
+    this.position.copy(new THREE.Vector3(0,PLAYER_HEIGHT,0));
 
     //reset everything
     this.health = 100;
@@ -3046,7 +3053,7 @@ cEntity.prototype = {
 //plane.rotation.setFromRotationMatrix( camera.matrix );
 var pEntity = function(hash){
   this.id = hash;
-  this.radius = 45;
+  this.radius = PLAYER_HEIGHT;
   this.index = 0;
   this.sprites = [];
   
@@ -3056,7 +3063,7 @@ var pEntity = function(hash){
       useScreenCoordinates: true 
     }));
 
-    sprite.position.set( 0, this.radius + 50, 0 );
+    sprite.position.set( 0, this.radius + PLAYER_HEIGHT, 0 );
     sprite.scale.set( 64, 64, 1.0 ); // imageWidth, imageHeight
     sprite.visible = false;
     
@@ -3073,7 +3080,6 @@ pEntity.prototype = {
   constructor: pEntity,
 
   position: function(pos, pnt){
-    console.log(pos);
     this.current_sprite.position.copy(pos);
 
     var c_pnt = new THREE.Vector2(character.pointed.x, character.pointed.z).normalize();
@@ -3111,7 +3117,7 @@ pEntity.prototype = {
 
   rayDetect: function (start, pointer){
     var ray = new THREE.Vector3();
-    ray.subVectors(start, this.geo.position);
+    ray.subVectors(start, this.current_sprite.position);
 
     var ray_comp = pointer.dot(ray);
     var discriminant = ray_comp * ray_comp - ray.dot(ray) + (this.radius * this.radius);
@@ -3263,14 +3269,14 @@ function init() {
 	scene = new THREE.Scene();
 
   //add weapons
-  weapons.push(new weapon("shotgun", weapon_objs["shotgun"], 850, effects['shotgun']));
-  weapons.push(new weapon("pistol", weapon_objs["pistol"], 600, effects['pistol']));
+  weapons.push(new weapon("shotgun", 300, weapon_objs["shotgun"], 850, effects['shotgun']));
+  weapons.push(new weapon("pistol", 3000, weapon_objs["pistol"], 600, effects['pistol']));
 
   //need to make the begining of the sound a little longer
-  weapons.push(new weapon("fist", weapon_objs["fist"], 700, effects['fist']));//get pistol sound
+  weapons.push(new weapon("fist", 40, weapon_objs["fist"], 700, effects['fist']));//get pistol sound
 
   //this is a singleton class
-  var character = new cEntity(new THREE.Vector3(45,45,45));
+  var character = new cEntity(new THREE.Vector3(0,PLAYER_HEIGHT,0));
 
   // Grid
 
@@ -3583,11 +3589,11 @@ function render() {
       socket.emit('m', {
         pos : {
           x : character.position.x,
+          y : character.position.y,
           z : character.position.z
         },
         pnt : {
           x : character.pointed.x,
-          y : character.pointed.y,
           z : character.pointed.z
         }
       });
@@ -3606,12 +3612,12 @@ socket.on('o', function (data) {
 
   	if(players[k] && data[k].pos){
   		players[k].position(
-  			new THREE.Vector3(data[k].pos.x ,data[k].pos.y, data[k].pos.z),
+  			new THREE.Vector3(data[k].pos.x ,data[k].pos.y + PLAYER_HEIGHT, data[k].pos.z),
   			new THREE.Vector2(data[k].pnt.x ,data[k].pnt.z).normalize()
   		);
   	}
   	else if(!players[k]){
-  		console.log("new player "+k+"entered");
+  		console.log("new player "+k+" entered");
   		players[k] = new pEntity(k); 
   		scene.add(players[k].current_sprite);
   	}

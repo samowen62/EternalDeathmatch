@@ -8,9 +8,9 @@ Gulp precompiles the assets and running <pre>node index.js</pre> on the root run
 ##TODO
 * Handle players who've left by broadcasting the disconnect serverside
 * Add more non-collideable scenery to the map.
-* Adjust sprites for movement.
 * More sounds on special events.
 * Fix multiple sound issue (maybe just use howler).
+* Fix reticule and tweak weapon range.
 * The corner clipping issue is still persisting
 
 #BIG TODO

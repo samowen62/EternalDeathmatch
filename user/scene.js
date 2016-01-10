@@ -25,14 +25,14 @@ function init() {
 	scene = new THREE.Scene();
 
   //add weapons
-  weapons.push(new weapon("shotgun", weapon_objs["shotgun"], 850, effects['shotgun']));
-  weapons.push(new weapon("pistol", weapon_objs["pistol"], 600, effects['pistol']));
+  weapons.push(new weapon("shotgun", 300, weapon_objs["shotgun"], 850, effects['shotgun']));
+  weapons.push(new weapon("pistol", 3000, weapon_objs["pistol"], 600, effects['pistol']));
 
   //need to make the begining of the sound a little longer
-  weapons.push(new weapon("fist", weapon_objs["fist"], 700, effects['fist']));//get pistol sound
+  weapons.push(new weapon("fist", 40, weapon_objs["fist"], 700, effects['fist']));//get pistol sound
 
   //this is a singleton class
-  var character = new cEntity(new THREE.Vector3(45,45,45));
+  var character = new cEntity(new THREE.Vector3(0,PLAYER_HEIGHT,0));
 
   // Grid
 
@@ -345,11 +345,11 @@ function render() {
       socket.emit('m', {
         pos : {
           x : character.position.x,
+          y : character.position.y,
           z : character.position.z
         },
         pnt : {
           x : character.pointed.x,
-          y : character.pointed.y,
           z : character.pointed.z
         }
       });
