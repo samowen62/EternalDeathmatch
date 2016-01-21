@@ -1782,7 +1782,7 @@ var p_hash = null,
 
 	BASE_STEP_FOOT = 10,
 	BASE_SPEED = 1,
-	BASE_JUMP_POWER = 100,
+	BASE_JUMP_POWER = 60,
 	BUTTON_PRESS_TIME = 1500,
 	MAX_MAP_WIDTH = 2000,
 	PLAYER_HEIGHT = 26;
@@ -1836,9 +1836,6 @@ var sprite_list = [
  * UI elements
  */
 var ui_health = document.getElementById("health");
-
-//objects.js
-
 var Controller = {
   keyIsDown: [],
 
@@ -1865,8 +1862,8 @@ var calcVec = new THREE.Vector3(),
 calcVec2 = new THREE.Vector3(),
 tmpPos = new THREE.Vector3();
 
+//weapons.js
 
-//images go in order of animation
 var weapon = function(name, range, sprites, duration, effect){
   this.duration = duration;
   this.name = name;
@@ -1920,6 +1917,7 @@ weapon.prototype = {
   }
 }
 
+//collisionwall js
 
 var collisionWall = function (upperLeft, lowerRight) {
   var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
@@ -2124,6 +2122,8 @@ collisionWall.prototype = {
 
 };
 
+//platform.js
+
 //points in clockwise directions
 var platform = function(points) {
   this.points = points;
@@ -2244,6 +2244,7 @@ platform.prototype = {
 
 };
 
+//ramp.js
 
 var ramp = function(points) {
   if(points.length != 4)
@@ -2418,6 +2419,7 @@ ceiling.prototype = {
 
 };
 
+//projectiles.js
 
 function projectiles(){
   var bullets = [];
@@ -2456,6 +2458,8 @@ function projectiles(){
 }
 
 var shots = new projectiles();
+
+//centity.js
 
 /*
  *  This class is for the main player and his controls.
@@ -2553,10 +2557,7 @@ cEntity.prototype = {
         if(pt != null && pt.len <= ray_hit.len){
             //shot someone
 
-            //eventually this should be server side since this is easily hacked
-            /*socket.emit('death', {
-              hash : pt.cw.id
-            });*/    
+            //eventually this should be server side since this is easily hacked 
             console.log("struck a player");
 
             socket.emit('damage', {
@@ -2584,12 +2585,12 @@ cEntity.prototype = {
 
       left_ray.applyAxisAngle(up, 0.075);
       left_end.copy(left_ray);
-      left_end.multiplyScalar(3*MAX_MAP_WIDTH);
+      left_end.multiplyScalar(this.weapon.range);
       left_end.add(calcVec);   
 
       right_ray.applyAxisAngle(up, -0.075);
       right_end.copy(right_ray);
-      right_end.multiplyScalar(3*MAX_MAP_WIDTH);
+      right_end.multiplyScalar(this.weapon.range);
       right_end.add(calcVec);   
       
 
@@ -2629,9 +2630,10 @@ cEntity.prototype = {
         }); 
       }
 
-      shots.add([start_Vec, ray_hit.end], 0x222222, 8);
-      shots.add([start_Vec, left_ray_hit.end], 0x222222, 8);
-      shots.add([start_Vec, right_ray_hit.end], 0x222222, 8);
+      //change 58 to 8 when not testing
+      shots.add([start_Vec, ray_hit.end], 0x222222, 58);
+      shots.add([start_Vec, left_ray_hit.end], 0x222222, 58);
+      shots.add([start_Vec, right_ray_hit.end], 0x222222, 58);
 
     }
 
@@ -3049,8 +3051,8 @@ cEntity.prototype = {
 
 };
 
-///will need these functions
-//plane.rotation.setFromRotationMatrix( camera.matrix );
+//pentity.js
+
 var pEntity = function(hash){
   this.id = hash;
   this.radius = PLAYER_HEIGHT;
@@ -3101,8 +3103,6 @@ pEntity.prototype = {
 
   },
 
-  //pose set is 0..2 so far sets of 5 sprites
-  //later incorporate angle
   setSprite: function(index){
     if(index != this.index){
       this.current_sprite.visible = false;
@@ -3136,7 +3136,6 @@ pEntity.prototype = {
   }
   
 }
-
 
 //controls.js
 
