@@ -8,10 +8,10 @@ Gulp precompiles the assets and running <pre>node index.js</pre> on the root run
 ##TODO
 * Handle players who've left by broadcasting the disconnect serverside
 * Add more non-collideable scenery to the map.
-* More sounds on special events.
 * Fix multiple sound issue (maybe just use howler).
-* Fix reticule and tweak weapon range.
-* Jumping into the floor glitch
+* Fix reticule on images.
+* Jumping into the ramp glitch (adjust ramp.over function for this)
+* Fix respawning
 
 #BIG TODO
 * Migrate all the code to the server side except button pushes to avoid hacking

@@ -37,6 +37,9 @@ var p_hash = null,
 	BASE_JUMP_POWER = 60,
 	BUTTON_PRESS_TIME = 1500,
 	MAX_MAP_WIDTH = 2000,
+	GROUND_TOLERANCE = 5,
+	GRAVITY_ACC = 5,
+	RESPAWN_TIME = 5000,
 	PLAYER_HEIGHT = 26;
 
 /* set collision detection spacial structure

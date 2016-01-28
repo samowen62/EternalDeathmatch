@@ -28,6 +28,8 @@ var cEntity = function(pos){
 
   this.weapon = null;
   this.health = 100;
+  this.respawn_time = 0;
+  this.dead = false;
   //to stop from firing too fast
   var curr_time = new Date().getTime() + 3000;
 
@@ -47,6 +49,9 @@ cEntity.prototype = {
   },
   
   aim: function (e){
+    if(character.dead)
+      return;
+
     var movementX = e.movementX ||
     e.mozMovementX          ||
     e.webkitMovementX       ||
@@ -311,10 +316,10 @@ cEntity.prototype = {
   },
 
   setWeapon: function(weapon){
-    current_sprite = weapon.sprites[0];
-    current_sprite.style.display = "block";
-
     this.weapon = weapon;
+
+    current_sprite = this.weapon.sprites[0];
+    current_sprite.style.display = "block";
   },
 
   rotateWeapon: function(){
@@ -345,8 +350,11 @@ cEntity.prototype = {
 
     //do a timed death sequence here
 
-    //respawn point
-    this.position.copy(new THREE.Vector3(0,PLAYER_HEIGHT,0));
+    this.respawn_time = RESPAWN_TIME + new Date().getTime();
+    this.dead = true;
+    //a hack to get out of the map
+    //TODO: just hide him
+    this.position.copy(new THREE.Vector3(0,-MAX_MAP_WIDTH + 100,0));
 
     //reset everything
     this.health = 100;
@@ -354,6 +362,11 @@ cEntity.prototype = {
 
     this.setWeapon(weapons['shotgun']);
     this.weapon_index = 0;
+  },
+
+  respawn: function(pos){
+    this.position.copy(pos);
+    this.dead = false;
   },
 
   move: function (){
@@ -385,11 +398,9 @@ cEntity.prototype = {
 
     else if(this.grounded){
       new_y = this.ground.yAt(this.position);
-
       //walked off ledge or switching platforms
 
       //check if walked onto ramp here
-
       for(var r in ramps){
         if(ramps[r].over(this.position)){
           var r_y = ramps[r].yAt(this.position);
@@ -401,7 +412,6 @@ cEntity.prototype = {
       }
 
       if(!this.ground.over(this.position)){
-        //happening here of course
         console.log('falling');
         
         this.grounded = false;
@@ -409,7 +419,7 @@ cEntity.prototype = {
         for(var g in ground){
           if(ground[g].over(this.position)){
             //changing platforms
-            if(Math.abs(this.position.y - ground[g].points[0].y) < 3){
+            if(Math.abs(this.position.y - ground[g].points[0].y) < GROUND_TOLERANCE){
               this.grounded = true;
               this.jumping = false;
               this.ground = ground[g];
@@ -426,7 +436,7 @@ cEntity.prototype = {
 
           this.air_v = 0;
           this.start_t = d.getTime();
-          this.air_o = this.position.y;// - this.thickness.y;
+          this.air_o = this.position.y;
         }
       }
     }
@@ -434,7 +444,7 @@ cEntity.prototype = {
 
       var d = new Date();
       var dt = (d.getTime() - this.start_t) / 100;       
-      new_y = -5 * (dt*dt) + this.air_v*dt + this.air_o;
+      new_y = -GRAVITY_ACC * (dt*dt) + this.air_v*dt + this.air_o;
       var hit = false;
 
       var new_pos = new THREE.Vector3(this.position.x, new_y, this.position.z);
@@ -449,8 +459,8 @@ cEntity.prototype = {
             if((!a && b)||(a && !b)){
               var d = new Date();
               this.start_t = d.getTime();
-              new_y = this.position.y;
-              this.air_o = this.position.y;
+              new_y = this.position.y - GROUND_TOLERANCE;
+              this.air_o = new_y;
               this.air_v = 0;
               hit = true;
               break;
@@ -458,10 +468,9 @@ cEntity.prototype = {
           }
         }
 
-        //ramps here too
         for(var g in ground){
           if(ground[g].over(this.position)){
-            if(Math.abs(ground[g].yAt(this.position) - new_pos.y) < 3){
+            if(Math.abs(ground[g].yAt(this.position) - new_pos.y) < GROUND_TOLERANCE){
               var a = ground[g].above(this.position), b = ground[g].above(new_pos);
               if((!a && b)||(a && !b)){
                 new_y = ground[g].yAt(this.position);
@@ -586,7 +595,5 @@ cEntity.prototype = {
 
     return future;
   }
-
-
 
 };

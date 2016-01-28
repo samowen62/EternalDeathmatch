@@ -1,7 +1,7 @@
 
 //platform.js
 
-//points in clockwise directions
+//points should be specified in clockwise directions
 var platform = function(points) {
   this.points = points;
 

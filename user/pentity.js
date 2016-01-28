@@ -6,6 +6,7 @@ var pEntity = function(hash){
   this.radius = PLAYER_HEIGHT;
   this.index = 0;
   this.sprites = [];
+  this.alive = true;
   
   for(var s in sprite_list){
     var sprite = new THREE.Sprite( new THREE.SpriteMaterial({
@@ -81,6 +82,16 @@ pEntity.prototype = {
     }
 
     return null;
+  },
+
+  respawn: function(pos){
+    this.alive = true;
+    this.position.copy(pos);
+  },
+
+  kill: function(){
+    console.log('he is dead');
+    this.alive = false;
   }
   
 }

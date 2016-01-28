@@ -343,6 +343,8 @@ function render() {
       }
 
       socket.emit('m', {
+        resp_time : character.respawn_time,
+        dead : character.dead,
         pos : {
           x : character.position.x,
           y : character.position.y,

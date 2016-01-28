@@ -109,7 +109,19 @@ io.sockets.on('connection', function(socket){
   socket.on('m', function(msg){
     rooms[socket.room_id].members[socket.uniq_id]['pos'] = msg['pos'];
     rooms[socket.room_id].members[socket.uniq_id]['pnt'] = msg['pnt'];
+    rooms[socket.room_id].members[socket.uniq_id]['resp_time'] = msg['resp_time'];
+    rooms[socket.room_id].members[socket.uniq_id]['dead'] = msg['dead'];
     
+    if(msg['dead']){
+      if(msg['resp_time'] < new Date().getTime()){
+        console.log('ressurecting!');
+        io.to(socket.room).emit('respawn',{
+          id: socket.uniq_id,
+          pos: msg['pos']//change this to actual respawn point
+        });
+      }
+    }
+
     /*
       optimize per socket latency later to respond more frequently
       to faster clients that demand more and vice-versa
@@ -130,6 +142,7 @@ io.sockets.on('connection', function(socket){
       { id: data.hash }
     );
   });
+
 
 });
 

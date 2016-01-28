@@ -18,12 +18,13 @@ gulp.task('scripts', function() {
       "user/collisionwall.js",
       "user/platform.js",
       "user/ramp.js",
+      "user/ceiling.js",
       "user/projectiles.js",
       "user/centity.js",
       "user/pentity.js",
       "user/controls.js",
       "user/scene.js",
-      "user/main.js"])
+      "user/socket.js"])
        // .pipe(browserify())
         .pipe(concat('dest.js'))
         .pipe(gulp.dest('assets/js'))
