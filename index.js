@@ -58,11 +58,6 @@ io.sockets.on('connection', function(socket){
   newId = makeid(25);
   socket.uniq_id = newId;
 
-  //transmit initial data to client
-  socket.emit('id', { 
-    id : newId
-  });
-
   var choice, trys = 1000;
 
   while(trys > 0){
@@ -82,26 +77,42 @@ io.sockets.on('connection', function(socket){
   //so far host doesn't really have a purpose
   if(rooms[socket.room_id].host == '')
     rooms[socket.room_id].host = newId;
-  rooms[socket.room_id].members[newId] = {};
-
+  
+  rooms[socket.room_id].members[newId] = {
+    'deaths'  : 0,
+    'kills'   : 0  
+  };
   
   socket.iter = 0;
   socket.latency = BASE_LATENCY;
   socket.room = rooms[socket.room_id].id;
   socket.join(socket.room);
  
+  //transmit initial data to client
+  socket.emit('id', { 
+    id : newId,
+    players : rooms[socket.room_id].members
+  });
+
 
   socket.on('disconnect', function() {
+    var room_id = socket.room_id;
     console.log('User disconnected');
-    
-    delete rooms[socket.room_id].members[socket.uniq_id];
 
-    if(rooms[socket.room_id].host == socket.uniq_id){
-      var keys = Object.keys(rooms[socket.room_id].members);
-      rooms[socket.room_id].host = keys.length == 0 ? '' : keys[0];
+    delete rooms[room_id].members[socket.uniq_id];
+
+    if(rooms[room_id].host == socket.uniq_id){
+      var keys = Object.keys(rooms[room_id].members);
+      rooms[room_id].host = keys.length == 0 ? '' : keys[0];
     }
-        //could dynamically alter who is host based on latency
-    socket.leave(socket.room_id);
+    
+    io.to(socket.room).emit('left', {
+      'id'  : socket.uniq_id
+    });
+
+    //could dynamically alter who is host based on latency
+    socket.leave(socket.room_id);  
+    
   });
 
 
@@ -126,21 +137,35 @@ io.sockets.on('connection', function(socket){
       optimize per socket latency later to respond more frequently
       to faster clients that demand more and vice-versa
     */
-    socket.emit('o', 
+    io.to(socket.room).emit('o', 
       rooms[socket.room_id].members
     );    
   });
 
   socket.on('damage', function(data){
     io.to(socket.room).emit('damage', 
-      { id: data.hash, amount: data.amount }
+      { 
+        id        : data.hash, 
+        attacker  : data.attacker,
+        amount    : data.amount 
+      }
     );
   });
 
   socket.on('death', function(data){
+    rooms[socket.room_id].members[data.victim]['deaths'] += 1;
+    rooms[socket.room_id].members[data.attacker]['kills'] += 1;
+
     io.to(socket.room).emit('kill', 
-      { id: data.hash }
+      { 
+        id: data.victim,
+      }
     );
+
+    io.to(socket.room).emit('stats',{
+      players : rooms[socket.room_id].members
+    });
+
   });
 
 

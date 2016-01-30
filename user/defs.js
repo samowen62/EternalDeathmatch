@@ -6,6 +6,8 @@
 var p_hash = null,
 	socket = io(),
 	players={},
+	player_stats={},
+	player_alloc = [false, false, false, false, false, false, false, false],
 	weapons=[],
 	
 	container, 
@@ -13,7 +15,7 @@ var p_hash = null,
 	camera, 
 	scene, 
 	renderer,
-	
+
 	lastMouse = [winWidth/2,winHeight/2],
 	current_sprite,
 	//from currPos to view point
@@ -35,7 +37,7 @@ var p_hash = null,
 	BASE_STEP_FOOT = 10,
 	BASE_SPEED = 1,
 	BASE_JUMP_POWER = 60,
-	BUTTON_PRESS_TIME = 1500,
+	BUTTON_PRESS_TIME = 800,
 	MAX_MAP_WIDTH = 2000,
 	GROUND_TOLERANCE = 5,
 	GRAVITY_ACC = 5,
@@ -91,3 +93,4 @@ var sprite_list = [
  * UI elements
  */
 var ui_health = document.getElementById("health");
+var ui_player_stats = document.getElementById("player-stats-body");

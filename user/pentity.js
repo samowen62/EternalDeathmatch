@@ -86,12 +86,14 @@ pEntity.prototype = {
 
   respawn: function(pos){
     this.alive = true;
+    this.current_sprite.visible = true;
     this.position.copy(pos);
   },
 
   kill: function(){
     console.log('he is dead');
     this.alive = false;
+    this.current_sprite.visible = false;
   }
   
 }

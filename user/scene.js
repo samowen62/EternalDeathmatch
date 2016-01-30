@@ -331,6 +331,7 @@ function render() {
       if(character.weapon){
         0//character.weapon.position(tmpVec.add(camera.position));
       }else{
+        //TODO: make this an enum instead
         character.setWeapon(weapons[0]);
       }
       

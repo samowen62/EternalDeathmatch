@@ -68,3 +68,27 @@
     height: 100%;
     display: none;
 }
+
+#stats-screen{
+    display: none;
+}
+
+#stats-screen table{
+    margin: 0 auto;
+    color: #eee;
+    font-size: 25px;
+    font-family: helvetica;
+    margin-top: 65px;
+    background-color: rgba(120,0,0,0.6);
+    padding: 7px;
+    border-radius: 4px;
+}
+
+#stats-screen td, #stats-screen th{
+    padding: 4px 10px;
+    text-align: center;
+}
+
+#stats-screen .highlight{
+    color: #ee0;
+}

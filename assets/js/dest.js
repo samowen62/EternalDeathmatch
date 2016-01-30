@@ -1754,6 +1754,8 @@ a+"px",m=b,r=0);return b},update:function(){l=this.end()}}};
 var p_hash = null,
 	socket = io(),
 	players={},
+	player_stats={},
+	player_alloc = [false, false, false, false, false, false, false, false],
 	weapons=[],
 	
 	container, 
@@ -1761,7 +1763,7 @@ var p_hash = null,
 	camera, 
 	scene, 
 	renderer,
-	
+
 	lastMouse = [winWidth/2,winHeight/2],
 	current_sprite,
 	//from currPos to view point
@@ -1783,7 +1785,7 @@ var p_hash = null,
 	BASE_STEP_FOOT = 10,
 	BASE_SPEED = 1,
 	BASE_JUMP_POWER = 60,
-	BUTTON_PRESS_TIME = 1500,
+	BUTTON_PRESS_TIME = 800,
 	MAX_MAP_WIDTH = 2000,
 	GROUND_TOLERANCE = 5,
 	GRAVITY_ACC = 5,
@@ -1839,6 +1841,7 @@ var sprite_list = [
  * UI elements
  */
 var ui_health = document.getElementById("health");
+var ui_player_stats = document.getElementById("player-stats-body");
 var Controller = {
   keyIsDown: [],
 
@@ -1865,6 +1868,51 @@ var calcVec = new THREE.Vector3(),
 calcVec2 = new THREE.Vector3(),
 tmpPos = new THREE.Vector3();
 
+function find_open_num(){
+  for(var i in player_alloc){
+    if(!player_alloc[i]){
+      player_alloc[i] = true;
+      return i;
+    }
+  }
+}
+
+function update_game_stats(data){
+  for(var d in data){
+    if(d in player_stats){
+      player_stats[d].deaths = data[d].deaths;
+      player_stats[d].kills = data[d].kills;
+    }
+    else{
+      player_stats[d] = {
+        num     : find_open_num(),
+        deaths  : data[d].deaths,
+        kills   : data[d].kills
+      }
+    }
+  }
+
+  update_stats_html();
+}
+
+function update_stats_html(){
+  var html = "";
+
+  for(var i in player_stats){
+    if(i == p_hash){
+      html += "<tr class='highlight'>";
+      html += "<td>You</td>";
+    }else{
+      html += "<tr>";
+      html += "<td>Player "+(parseInt(player_stats[i].num) + 1)+"</td>";
+    }
+    html += "<td>"+player_stats[i].kills+"</td>";
+    html += "<td>"+player_stats[i].deaths+"</td>";
+    html += "</tr>";
+  }
+
+  ui_player_stats.innerHTML = html;
+}
 //weapons.js
 
 var weapon = function(name, range, sprites, duration, effect){
@@ -2503,6 +2551,7 @@ var cEntity = function(pos){
   this.weapon_index = 0;
 
   this.last_pressed_r = curr_time;
+  this.last_pressed_z = curr_time;
 
 }
 
@@ -2614,6 +2663,9 @@ cEntity.prototype = {
 
       //find min dist here
       for(var p in players){
+        if(!players[p].alive)
+          return;
+
         calcVec.copy(start_Vec);
         var pt = players[p].rayDetect(calcVec, middle_ray);
         if(pt != null && pt.len <= ray_hit.len && hashes.indexOf(pt.cw.id) == -1){
@@ -2636,15 +2688,16 @@ cEntity.prototype = {
       for(var h in hashes){
         console.log("struck a player");
         socket.emit('damage', {
-          hash : hashes[h],
-          amount : 40
+          hash      : hashes[h],
+          attacker  : p_hash,
+          amount    : 40
         }); 
       }
 
       //change 58 to 8 when not testing
-      shots.add([start_Vec, ray_hit.end], 0x222222, 58);
-      shots.add([start_Vec, left_ray_hit.end], 0x222222, 58);
-      shots.add([start_Vec, right_ray_hit.end], 0x222222, 58);
+      shots.add([start_Vec, ray_hit.end], 0x222222, 8);
+      shots.add([start_Vec, left_ray_hit.end], 0x222222, 8);
+      shots.add([start_Vec, right_ray_hit.end], 0x222222, 8);
 
     }
 
@@ -2794,14 +2847,15 @@ cEntity.prototype = {
     this.setWeapon(weapons[this.weapon_index]); 
   },
 
-  damage: function(amount){
+  damage: function(amount, attacker){
 
     this.health -= amount;
-
+    
     //you died
     if(this.health <= 0){
       socket.emit('death', {
-        hash : p_hash
+        victim    : p_hash,
+        attacker  : attacker
       });
     }else{
       effects['damage'].play();
@@ -2818,33 +2872,32 @@ cEntity.prototype = {
 
     this.respawn_time = RESPAWN_TIME + new Date().getTime();
     this.dead = true;
-    //a hack to get out of the map
-    //TODO: just hide him
-    this.position.copy(new THREE.Vector3(0,-MAX_MAP_WIDTH + 100,0));
-
+    
     //reset everything
     this.health = 100;
     ui_health.innerHTML = 100;
 
-    this.setWeapon(weapons['shotgun']);
+    this.setWeapon(weapons[0]);
+    this.weapon.close();
     this.weapon_index = 0;
   },
 
   respawn: function(pos){
-    this.position.copy(pos);
+    this.weapon.open();
     this.dead = false;
+    this.position.copy(pos);
   },
 
   move: function (){
-    if(!Controller)
-      return
+    if(!Controller || this.dead)
+      return;
 
     var s = this.stepFoot * this.speed;
     var diagS = s / Math.sqrt(2);
     this.position.y = isNaN(this.position.y) ? 0: this.position.y;
     var new_y = this.position.y;
 
-    if(mouseDown){
+    if(!this.dead && mouseDown){
       this.shoot();
       mouseDown = 0;
     }
@@ -2982,7 +3035,7 @@ cEntity.prototype = {
 
 
     if((Controller.keyIsDown[87] && Controller.keyIsDown[83]) || (Controller.keyIsDown[68] && Controller.keyIsDown[65]))
-      1
+      1;
     else if(Controller.keyIsDown[87] && Controller.keyIsDown[65]) //w + a
     {
       tmpVec.x += diagS * (this.pointed.z + this.pointed.x);
@@ -3019,11 +3072,12 @@ cEntity.prototype = {
       tmpVec.x -= s * this.pointed.z;
       tmpVec.z += s * this.pointed.x;
     }
-    else if(Controller.keyIsDown[90]){ //z
-      camera.translateY(-10);
-    }
-    else if(Controller.keyIsDown[88]){ //x
-      camera.translateY(10);
+    else if(Controller.keyIsDown[90] && (curr_time - this.last_pressed_z > BUTTON_PRESS_TIME)){//z
+      this.last_pressed_z = curr_time;
+      if($('#stats-screen').css("display") == "none")
+        $('#stats-screen').show();
+      else
+        $('#stats-screen').hide();
     }
     
     tmpVec.y = new_y;
@@ -3151,12 +3205,14 @@ pEntity.prototype = {
 
   respawn: function(pos){
     this.alive = true;
+    this.current_sprite.visible = true;
     this.position.copy(pos);
   },
 
   kill: function(){
     console.log('he is dead');
     this.alive = false;
+    this.current_sprite.visible = false;
   }
   
 }
@@ -3200,6 +3256,7 @@ document.exitPointerLock = document.exitPointerLock ||
          document.webkitExitPointerLock;
 
 container.appendChild($('.health-box')[0]);
+container.appendChild($('#stats-screen')[0]);
 
 var img_dom_objs = [];
 var weapon_objs = {
@@ -3598,6 +3655,7 @@ function render() {
       if(character.weapon){
         0//character.weapon.position(tmpVec.add(camera.position));
       }else{
+        //TODO: make this an enum instead
         character.setWeapon(weapons[0]);
       }
       
@@ -3647,20 +3705,32 @@ socket.on('o', function (data) {
   		console.log("new player "+k+" entered");
   		players[k] = new pEntity(k); 
   		scene.add(players[k].current_sprite);
+
+      update_game_stats(data.players);
   	}
   }
 });
 
 socket.on('id', function (data) {
-  if(p_hash == null)
+  if(p_hash == null){
     p_hash = data.id;
+  
+    player_alloc[0] = true;
+    player_stats[p_hash] = {
+      num     : 0,
+      deaths  : 0,
+      kills   : 0
+    }
+
+    update_game_stats(data.players);
+  }
 });
 
 socket.on('damage', function (data) {
 	//server says player has been damaged
-
-	if(data.id == p_hash){
-  		character.damage(data.amount);
+  console.log(data)
+	if(data.id == p_hash && !character.dead){
+  		character.damage(data.amount, data.attacker);
   		ui_health.innerHTML = character.health <= 0 ? 0 : character.health;
   	}
 });
@@ -3680,12 +3750,25 @@ socket.on('respawn', function (data) {
   //the player is ressurected!
   console.log("ressurection!");
   for(var p in players){
-    if(players[p] == data.id){
-      players[p].respawn(data.pos);
-    }else if(p_hash == data.id){
+    if(p_hash == data.id){
       character.respawn(data.pos)
+    }else{
+      players[data.id].respawn(data.pos);
     }
   }
+});
+
+socket.on('left', function(data){
+  players[data.id].current_sprite.visible = false;
+  player_alloc[player_stats[data.id].num] = false;
+  delete player_stats[data.id];
+  delete players[data.id];
+
+  update_stats_html();
+});
+
+socket.on('stats', function(data){
+  update_game_stats(data.players);
 });
 
 //coll. pg 87 for lines & a bit before for rays is a good resource for triangle collisions

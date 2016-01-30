@@ -19,20 +19,32 @@ socket.on('o', function (data) {
   		console.log("new player "+k+" entered");
   		players[k] = new pEntity(k); 
   		scene.add(players[k].current_sprite);
+
+      update_game_stats(data.players);
   	}
   }
 });
 
 socket.on('id', function (data) {
-  if(p_hash == null)
+  if(p_hash == null){
     p_hash = data.id;
+  
+    player_alloc[0] = true;
+    player_stats[p_hash] = {
+      num     : 0,
+      deaths  : 0,
+      kills   : 0
+    }
+
+    update_game_stats(data.players);
+  }
 });
 
 socket.on('damage', function (data) {
 	//server says player has been damaged
-
-	if(data.id == p_hash){
-  		character.damage(data.amount);
+  console.log(data)
+	if(data.id == p_hash && !character.dead){
+  		character.damage(data.amount, data.attacker);
   		ui_health.innerHTML = character.health <= 0 ? 0 : character.health;
   	}
 });
@@ -52,12 +64,25 @@ socket.on('respawn', function (data) {
   //the player is ressurected!
   console.log("ressurection!");
   for(var p in players){
-    if(players[p] == data.id){
-      players[p].respawn(data.pos);
-    }else if(p_hash == data.id){
+    if(p_hash == data.id){
       character.respawn(data.pos)
+    }else{
+      players[data.id].respawn(data.pos);
     }
   }
+});
+
+socket.on('left', function(data){
+  players[data.id].current_sprite.visible = false;
+  player_alloc[player_stats[data.id].num] = false;
+  delete player_stats[data.id];
+  delete players[data.id];
+
+  update_stats_html();
+});
+
+socket.on('stats', function(data){
+  update_game_stats(data.players);
 });
 
 //coll. pg 87 for lines & a bit before for rays is a good resource for triangle collisions

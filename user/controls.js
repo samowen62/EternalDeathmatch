@@ -38,6 +38,7 @@ document.exitPointerLock = document.exitPointerLock ||
          document.webkitExitPointerLock;
 
 container.appendChild($('.health-box')[0]);
+container.appendChild($('#stats-screen')[0]);
 
 var img_dom_objs = [];
 var weapon_objs = {
