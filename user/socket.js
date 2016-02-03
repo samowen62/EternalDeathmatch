@@ -40,6 +40,10 @@ socket.on('id', function (data) {
   }
 });
 
+socket.on('projectile', function (data) {
+  shots.add([new THREE.Vector3(data.start.x, data.start.y, data.start.z), new THREE.Vector3(data.end.x, data.end.y, data.end.z)], data.color, data.duration);
+});
+
 socket.on('damage', function (data) {
 	//server says player has been damaged
   console.log(data)

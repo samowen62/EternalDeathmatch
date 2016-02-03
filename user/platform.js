@@ -8,16 +8,6 @@ var platform = function(points) {
   //the following for generalized triangles
   if(points.length != 3)
     return;
-  this.flat = (points[0].y == points[1].y) && (points[1].y == points[2].y);
-  this.v0 = new THREE.Vector3(points[1].x - points[0].x,points[1].y - points[0].y,points[1].z - points[0].z);
-  this.v1 = new THREE.Vector3(points[2].x - points[0].x,points[2].y - points[0].y,points[2].z - points[0].z);
-  this.d00 = this.v0.dot(this.v0);
-  this.d01 = this.v1.dot(this.v0);
-  this.d11 = this.v1.dot(this.v1);
-  this.den = this.d00 * this.d11 - this.d01 * this.d01;
-  if(this.den == 0)
-    this.den = 1;//invalid
-
 
   var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
 
@@ -26,9 +16,23 @@ var platform = function(points) {
   tmp3.crossVectors(tmp2, tmp1)
   tmp3.normalize()
 
-  if(tmp3.y < 0) tmp3.multiplyScalar(-1.0)
+  var mid = new THREE.Vector3();
+  mid.addVectors(points[0], points[1])
+  mid.add(points[2])
+  mid.divideScalar(3)
 
-    this.normal = tmp3, this.d = points[0].dot(tmp3)
+  //the purpose is to extend the edges slightly so that there is no passing between cracks
+  this.awningEdges = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  this.awningEdges[0].subVectors(points[0], mid).normalize().multiplyScalar(3);
+  this.awningEdges[1].subVectors(points[1], mid).normalize().multiplyScalar(3);
+  this.awningEdges[2].subVectors(points[2], mid).normalize().multiplyScalar(3);
+  this.awningEdges[0].add(points[0]);
+  this.awningEdges[1].add(points[1]);
+  this.awningEdges[2].add(points[2]);
+
+  if(tmp3.y < 0) tmp3.multiplyScalar(-1.0);
+
+    this.normal = tmp3, this.d = points[0].dot(tmp3);
 }
 
 platform.prototype = {
@@ -40,8 +44,6 @@ platform.prototype = {
     return ((p1.x - p3.x) * (p2.z - p3.z)) - ((p2.x - p3.x) * (p1.z - p3.z));
   },
 
-  //WONT WORK FOR SLANTED HILL PLATFORMS SINCE THE PLANE TAKES UP THE ENTIRE ENVIREONMENT
-  //SO ONLY LOOK AT IT IF THE USER IS OVER IT
   //false if underneath
   above: function (point){
     return point.dot(this.normal) >= this.d;
@@ -52,9 +54,9 @@ platform.prototype = {
    */
    over: function (point){
     var pt = {x : point.x, z: point.z},
-    b1 = this.sign(point, this.points[0], this.points[1]) < 0,
-    b2 = this.sign(point, this.points[1], this.points[2]) < 0,
-    b3 = this.sign(point, this.points[2], this.points[0]) < 0;
+    b1 = this.sign(point, this.awningEdges[0], this.awningEdges[1]) < 0,
+    b2 = this.sign(point, this.awningEdges[1], this.awningEdges[2]) < 0,
+    b3 = this.sign(point, this.awningEdges[2], this.awningEdges[0]) < 0;
 
     return ((b1 == b2) && (b2 == b3));
   },
@@ -75,21 +77,6 @@ platform.prototype = {
     return geometry;
   },
 
-  baryCoords: function (pos){
-    var v2 = new THREE.Vector3(0,0,0);
-    v2.subVectors(pos,this.points[0]);
-
-    var d20 = v2.dot(this.v0),
-    d21 = v2.dot(this.v1);
-
-    //u,v bary for points 0 and 1
-    var v = (this.d11 * d20 - this.d01 * d21) / this.den,
-    u = 1 - v - ((this.d00 * d21 - this.d01 * d20) / this.den);
-
-    return u * this.points[0].y + v * this.points[1].y;
-
-  },
-
   yAt: function (pos){
     return this.points[0].y;
   },
@@ -102,7 +89,7 @@ platform.prototype = {
 
     if(den != 0){
       var dist = num / den;
-      //console.log(dist);
+
       if(dist < 0)
         return null;
 

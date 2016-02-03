@@ -113,7 +113,8 @@ cEntity.prototype = {
         }
       }
 
-      shots.add([start_Vec, ray_hit.end], 0x222222, 8);
+      if(this.weapon.name == "pistol")
+        shots.start([start_Vec, ray_hit.end], 0x222222, 8);
 
     }else if(this.weapon.name == "shotgun"){
       //make shotgun shorter range
@@ -181,9 +182,9 @@ cEntity.prototype = {
       }
 
       //change 58 to 8 when not testing
-      shots.add([start_Vec, ray_hit.end], 0x222222, 8);
-      shots.add([start_Vec, left_ray_hit.end], 0x222222, 8);
-      shots.add([start_Vec, right_ray_hit.end], 0x222222, 8);
+      shots.start([start_Vec, ray_hit.end], 0x222222, 8);
+      shots.start([start_Vec, left_ray_hit.end], 0x222222, 8);
+      shots.start([start_Vec, right_ray_hit.end], 0x222222, 8);
 
     }
 

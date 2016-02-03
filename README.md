@@ -11,6 +11,7 @@ Gulp precompiles the assets and running <pre>node index.js</pre> on the root run
 * Fix multiple sound issue (maybe just use howler).
 * Fix reticule on images.
 * Jumping into the ramp glitch (adjust ramp.over function for this)
+* Falling through cracks in ground on jump (think it's fixed, testing)
 * replace jQuery with regular js. We don't need it all.
 
 #BIG TODO

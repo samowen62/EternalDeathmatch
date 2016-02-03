@@ -152,6 +152,17 @@ io.sockets.on('connection', function(socket){
     );
   });
 
+  socket.on('projectile', function(data){
+    io.to(socket.room).emit('projectile', 
+      { 
+        start     : data.line.start,
+        end       : data.line.end,
+        color     : data.color,
+        duration  : data.duration
+      }
+    );
+  });
+
   socket.on('death', function(data){
     rooms[socket.room_id].members[data.victim]['deaths'] += 1;
     rooms[socket.room_id].members[data.attacker]['kills'] += 1;
