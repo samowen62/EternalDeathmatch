@@ -1787,8 +1787,10 @@ var p_hash = null,
 	BASE_JUMP_POWER = 60,
 	BUTTON_PRESS_TIME = 800,
 	MAX_MAP_WIDTH = 2000,
-	GROUND_TOLERANCE = 5,
+	GROUND_TOLERANCE = 12,
+	RAMP_TOLERANCE = GROUND_TOLERANCE + 5,
 	GRAVITY_ACC = 5,
+	RAMP_WAIT_TIME = 8,
 	RESPAWN_TIME = 5000,
 	PLAYER_HEIGHT = 26;
 
@@ -2294,12 +2296,35 @@ var ramp = function(points) {
   var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
 
   //used for determining if a point is inside the range
-  tmp1.subVectors(points[1], points[0]);
+  //the purpose is to extend the edges slightly so that there is no passing between cracks
+  var mid = new THREE.Vector3();
+  mid.addVectors(points[0], points[1])
+  mid.add(points[2])
+  mid.add(points[3])
+  mid.divideScalar(4)
+
+  //the purpose is to extend the edges slightly so that there is no passing between cracks
+  this.awningEdges = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  this.awningEdges[0].subVectors(points[0], mid).normalize().multiplyScalar(4);
+  this.awningEdges[1].subVectors(points[1], mid).normalize().multiplyScalar(4);
+  this.awningEdges[2].subVectors(points[2], mid).normalize().multiplyScalar(4);
+  this.awningEdges[3].subVectors(points[3], mid).normalize().multiplyScalar(4);
+  this.awningEdges[0].add(points[0]);
+  this.awningEdges[1].add(points[1]);
+  this.awningEdges[2].add(points[2]);
+  this.awningEdges[3].add(points[3]);
+
+  tmp1.subVectors(this.awningEdges[1], this.awningEdges[0]);
   this.AB = new THREE.Vector2(tmp1.x, tmp1.z);
   this.AB_Sqared = this.AB.dot(this.AB);
-  tmp1.subVectors(points[3], points[0]);
+  tmp1.subVectors(this.awningEdges[3], this.awningEdges[0]);
   this.AD = new THREE.Vector2(tmp1.x, tmp1.z);
   this.AD_Sqared = this.AD.dot(this.AD);
+
+  //dont need last 3 during the programs execution
+  delete this.awningEdges[1];
+  delete this.awningEdges[2];
+  delete this.awningEdges[3];
 
   tmp1.subVectors(points[0], points[1]);
   tmp2.subVectors(points[0], points[2]);
@@ -2308,11 +2333,7 @@ var ramp = function(points) {
   if(tmp3.y < 0) tmp3.multiplyScalar(-1.0);
   this.normal = tmp3, this.d = points[0].dot(tmp3);
 
-  tmp1.addVectors(points[0],points[1]);
-  tmp2.addVectors(points[2], points[3]);
-  tmp1.add(tmp2);
-  tmp1.multiplyScalar(0.25);
-  this.center = tmp1;//average of all points
+  this.center = mid;
 
   //assume first two points are lowest? for now
   tmp1 = new THREE.Vector3((points[2].x+points[3].x)*0.5 - this.center.x,points[2].y - this.center.y,(points[2].z+points[3].z)*0.5 - this.center.z)
@@ -2338,19 +2359,26 @@ ramp.prototype = {
   },
 
   /*
-   * Checks if we are even within the x/z triangle in question
-   * and returns appropriate y
+   *
+   */
+  distance_away: function (point){
+    var dist = new THREE.Vector3();
+    dist.subVectors(point, this.center);
+    return Math.abs(dist.dot(this.normal));
+  },
+
+  /*
+   * Checks if we are even within the x/z square in question
+   * 
+   * This math is strictly 2 dimensional
    */
    over: function (point){
-    var AM = new THREE.Vector2(point.x - this.points[0].x, point.z - this.points[0].z),
+    var AM = new THREE.Vector2(point.x - this.awningEdges[0].x, point.z - this.awningEdges[0].z),
     AMdAB = AM.dot(this.AB),
     AMdAD = AM.dot(this.AD);
 
     var ret = ((0 < AMdAB) && (AMdAB < this.AB_Sqared) && (0 < AMdAD) && (AMdAD < this.AD_Sqared));
-    //if(ret){
-     // console.log(point.y, this.points[0].y, this.above(point));
 
-    //}
     return ret;
 
   },
@@ -2544,6 +2572,7 @@ var cEntity = function(pos){
   this.air_o = 0;
   this.air_v =  0;
   this.start_t = -1;
+  this.jump_frame = -1;
 
   this.weapon = null;
   this.health = 100;
@@ -2908,12 +2937,15 @@ cEntity.prototype = {
       mouseDown = 0;
     }
 
+    //character jumped
     if(Controller.keyIsDown[32] && this.grounded){
       var d = new Date();
       console.log('jumping');
       this.jumping = true;
+      this.jump_frame = 0;  //set when not in the air
       this.grounded = false;
       this.ground = null; //redundant
+
 
       this.air_v = BASE_JUMP_POWER;
       this.start_t = d.getTime();
@@ -2923,49 +2955,51 @@ cEntity.prototype = {
 
     else if(this.grounded){
       new_y = this.ground.yAt(this.position);
-      //walked off ledge or switching platforms
+      //walked off ledge or switching platforms check
 
       //check if walked onto ramp here
       for(var r in ramps){
         if(ramps[r].over(this.position)){
           var r_y = ramps[r].yAt(this.position);
-          if(Math.abs(new_y - r_y) < 8){//for slight error. It was 5 but yAt is given an artificial offset of 3
+          if(Math.abs(new_y - r_y) < GROUND_TOLERANCE){
             this.ground = ramps[r];
             new_y = r_y;
           }
         }
       }
 
-      if(!this.ground.over(this.position)){
-        console.log('falling');
-        
+      if(!this.ground.over(this.position)){       
         this.grounded = false;
 
+        //check for changing platforms
         for(var g in ground){
           if(ground[g].over(this.position)){
-            //changing platforms
             if(Math.abs(this.position.y - ground[g].points[0].y) < GROUND_TOLERANCE){
               this.grounded = true;
               this.jumping = false;
+              this.jump_frame = -1;
               this.ground = ground[g];
               break;
             }      
           }
         }
 
+        //no platform found, falling
         if(!this.grounded){
           var d = new Date();
           this.jumping = false;
+          this.jump_frame = 0;
           this.ground = null;
-
-
+          
           this.air_v = 0;
           this.start_t = d.getTime();
           this.air_o = this.position.y;
         }
       }
+
     }
     else if(!this.grounded){
+      this.jump_frame++;
 
       var d = new Date();
       var dt = (d.getTime() - this.start_t) / 100;       
@@ -2976,6 +3010,7 @@ cEntity.prototype = {
 
       if(this.jumping){
 
+        //check for ceiling collision
         for(var c in ceil){
           if(ceil[c].over(this.position)){
             var a = ceil[c].below(tmpVec.addVectors(this.position, this.thickness));
@@ -2993,38 +3028,44 @@ cEntity.prototype = {
           }
         }
 
-        for(var g in ground){
-          if(ground[g].over(this.position)){
-            if(Math.abs(ground[g].yAt(this.position) - new_pos.y) < GROUND_TOLERANCE){
+      }
+
+      if(!hit){
+        //check for landing
+
+        for(var r in ramps){
+          if(ramps[r].over(this.position) && this.jump_frame > RAMP_WAIT_TIME){
+            var dist = ramps[r].distance_away(this.position);
+            console.log(dist); 
+            if(dist < RAMP_TOLERANCE){
+              new_y = ramps[r].yAt(this.position);
+              this.grounded = true;
+              this.jump_frame = -1;
+              this.jumping = false;
+              this.ground = ramps[r];
+              console.log("ramp");
+              break;
+            }
+          }
+        }
+
+        if(!this.grounded){
+          for(var g in ground){
+            if(ground[g].over(this.position)){
               var a = ground[g].above(this.position), b = ground[g].above(new_pos);
               if((!a && b)||(a && !b)){
                 new_y = ground[g].yAt(this.position);
                 this.grounded = true;
+                this.jump_frame = -1;
                 this.jumping = false;
                 this.ground = ground[g];
+                console.log("ground");
                 break;
               }
             }
           }
         }
 
-      }
-
-      if(!hit){
-        for(var g in ground){
-          if(ground[g].over(this.position)){
-
-            var a = ground[g].above(this.position), b = ground[g].above(new_pos);
-            if((!a && b)||(a && !b)){
-              new_y = ground[g].yAt(this.position);
-              this.grounded = true;
-              this.jumping = false;
-              this.ground = ground[g];
-              break;
-            }
-
-          }
-        }
       }
     }
 
@@ -3689,6 +3730,7 @@ function render() {
 
     }
     renderer.render( scene, camera );
+
 }
 
 //socket.js

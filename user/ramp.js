@@ -11,12 +11,35 @@ var ramp = function(points) {
   var tmp1 = new THREE.Vector3(),tmp2 = new THREE.Vector3(),tmp3 = new THREE.Vector3();
 
   //used for determining if a point is inside the range
-  tmp1.subVectors(points[1], points[0]);
+  //the purpose is to extend the edges slightly so that there is no passing between cracks
+  var mid = new THREE.Vector3();
+  mid.addVectors(points[0], points[1])
+  mid.add(points[2])
+  mid.add(points[3])
+  mid.divideScalar(4)
+
+  //the purpose is to extend the edges slightly so that there is no passing between cracks
+  this.awningEdges = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  this.awningEdges[0].subVectors(points[0], mid).normalize().multiplyScalar(4);
+  this.awningEdges[1].subVectors(points[1], mid).normalize().multiplyScalar(4);
+  this.awningEdges[2].subVectors(points[2], mid).normalize().multiplyScalar(4);
+  this.awningEdges[3].subVectors(points[3], mid).normalize().multiplyScalar(4);
+  this.awningEdges[0].add(points[0]);
+  this.awningEdges[1].add(points[1]);
+  this.awningEdges[2].add(points[2]);
+  this.awningEdges[3].add(points[3]);
+
+  tmp1.subVectors(this.awningEdges[1], this.awningEdges[0]);
   this.AB = new THREE.Vector2(tmp1.x, tmp1.z);
   this.AB_Sqared = this.AB.dot(this.AB);
-  tmp1.subVectors(points[3], points[0]);
+  tmp1.subVectors(this.awningEdges[3], this.awningEdges[0]);
   this.AD = new THREE.Vector2(tmp1.x, tmp1.z);
   this.AD_Sqared = this.AD.dot(this.AD);
+
+  //dont need last 3 during the programs execution
+  delete this.awningEdges[1];
+  delete this.awningEdges[2];
+  delete this.awningEdges[3];
 
   tmp1.subVectors(points[0], points[1]);
   tmp2.subVectors(points[0], points[2]);
@@ -25,11 +48,7 @@ var ramp = function(points) {
   if(tmp3.y < 0) tmp3.multiplyScalar(-1.0);
   this.normal = tmp3, this.d = points[0].dot(tmp3);
 
-  tmp1.addVectors(points[0],points[1]);
-  tmp2.addVectors(points[2], points[3]);
-  tmp1.add(tmp2);
-  tmp1.multiplyScalar(0.25);
-  this.center = tmp1;//average of all points
+  this.center = mid;
 
   //assume first two points are lowest? for now
   tmp1 = new THREE.Vector3((points[2].x+points[3].x)*0.5 - this.center.x,points[2].y - this.center.y,(points[2].z+points[3].z)*0.5 - this.center.z)
@@ -55,19 +74,26 @@ ramp.prototype = {
   },
 
   /*
-   * Checks if we are even within the x/z triangle in question
-   * and returns appropriate y
+   *
+   */
+  distance_away: function (point){
+    var dist = new THREE.Vector3();
+    dist.subVectors(point, this.center);
+    return Math.abs(dist.dot(this.normal));
+  },
+
+  /*
+   * Checks if we are even within the x/z square in question
+   * 
+   * This math is strictly 2 dimensional
    */
    over: function (point){
-    var AM = new THREE.Vector2(point.x - this.points[0].x, point.z - this.points[0].z),
+    var AM = new THREE.Vector2(point.x - this.awningEdges[0].x, point.z - this.awningEdges[0].z),
     AMdAB = AM.dot(this.AB),
     AMdAD = AM.dot(this.AD);
 
     var ret = ((0 < AMdAB) && (AMdAB < this.AB_Sqared) && (0 < AMdAD) && (AMdAD < this.AD_Sqared));
-    //if(ret){
-     // console.log(point.y, this.points[0].y, this.above(point));
 
-    //}
     return ret;
 
   },

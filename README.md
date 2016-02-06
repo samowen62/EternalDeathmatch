@@ -8,11 +8,15 @@ Gulp precompiles the assets and running <pre>node index.js</pre> on the root run
 ##TODO
 * Handle players who've left by broadcasting the disconnect serverside
 * Add more non-collideable scenery to the map.
-* Fix multiple sound issue (maybe just use howler).
 * Fix reticule on images.
-* Jumping into the ramp glitch (adjust ramp.over function for this)
-* Falling through cracks in ground on jump (think it's fixed, testing)
 * replace jQuery with regular js. We don't need it all.
+* Might want to refactor the cEntity.move() method. It's a little messy at parts
+* <span style="color:#bbb">Jumping into the ramp glitch</span>
+* <span style="color:#bbb">Falling through cracks in ground on jump</span>
+* <span style="color:#bbb">Fix multiple sound issue (maybe just use howler).</span>
+
+Lighter colored items are believed to be fixed.
+
 
 #BIG TODO
 * Migrate all the code to the server side except button pushes to avoid hacking

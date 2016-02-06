@@ -25,6 +25,7 @@ var cEntity = function(pos){
   this.air_o = 0;
   this.air_v =  0;
   this.start_t = -1;
+  this.jump_frame = -1;
 
   this.weapon = null;
   this.health = 100;
@@ -389,12 +390,15 @@ cEntity.prototype = {
       mouseDown = 0;
     }
 
+    //character jumped
     if(Controller.keyIsDown[32] && this.grounded){
       var d = new Date();
       console.log('jumping');
       this.jumping = true;
+      this.jump_frame = 0;  //set when not in the air
       this.grounded = false;
       this.ground = null; //redundant
+
 
       this.air_v = BASE_JUMP_POWER;
       this.start_t = d.getTime();
@@ -404,49 +408,51 @@ cEntity.prototype = {
 
     else if(this.grounded){
       new_y = this.ground.yAt(this.position);
-      //walked off ledge or switching platforms
+      //walked off ledge or switching platforms check
 
       //check if walked onto ramp here
       for(var r in ramps){
         if(ramps[r].over(this.position)){
           var r_y = ramps[r].yAt(this.position);
-          if(Math.abs(new_y - r_y) < 8){//for slight error. It was 5 but yAt is given an artificial offset of 3
+          if(Math.abs(new_y - r_y) < GROUND_TOLERANCE){
             this.ground = ramps[r];
             new_y = r_y;
           }
         }
       }
 
-      if(!this.ground.over(this.position)){
-        console.log('falling');
-        
+      if(!this.ground.over(this.position)){       
         this.grounded = false;
 
+        //check for changing platforms
         for(var g in ground){
           if(ground[g].over(this.position)){
-            //changing platforms
             if(Math.abs(this.position.y - ground[g].points[0].y) < GROUND_TOLERANCE){
               this.grounded = true;
               this.jumping = false;
+              this.jump_frame = -1;
               this.ground = ground[g];
               break;
             }      
           }
         }
 
+        //no platform found, falling
         if(!this.grounded){
           var d = new Date();
           this.jumping = false;
+          this.jump_frame = 0;
           this.ground = null;
-
-
+          
           this.air_v = 0;
           this.start_t = d.getTime();
           this.air_o = this.position.y;
         }
       }
+
     }
     else if(!this.grounded){
+      this.jump_frame++;
 
       var d = new Date();
       var dt = (d.getTime() - this.start_t) / 100;       
@@ -457,6 +463,7 @@ cEntity.prototype = {
 
       if(this.jumping){
 
+        //check for ceiling collision
         for(var c in ceil){
           if(ceil[c].over(this.position)){
             var a = ceil[c].below(tmpVec.addVectors(this.position, this.thickness));
@@ -474,38 +481,44 @@ cEntity.prototype = {
           }
         }
 
-        for(var g in ground){
-          if(ground[g].over(this.position)){
-            if(Math.abs(ground[g].yAt(this.position) - new_pos.y) < GROUND_TOLERANCE){
+      }
+
+      if(!hit){
+        //check for landing
+
+        for(var r in ramps){
+          if(ramps[r].over(this.position) && this.jump_frame > RAMP_WAIT_TIME){
+            var dist = ramps[r].distance_away(this.position);
+            console.log(dist); 
+            if(dist < RAMP_TOLERANCE){
+              new_y = ramps[r].yAt(this.position);
+              this.grounded = true;
+              this.jump_frame = -1;
+              this.jumping = false;
+              this.ground = ramps[r];
+              console.log("ramp");
+              break;
+            }
+          }
+        }
+
+        if(!this.grounded){
+          for(var g in ground){
+            if(ground[g].over(this.position)){
               var a = ground[g].above(this.position), b = ground[g].above(new_pos);
               if((!a && b)||(a && !b)){
                 new_y = ground[g].yAt(this.position);
                 this.grounded = true;
+                this.jump_frame = -1;
                 this.jumping = false;
                 this.ground = ground[g];
+                console.log("ground");
                 break;
               }
             }
           }
         }
 
-      }
-
-      if(!hit){
-        for(var g in ground){
-          if(ground[g].over(this.position)){
-
-            var a = ground[g].above(this.position), b = ground[g].above(new_pos);
-            if((!a && b)||(a && !b)){
-              new_y = ground[g].yAt(this.position);
-              this.grounded = true;
-              this.jumping = false;
-              this.ground = ground[g];
-              break;
-            }
-
-          }
-        }
       }
     }
 
