@@ -15,8 +15,8 @@ Gulp precompiles the assets and running <pre>node index.js</pre> on the root run
 * <span style="color:#bbb">Falling through cracks in ground on jump</span>
 * <span style="color:#bbb">Fix multiple sound issue (maybe just use howler).</span>
 
-Lighter colored items are believed to be fixed.
-
 
 #BIG TODO
 * Migrate all the code to the server side except button pushes to avoid hacking
+
+Visit at www.eternaldeathmatch.com. Not completely finished yet.
