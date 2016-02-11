@@ -3,13 +3,13 @@
   <head>
     <title>Eternal Deathmatch</title>
 
-    <script src="jquery.js"></script>
-    <script src="socket.js"></script>
+    <!--script src="jquery.js"></script-->
+    <script type="text/javascript" src="socket.js"></script>
     <link rel="stylesheet" type="text/css" href="assets/css/game.css">
     
 
   </head>
-  <body>
+  <body onclick="onBodyClick()">
     <audio id="audiotag1" src="sounds/die.wav" preload="auto"></audio>
     <!-- All of these sounds are taken from DOOM of course -->
     <audio id="doom-damage" src="sounds/damage.wav" preload="auto"></audio>
@@ -44,7 +44,7 @@
       </table>
     </div>
 
-    <div class="health-box">
+    <div id="health-box">
       +&nbsp;<span id="health">100</span>
     </div>
 

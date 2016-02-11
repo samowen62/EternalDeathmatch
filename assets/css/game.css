@@ -50,7 +50,7 @@
 	width:250px;
 }
 
-.health-box{
+#health-box{
 	position: fixed;
     bottom: 0px;
     right: 0px;

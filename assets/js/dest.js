@@ -1774,8 +1774,8 @@ var p_hash = null,
     //vector used for three js calculations
     tmpVec = new THREE.Vector3(),
 
-	winHeight = $(window).height(),
-	winWidth = $(window).width(),
+	winHeight = window.innerHeight,
+	winWidth = window.innerWidth,
 	centX = winWidth / 2,
 	centY = winHeight / 2,
 	mouseSensitivity = 0.004,//tweak based on fps
@@ -1845,25 +1845,17 @@ var sprite_list = [
 var ui_health = document.getElementById("health");
 var ui_player_stats = document.getElementById("player-stats-body");
 var Controller = {
-  keyIsDown: [],
+  keyIsDown: []
+}
 
-  add: function (key, down, up) {
-    $(document).keydown(function(e) {
-      if(e.keyCode === key && !Controller.keyIsDown[key]) {
-        down();
-        Controller.keyIsDown[key] = true;
-        return false;
-      }
-    })
+document.onkeydown = function(e) {
+  Controller.keyIsDown[e.keyCode] = true;
+  return false;
+}
 
-    $(document).keyup(function(e) {
-      if(e.keyCode === key) {
-        if(up) up();
-        Controller.keyIsDown[key] = false;
-        return false;
-      };
-    });
-  }
+document.onkeyup = function(e) {
+  Controller.keyIsDown[e.keyCode] = false;
+  return false;
 }
 
 var calcVec = new THREE.Vector3(),
@@ -3278,18 +3270,11 @@ function onWindowResize() {
 }
 
 
-$("body").click(function(e){
+function onBodyClick(){
   mouseDown = 1;
-});
+}
 
 var character = new cEntity(new THREE.Vector3(45,45,45));
-
-var keys = [65, 68, 82, 83, 87, 88, 89, 90, 32];
-for(var i in keys){
-  Controller.add(keys[i],
-      function () {},
-      function () {})
-}
 
 container = document.createElement( 'div' );
 document.body.appendChild( container );
@@ -3302,8 +3287,8 @@ document.exitPointerLock = document.exitPointerLock ||
          document.mozExitPointerLock ||
          document.webkitExitPointerLock;
 
-container.appendChild($('.health-box')[0]);
-container.appendChild($('#stats-screen')[0]);
+container.appendChild(document.getElementById('health-box'));
+container.appendChild(document.getElementById('stats-screen'));
 
 var img_dom_objs = [];
 var weapon_objs = {
@@ -3312,29 +3297,34 @@ var weapon_objs = {
   "shotgun" : []
 };
 
-$.each(document.getElementsByClassName('sprite-img'), function(k, v){
-  
-  switch(v.dataset.weapon){
-    case "fist":
-      weapon_objs["fist"].push(v);
-      break;
-    case "pistol":
-      weapon_objs["pistol"].push(v);
-      break;
-    case "shotgun":
-      weapon_objs["shotgun"].push(v);
-      break;
+var img_objs = document.getElementsByClassName('sprite-img');
 
-    default:
-      console.log("invalid data-weapon attribute");
+for(var i in img_objs){ 
+  var val = img_objs[i];
+
+  if(val.dataset){
+    switch(val.dataset.weapon){
+      case "fist":
+        weapon_objs["fist"].push(val);
+        break;
+      case "pistol":
+        weapon_objs["pistol"].push(val);
+        break;
+      case "shotgun":
+        weapon_objs["shotgun"].push(val);
+        break;
+
+      default:
+        console.log("invalid data-weapon attribute");
+    }
+
+    img_dom_objs.push(val);
   }
+}
 
-  img_dom_objs.push(v);
-});
-
-$.each(img_dom_objs, function(k, v){
-  container.appendChild(v);
-});
+for(var i in img_dom_objs){ 
+  container.appendChild(img_dom_objs[i]);
+};
 
 function toggleFullScreen() {
   if (container.requestFullscreen) {

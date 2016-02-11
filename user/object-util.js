@@ -1,23 +1,15 @@
 var Controller = {
-  keyIsDown: [],
+  keyIsDown: []
+}
 
-  add: function (key, down, up) {
-    $(document).keydown(function(e) {
-      if(e.keyCode === key && !Controller.keyIsDown[key]) {
-        down();
-        Controller.keyIsDown[key] = true;
-        return false;
-      }
-    })
+document.onkeydown = function(e) {
+  Controller.keyIsDown[e.keyCode] = true;
+  return false;
+}
 
-    $(document).keyup(function(e) {
-      if(e.keyCode === key) {
-        if(up) up();
-        Controller.keyIsDown[key] = false;
-        return false;
-      };
-    });
-  }
+document.onkeyup = function(e) {
+  Controller.keyIsDown[e.keyCode] = false;
+  return false;
 }
 
 var calcVec = new THREE.Vector3(),

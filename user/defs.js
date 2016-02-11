@@ -26,8 +26,8 @@ var p_hash = null,
     //vector used for three js calculations
     tmpVec = new THREE.Vector3(),
 
-	winHeight = $(window).height(),
-	winWidth = $(window).width(),
+	winHeight = window.innerHeight,
+	winWidth = window.innerWidth,
 	centX = winWidth / 2,
 	centY = winHeight / 2,
 	mouseSensitivity = 0.004,//tweak based on fps
