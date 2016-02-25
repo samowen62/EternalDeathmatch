@@ -23,12 +23,12 @@
     <div class="overlay">
       <div class="inner">
         <img src="assets/css/skull.png" />
-        <h2>Get ready to DIE, HAHAHA!</h2>
+        <h2>Get ready to DIE!</h2>
         <input type="button" value="Click to Play" onclick="toggleFullScreen()">
       </div>
     </div>
 
-    <div id="stats-screen" class="overlay">
+    <div id="stats-screen" class="js-fade fade-in is-paused overlay">
       <table>
         <thead>
           <tr>
@@ -44,6 +44,54 @@
 
     <div id="health-box">
       +&nbsp;<span id="health">100</span>
+    </div>
+
+    <div id="control-box" class="js-fade fade-in is-paused">
+      <table>
+        <tr>
+          <th colspan="2">Controls</th>
+        </tr>
+        <tr>
+          <td>W</td>
+          <td>: Forward</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td>: Left</td>
+        </tr>
+        <tr>
+          <td>S</td>
+          <td>: Backward</td>
+        </tr>
+        <tr>
+          <td>D</td>
+          <td>: Right</td>
+        </tr>
+        <tr>
+          <td>R</td>
+          <td>: Rotate Weapon</td>
+        </tr>
+        <tr>
+          <td>Space</td>
+          <td>: Jump</td>
+        </tr>
+        <tr>
+          <td>L-Mouse</td>
+          <td>: Attack</td>
+        </tr>
+        <tr>
+          <td colspan="2"><br /></td>
+        </tr>
+        <tr>
+          <td>Z</td>
+          <td>: Stats Screen</td>
+        </tr>
+        <tr>
+          <td>X</td>
+          <td>: Info Box</td>
+        </tr>
+      </table>
+
     </div>
 
     <img class="sprite-img" data-weapon="fist" src="images/fist-1.png" />

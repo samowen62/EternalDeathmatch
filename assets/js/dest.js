@@ -1786,6 +1786,7 @@ var p_hash = null,
 	BASE_SPEED = 1,
 	BASE_JUMP_POWER = 60,
 	BUTTON_PRESS_TIME = 800,
+	INFO_PRESS_TIME = 400,
 	MAX_MAP_WIDTH = 2000,
 	GROUND_TOLERANCE = 12,
 	RAMP_TOLERANCE = GROUND_TOLERANCE + 5,
@@ -2586,6 +2587,7 @@ var cEntity = function(pos){
 
   this.last_pressed_r = curr_time;
   this.last_pressed_z = curr_time;
+  this.last_pressed_x = curr_time;
 
 }
 
@@ -3125,12 +3127,19 @@ cEntity.prototype = {
       tmpVec.x -= s * this.pointed.z;
       tmpVec.z += s * this.pointed.x;
     }
-    else if(Controller.keyIsDown[90] && (curr_time - this.last_pressed_z > BUTTON_PRESS_TIME)){//z
+    else if(Controller.keyIsDown[88] && ((curr_time - this.last_pressed_x) > INFO_PRESS_TIME)){ //x
+      this.last_pressed_x = curr_time;
+      toggleInfo();
+    }
+    else if(Controller.keyIsDown[90] && ((curr_time - this.last_pressed_z) > INFO_PRESS_TIME)){ //z
       this.last_pressed_z = curr_time;
-      if($('#stats-screen').css("display") == "none")
-        $('#stats-screen').show();
-      else
-        $('#stats-screen').hide();
+      toggleStats();
+    }
+
+    if(Controller.keyIsDown[88] || Controller.keyIsDown[90] ){ //x
+      console.log(curr_time - this.last_pressed_z, curr_time - this.last_pressed_x, INFO_PRESS_TIME);
+      console.log(((curr_time - this.last_pressed_z) > INFO_PRESS_TIME));
+      console.log(((curr_time - this.last_pressed_x) > INFO_PRESS_TIME));
     }
     
     tmpVec.y = new_y;
@@ -3302,6 +3311,7 @@ document.exitPointerLock = document.exitPointerLock ||
          document.webkitExitPointerLock;
 
 container.appendChild(document.getElementById('health-box'));
+container.appendChild(document.getElementById('control-box'));
 container.appendChild(document.getElementById('stats-screen'));
 
 var img_dom_objs = [];
@@ -3352,6 +3362,12 @@ function toggleFullScreen() {
   }
 
   effects['intro'].play();
+ 
+  fadeIn(document.getElementById('control-box'));
+
+  setTimeout(function(){
+    fadeOut(document.getElementById('control-box'));
+  }, 2500);
 
   container.requestPointerLock();
 }
@@ -3371,6 +3387,59 @@ function lockChangeAlert() {
   } else {
     console.log('The pointer lock status is now unlocked');  
     document.removeEventListener("mousemove", character.aim, false);
+  }
+}
+
+function fadeOut(el){
+  el.style.opacity = 1;
+
+  (function fade() {
+    if ((el.style.opacity -= .1) < 0) {
+      el.style.display = 'none';
+      el.classList.add('is-hidden');
+    } else {
+      requestAnimationFrame(fade);
+    }
+  })();
+}
+
+// fade in
+
+function fadeIn(el, display){
+  if (el.classList.contains('is-hidden')){
+    el.classList.remove('is-hidden');
+  }
+  el.style.opacity = 0;
+  el.style.display = display || "block";
+
+  (function fade() {
+    var val = parseFloat(el.style.opacity);
+    if (!((val += .1) > 1)) {
+      el.style.opacity = val;
+      requestAnimationFrame(fade);
+    }
+  })();
+}
+
+function toggleInfo(){
+  var el = document.getElementById('control-box');
+ 
+  if(el.classList.contains('is-hidden')){
+    fadeIn(el);
+  }
+  else {
+    fadeOut(el);
+  }
+}
+
+function toggleStats(){
+  var el = document.getElementById('stats-screen');
+ 
+  if(el.classList.contains('is-hidden')){
+    fadeIn(el);
+  }
+  else {
+    fadeOut(el);
   }
 }
 

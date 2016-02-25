@@ -62,6 +62,18 @@
     font-size: 50px;
 }
 
+#control-box{
+    position: fixed;
+    bottom: 15px;
+    left: 15px;
+    padding: 6px 10px;
+    color: #eee;
+    background-color: rgba(0,0,0,0.6); /*#fff;*/
+    z-index: 50;
+    font-family: helvetica;
+    font-size: 15px;
+}
+
 .sprite-img{
 	position: fixed;
     width:100%;
@@ -91,4 +103,19 @@
 
 #stats-screen .highlight{
     color: #ee0;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeIn .5s ease-in 1 forwards;
+}
+
+.is-paused {
+  animation-play-state: paused;
 }

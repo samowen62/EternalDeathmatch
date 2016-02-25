@@ -39,6 +39,7 @@ var cEntity = function(pos){
 
   this.last_pressed_r = curr_time;
   this.last_pressed_z = curr_time;
+  this.last_pressed_x = curr_time;
 
 }
 
@@ -578,12 +579,19 @@ cEntity.prototype = {
       tmpVec.x -= s * this.pointed.z;
       tmpVec.z += s * this.pointed.x;
     }
-    else if(Controller.keyIsDown[90] && (curr_time - this.last_pressed_z > BUTTON_PRESS_TIME)){//z
+    else if(Controller.keyIsDown[88] && ((curr_time - this.last_pressed_x) > INFO_PRESS_TIME)){ //x
+      this.last_pressed_x = curr_time;
+      toggleInfo();
+    }
+    else if(Controller.keyIsDown[90] && ((curr_time - this.last_pressed_z) > INFO_PRESS_TIME)){ //z
       this.last_pressed_z = curr_time;
-      if($('#stats-screen').css("display") == "none")
-        $('#stats-screen').show();
-      else
-        $('#stats-screen').hide();
+      toggleStats();
+    }
+
+    if(Controller.keyIsDown[88] || Controller.keyIsDown[90] ){ //x
+      console.log(curr_time - this.last_pressed_z, curr_time - this.last_pressed_x, INFO_PRESS_TIME);
+      console.log(((curr_time - this.last_pressed_z) > INFO_PRESS_TIME));
+      console.log(((curr_time - this.last_pressed_x) > INFO_PRESS_TIME));
     }
     
     tmpVec.y = new_y;
