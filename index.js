@@ -164,8 +164,12 @@ io.sockets.on('connection', function(socket){
   });
 
   socket.on('death', function(data){
+    console.log(rooms[socket.room_id].members, data.attacker, data.victim);
+
     rooms[socket.room_id].members[data.victim]['deaths'] += 1;
-    rooms[socket.room_id].members[data.attacker]['kills'] += 1;
+  
+    if(rooms[socket.room_id].members[data.attacker])
+      rooms[socket.room_id].members[data.attacker]['kills'] += 1;
 
     io.to(socket.room).emit('kill', 
       { 

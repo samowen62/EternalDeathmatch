@@ -96,3 +96,12 @@ var sprite_list = [
  */
 var ui_health = document.getElementById("health");
 var ui_player_stats = document.getElementById("player-stats-body");
+
+function bringInBounds(axis){
+	if(axis > MAX_MAP_WIDTH)
+		return MAX_MAP_WIDTH;
+	if(axis < -MAX_MAP_WIDTH)
+		return -MAX_MAP_WIDTH;
+
+	return axis;
+}

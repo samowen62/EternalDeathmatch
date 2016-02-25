@@ -12,12 +12,6 @@ weapon.prototype = {
 
   constructor: weapon,
 
-/*
-  position: function(vec){
-    for( var s in this.sprites)
-      this.sprites[s].position.copy(vec);
-  },
-*/
   open: function(){
     this.sprites[0].style.display = "block";
   },
@@ -37,18 +31,23 @@ weapon.prototype = {
     var seg = this.duration / (num_s - 1);
 
     for( var s = 1; s <= num_s; s++){
-      setTimeout(this.swapFrames, (s - 1) * seg, s, this.sprites);
+      setTimeout(this.swapFrames, (s - 1) * seg, s, this.sprites, this.name);
     }
 
     this.sprites[this.sprites.length - 1].style.display = "none";
     this.sprites[0].style.display = "block";
   },
 
-  swapFrames: function(frame, sprites){
+  swapFrames: function(frame, sprites, name){
+
     var first = (frame - 1) % sprites.length;
     frame = frame % sprites.length;
     
     sprites[first].style.display = "none";
-    sprites[frame].style.display = "block";
-  }
+    sprites[frame].style.display = character.weapon.name != name ? "none" : "block";
+  
+    if(character.weapon.name == name)
+      current_sprite = sprites[frame];
+
+  },
 }

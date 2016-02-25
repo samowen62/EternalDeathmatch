@@ -1844,6 +1844,15 @@ var sprite_list = [
  */
 var ui_health = document.getElementById("health");
 var ui_player_stats = document.getElementById("player-stats-body");
+
+function bringInBounds(axis){
+	if(axis > MAX_MAP_WIDTH)
+		return MAX_MAP_WIDTH;
+	if(axis < -MAX_MAP_WIDTH)
+		return -MAX_MAP_WIDTH;
+
+	return axis;
+}
 var Controller = {
   keyIsDown: []
 }
@@ -1921,12 +1930,6 @@ weapon.prototype = {
 
   constructor: weapon,
 
-/*
-  position: function(vec){
-    for( var s in this.sprites)
-      this.sprites[s].position.copy(vec);
-  },
-*/
   open: function(){
     this.sprites[0].style.display = "block";
   },
@@ -1946,20 +1949,25 @@ weapon.prototype = {
     var seg = this.duration / (num_s - 1);
 
     for( var s = 1; s <= num_s; s++){
-      setTimeout(this.swapFrames, (s - 1) * seg, s, this.sprites);
+      setTimeout(this.swapFrames, (s - 1) * seg, s, this.sprites, this.name);
     }
 
     this.sprites[this.sprites.length - 1].style.display = "none";
     this.sprites[0].style.display = "block";
   },
 
-  swapFrames: function(frame, sprites){
+  swapFrames: function(frame, sprites, name){
+
     var first = (frame - 1) % sprites.length;
     frame = frame % sprites.length;
     
     sprites[first].style.display = "none";
-    sprites[frame].style.display = "block";
-  }
+    sprites[frame].style.display = character.weapon.name != name ? "none" : "block";
+  
+    if(character.weapon.name == name)
+      current_sprite = sprites[frame];
+
+  },
 }
 
 //collisionwall js
@@ -2763,7 +2771,8 @@ cEntity.prototype = {
     wxEnd = (wxEnd > this.weapon.range) ? this.weapon.range : (wxEnd < -this.weapon.range) ? -this.weapon.range : wxEnd;
     wzEnd = (wzEnd > this.weapon.range) ? this.weapon.range : (wzEnd < -this.weapon.range) ? -this.weapon.range : wzEnd;
 
-    
+    wxEnd = bringInBounds(wxEnd);
+    wzEnd = bringInBounds(wzEnd);
 
     /*  
      *  I tried to make this next series of control statements as simple as 
@@ -2864,12 +2873,17 @@ cEntity.prototype = {
   setWeapon: function(weapon){
     this.weapon = weapon;
 
-    current_sprite = this.weapon.sprites[0];
-    current_sprite.style.display = "block";
+    if(current_sprite){
+      current_sprite.style.display = "none";
+      current_sprite = this.weapon.sprites[0];
+      current_sprite.style.display = "block";
+    }else{
+      current_sprite = this.weapon.sprites[0];
+      current_sprite.style.display = "block";
+    }
   },
 
-  rotateWeapon: function(){
-    if(current_sprite) current_sprite.style.display = "none";
+  rotateWeapon: function(){      
     this.weapon_index = (this.weapon_index + 1) % weapons.length;
     this.setWeapon(weapons[this.weapon_index]); 
   },
@@ -3028,7 +3042,7 @@ cEntity.prototype = {
         for(var r in ramps){
           if(ramps[r].over(this.position) && this.jump_frame > RAMP_WAIT_TIME){
             var dist = ramps[r].distance_away(this.position);
-            console.log(dist); 
+
             if(dist < RAMP_TOLERANCE){
               new_y = ramps[r].yAt(this.position);
               this.grounded = true;

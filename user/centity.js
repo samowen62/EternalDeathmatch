@@ -224,7 +224,8 @@ cEntity.prototype = {
     wxEnd = (wxEnd > this.weapon.range) ? this.weapon.range : (wxEnd < -this.weapon.range) ? -this.weapon.range : wxEnd;
     wzEnd = (wzEnd > this.weapon.range) ? this.weapon.range : (wzEnd < -this.weapon.range) ? -this.weapon.range : wzEnd;
 
-    
+    wxEnd = bringInBounds(wxEnd);
+    wzEnd = bringInBounds(wzEnd);
 
     /*  
      *  I tried to make this next series of control statements as simple as 
@@ -325,12 +326,17 @@ cEntity.prototype = {
   setWeapon: function(weapon){
     this.weapon = weapon;
 
-    current_sprite = this.weapon.sprites[0];
-    current_sprite.style.display = "block";
+    if(current_sprite){
+      current_sprite.style.display = "none";
+      current_sprite = this.weapon.sprites[0];
+      current_sprite.style.display = "block";
+    }else{
+      current_sprite = this.weapon.sprites[0];
+      current_sprite.style.display = "block";
+    }
   },
 
-  rotateWeapon: function(){
-    if(current_sprite) current_sprite.style.display = "none";
+  rotateWeapon: function(){      
     this.weapon_index = (this.weapon_index + 1) % weapons.length;
     this.setWeapon(weapons[this.weapon_index]); 
   },
@@ -489,7 +495,7 @@ cEntity.prototype = {
         for(var r in ramps){
           if(ramps[r].over(this.position) && this.jump_frame > RAMP_WAIT_TIME){
             var dist = ramps[r].distance_away(this.position);
-            console.log(dist); 
+
             if(dist < RAMP_TOLERANCE){
               new_y = ramps[r].yAt(this.position);
               this.grounded = true;
