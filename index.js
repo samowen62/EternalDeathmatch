@@ -7,6 +7,33 @@ var io = require('socket.io')(http);
 var rooms = [], newId
 var BASE_LATENCY = 5 
 
+//later include pointed dir
+var resp_points = [
+  {
+    x : 760,
+    y : 0,
+    z : 190
+  },
+  //{ 0, 0, -1}
+  {
+    x : 849,
+    y : 0,
+    z : -1660
+  },
+  //{ -1, 0, 0}
+  {
+    x : 75,
+    y : 200,//make sure 2nd floor works too
+    z : -1060
+  },
+  //{ 1, 0, 0}
+  {
+    x : -595,
+    y : 0,
+    z : 290
+  },
+  //{ 1, 0, -1}
+];
 
 for(var i = 0; i < num_rooms; i++){
   //things we want to store on a per room basis
@@ -17,12 +44,48 @@ for(var i = 0; i < num_rooms; i++){
   });
 }
 
-//need hashes for user and game
+/*
+ * Simply returns squared distance between points
+ */
+function distSq(p1, p2){
+  return (Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2) + Math.pow(p1.z - p2.z, 2));
+}
+
+/*
+ * need hashes for user and game
+ */
 function makeid(len){
   var text = "",possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   for( var i=0; i < len; i++ )
       text += possible.charAt(Math.floor(Math.random() * possible.length));
   return text;
+}
+
+/*
+ *  Choose a respawn point solely based on which is farthest from any other player
+ */
+function chooseRespawn(players, ignore_socket){
+  var max_dist = 0;
+  var point = resp_points[0];
+
+  for(var i in resp_points){
+    for(var j in players){
+      //don't look at current user
+      if(j == ignore_socket){
+        continue;
+      }
+
+      var d = distSq(players[j].pos, resp_points[i]);
+
+      if(d > max_dist){
+        max_dist = d;
+        point = resp_points[i];
+      }
+    }
+  }
+
+  console.log(point);
+  return point;
 }
 
 app.get('/', function(req, res){
@@ -126,9 +189,11 @@ io.sockets.on('connection', function(socket){
     if(msg['dead']){
       if(msg['resp_time'] < new Date().getTime()){
         console.log('ressurecting!');
+        var resp_point = chooseRespawn(rooms[socket.room_id].members, socket.uniq_id);
+
         io.to(socket.room).emit('respawn',{
           id: socket.uniq_id,
-          pos: msg['pos']//change this to actual respawn point
+          pos: resp_point
         });
       }
     }

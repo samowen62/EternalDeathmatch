@@ -3083,12 +3083,21 @@ cEntity.prototype = {
 
     var curr_time = new Date().getTime();
 
+    //controls unconnected to movement
     if(Controller.keyIsDown[82] && (curr_time - this.last_pressed_r > BUTTON_PRESS_TIME)){
       this.last_pressed_r = curr_time;
       this.rotateWeapon();
     }
+    if(Controller.keyIsDown[88] && (curr_time - this.last_pressed_x > INFO_PRESS_TIME)){ //x
+      this.last_pressed_x = curr_time;
+      toggleInfo();
+    }
+    if(Controller.keyIsDown[90] && (curr_time - this.last_pressed_z > INFO_PRESS_TIME)){ //z
+      this.last_pressed_z = curr_time;
+      toggleStats();
+    }
 
-
+    //movement
     if((Controller.keyIsDown[87] && Controller.keyIsDown[83]) || (Controller.keyIsDown[68] && Controller.keyIsDown[65]))
       1;
     else if(Controller.keyIsDown[87] && Controller.keyIsDown[65]) //w + a
@@ -3127,20 +3136,7 @@ cEntity.prototype = {
       tmpVec.x -= s * this.pointed.z;
       tmpVec.z += s * this.pointed.x;
     }
-    else if(Controller.keyIsDown[88] && ((curr_time - this.last_pressed_x) > INFO_PRESS_TIME)){ //x
-      this.last_pressed_x = curr_time;
-      toggleInfo();
-    }
-    else if(Controller.keyIsDown[90] && ((curr_time - this.last_pressed_z) > INFO_PRESS_TIME)){ //z
-      this.last_pressed_z = curr_time;
-      toggleStats();
-    }
 
-    if(Controller.keyIsDown[88] || Controller.keyIsDown[90] ){ //x
-      console.log(curr_time - this.last_pressed_z, curr_time - this.last_pressed_x, INFO_PRESS_TIME);
-      console.log(((curr_time - this.last_pressed_z) > INFO_PRESS_TIME));
-      console.log(((curr_time - this.last_pressed_x) > INFO_PRESS_TIME));
-    }
     
     tmpVec.y = new_y;
     tmpVec.copy(this.detectCol(tmpPos,tmpVec));

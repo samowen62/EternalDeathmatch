@@ -6,10 +6,13 @@ Gulp precompiles the assets and running <pre>node index.js</pre> on the root run
 ![screenshot](https://github.com/samowen62/webGLnetGame/blob/master/images/game.png)
 
 ##TODO
-* Handle players who've left by broadcasting the disconnect serverside
+* Handle players who've left by broadcasting the disconnect serverside.
+* Adjust respawn to occur when player spawns initially as well.
 * Add more non-collideable scenery to the map.
+* Add more weapons with respawning power ups as well.
 * Might want to refactor the cEntity.move() method. It's a little messy at parts
-* <span style="color:#bbb">Fix multiple sound issue (maybe just use howler).</span> (fixed)
+* Glitch when going up ramp on South side
+* Fix multiple sound issue (maybe just use howler).(fixed)
 * Bug: 
 TypeError: Cannot read property 'kills' of undefined
     at Socket.<anonymous> (/home/sam/Projects/webGLnetGame/index.js:168:49)
@@ -20,4 +23,4 @@ TypeError: Cannot read property 'kills' of undefined
 #BIG TODO
 * Migrate all the code to the server side except button pushes to avoid hacking
 
-Visit at www.eternaldeathmatch.com. Not completely finished yet.
+Visit at www.eternaldeathmatch.com. [Not completely finished yet]
