@@ -100,6 +100,9 @@ cEntity.prototype = {
       var ray_hit = this.rayShoot(start_Vec, end_vec, this.pointed);
       //check the players to see if we've hit any
       for(var p in players){
+        if(!players[p].alive)
+          return;
+
         calcVec.copy(start_Vec);
         var pt = players[p].rayDetect(calcVec, this.pointed);
         if(pt != null && pt.len <= ray_hit.len){
@@ -364,13 +367,14 @@ cEntity.prototype = {
     //effects['death'].play();
 
     //do a timed death sequence here
-
     this.respawn_time = RESPAWN_TIME + new Date().getTime();
     this.dead = true;
     
+    document.getElementById("dead-overlay").style.display = "block";
     //reset everything
     this.health = 100;
     ui_health.innerHTML = 100;
+    this.position = new THREE.Vector3(0,0,0);
 
     this.setWeapon(weapons[0]);
     this.weapon.close();
@@ -380,6 +384,7 @@ cEntity.prototype = {
   respawn: function(pos){
     this.weapon.open();
     this.dead = false;
+    document.getElementById("dead-overlay").style.display = "none";
     this.position.copy(pos);
   },
 

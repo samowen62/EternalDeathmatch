@@ -84,7 +84,6 @@ function chooseRespawn(players, ignore_socket){
     }
   }
 
-  console.log(point);
   return point;
 }
 
@@ -229,7 +228,7 @@ io.sockets.on('connection', function(socket){
   });
 
   socket.on('death', function(data){
-    console.log(rooms[socket.room_id].members, data.attacker, data.victim);
+    //console.log(rooms[socket.room_id].members, data.attacker, data.victim);
 
     rooms[socket.room_id].members[data.victim]['deaths'] += 1;
   

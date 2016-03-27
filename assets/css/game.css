@@ -50,6 +50,10 @@
 	width:250px;
 }
 
+#dead-overlay{
+    display: none;
+}
+
 #health-box{
 	position: fixed;
     bottom: 0px;

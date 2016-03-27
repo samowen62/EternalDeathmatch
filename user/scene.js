@@ -46,6 +46,24 @@ function init() {
     [new THREE.Vector3(-2000,0,-2000),new THREE.Vector3(2000,0,-2000), new THREE.Vector3(-2000,0,2000)],  
   ];
 
+  var cyl = THREE.SceneUtils.createMultiMaterialObject( 
+    // radiusAtTop, radiusAtBottom, height, segmentsAroundRadius, segmentsAlongHeight,
+    new THREE.CylinderGeometry( 550, 500, 80, 20, 1 ), 
+    material );
+  cyl.position.set(850, 650, 750);
+  scene.add( cyl );
+
+  var sphereGeometry = new THREE.SphereGeometry( 100, 50, 50 );
+  var sphereMaterial = new THREE.MeshPhongMaterial( { color:0xff0000, transparent:true, opacity:1, shininess: 30 } );
+  var sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
+  scene.add(sphere);
+  sphere.material.specular.setRGB(1,1,0.75)
+  //sphere.material.ambient.setRGB(0.75,0.75,0.75)
+  sphere.material.emissive.setRGB(0.1,0.1,0.25)
+  sphere.position.set(0,400,0);
+
+
+
   var floor1_h = 160;
   var walls = [
     {ul : new THREE.Vector3(250,floor1_h,0), lr : new THREE.Vector3(250,0,50)},
@@ -121,6 +139,7 @@ function init() {
     {ul : new THREE.Vector3(-350,450,220), lr : new THREE.Vector3(-350,0,-250)},
     {ul : new THREE.Vector3(-350,450,-250), lr : new THREE.Vector3(-500,0,-250)},
     {ul : new THREE.Vector3(-500,450,-250), lr : new THREE.Vector3(-500,0,220)},
+    {ul : new THREE.Vector3(-700,200, 220), lr : new THREE.Vector3(-500,0,220)},
 
 
     //another building
@@ -335,10 +354,10 @@ function render() {
         character.setWeapon(weapons[0]);
       }
       
-
+      //if out of bounds kill the character and move them back to start
       if(Math.abs(character.position.x) > 2000 || Math.abs(character.position.y) > 2000 || Math.abs(character.position.z) > 2000){
         socket.emit('death', {
-          hash : p_hash
+          victim : p_hash
         });
         character.kill();
       }
