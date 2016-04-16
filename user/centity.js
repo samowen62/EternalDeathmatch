@@ -40,6 +40,7 @@ var cEntity = function(pos){
   this.last_pressed_r = curr_time;
   this.last_pressed_z = curr_time;
   this.last_pressed_x = curr_time;
+  this.last_pressed_o_p = curr_time;
 
 }
 
@@ -381,11 +382,12 @@ cEntity.prototype = {
     this.weapon_index = 0;
   },
 
-  respawn: function(pos){
+  respawn: function(point){
     this.weapon.open();
     this.dead = false;
     document.getElementById("dead-overlay").style.display = "none";
-    this.position.copy(pos);
+    this.position.copy(point.pos);
+    this.pointed.copy(new THREE.Vector3(point.pnt.x, 0 , point.pnt.y));
   },
 
   move: function (){
@@ -552,6 +554,19 @@ cEntity.prototype = {
     if(Controller.keyIsDown[90] && (curr_time - this.last_pressed_z > INFO_PRESS_TIME)){ //z
       this.last_pressed_z = curr_time;
       toggleStats();
+    }
+    if((Controller.keyIsDown[79] || Controller.keyIsDown[80]) && (curr_time - this.last_pressed_o_p > BUTTON_PRESS_TIME)){ //o or p
+      this.last_pressed_o_p = curr_time;
+
+      if(Controller.keyIsDown[79])
+        mouseSensitivity -= 0.0005;
+      if(Controller.keyIsDown[80])
+        mouseSensitivity += 0.0005;
+
+      mouseSensitivity = Math.max(mouseSensitivity, MIN_SENSITIVITY);
+      mouseSensitivity = Math.min(mouseSensitivity, MAX_SENSITIVITY);
+
+      console.log(mouseSensitivity);
     }
 
     //movement

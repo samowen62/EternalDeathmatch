@@ -1,4 +1,4 @@
-var num_rooms = 1;
+var num_rooms = 1;//adjust to large numbers in production
 var room_size = 8;
 
 var app = require('express')();
@@ -7,32 +7,52 @@ var io = require('socket.io')(http);
 var rooms = [], newId
 var BASE_LATENCY = 5 
 
-//later include pointed dir
+//y functions as the z-coordinate
 var resp_points = [
   {
-    x : 760,
-    y : 0,
-    z : 190
+    pos: {
+      x : 760,
+      y : 0,
+      z : 190
+    },
+    pnt: {
+      x : 0,
+      y : -1
+    }
   },
-  //{ 0, 0, -1}
   {
-    x : 849,
-    y : 0,
-    z : -1660
+    pos: {
+      x : 849,
+      y : 0,
+      z : -1660
+    },
+    pnt: {
+      x : -1,
+      y : 0
+    }
   },
-  //{ -1, 0, 0}
   {
-    x : 75,
-    y : 200,//make sure 2nd floor works too
-    z : -1060
+    pos: {
+      x : 75,
+      y : 200,
+      z : -1060
+    },
+    pnt: {
+      x : 1,
+      y : 0
+    }
   },
-  //{ 1, 0, 0}
   {
-    x : -595,
-    y : 0,
-    z : 290
-  },
-  //{ 1, 0, -1}
+    pos: {
+      x : -595,
+      y : 0,
+      z : 290
+    },
+    pnt: {
+      x : 1,
+      y : -1
+    }
+  }
 ];
 
 for(var i = 0; i < num_rooms; i++){
@@ -75,7 +95,7 @@ function chooseRespawn(players, ignore_socket){
         continue;
       }
 
-      var d = distSq(players[j].pos, resp_points[i]);
+      var d = distSq(players[j].pos, resp_points[i].pos);
 
       if(d > max_dist){
         max_dist = d;
@@ -192,7 +212,7 @@ io.sockets.on('connection', function(socket){
 
         io.to(socket.room).emit('respawn',{
           id: socket.uniq_id,
-          pos: resp_point
+          point: resp_point
         });
       }
     }

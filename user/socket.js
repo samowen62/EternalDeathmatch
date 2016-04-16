@@ -67,9 +67,9 @@ socket.on('kill', function (data) {
 socket.on('respawn', function (data) {
   console.log("ressurection!");
   if(p_hash == data.id){
-    character.respawn(data.pos);
+    character.respawn(data.point);
   }else if(players[data.id]){
-    players[data.id].respawn(data.pos);
+    players[data.id].respawn(data.point);
   }
 });
 

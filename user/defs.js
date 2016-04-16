@@ -30,10 +30,12 @@ var p_hash = null,
 	winWidth = window.innerWidth,
 	centX = winWidth / 2,
 	centY = winHeight / 2,
-	mouseSensitivity = 0.004,//tweak based on fps
+	mouseSensitivity = 0.004,
 
 	mouseDown = 0,
 
+	MIN_SENSITIVITY = 0.0005,
+	MAX_SENSITIVITY = 0.010,
 	BASE_STEP_FOOT = 10,
 	BASE_SPEED = 1,
 	BASE_JUMP_POWER = 60,

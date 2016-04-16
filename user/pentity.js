@@ -39,7 +39,6 @@ pEntity.prototype = {
 
     var cos_2 = (c_pnt.x*c_pnt.x + c_pnt.y*c_pnt.y) * (pnt.x*pnt.x + pnt.y*pnt.y);
     cos_2 = num / cos_2;
-    
     //gave offset here (pi/8)^2
     cos_2 = parseInt(2*(cos_2 + 1.1542126));
 
@@ -84,10 +83,10 @@ pEntity.prototype = {
     return null;
   },
 
-  respawn: function(pos){
+  respawn: function(point){
     this.alive = true;
     this.current_sprite.visible = true;
-    this.position.copy(pos);
+    this.position(point.pos, point.pnt);
   },
 
   kill: function(){

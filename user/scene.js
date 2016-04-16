@@ -215,7 +215,7 @@ function init() {
     //ccw
     [new THREE.Vector3(980,0,-1200), new THREE.Vector3(700,0,-1200), new THREE.Vector3(700,200,-1450), new THREE.Vector3(980,200,-1450)],
     [new THREE.Vector3(700,floor1_h,150), new THREE.Vector3(700,floor1_h,550), new THREE.Vector3(450,0,550), new THREE.Vector3(450,0,150)],
-    [new THREE.Vector3(-400,200,-1500), new THREE.Vector3(-400,200,-1300), new THREE.Vector3(-700,0,-1300), new THREE.Vector3(-700,0,-1500)],
+    [new THREE.Vector3(-420,200,-1500), new THREE.Vector3(-420,200,-1300), new THREE.Vector3(-700,0,-1300), new THREE.Vector3(-700,0,-1500)],
     [new THREE.Vector3(-500,200,200), new THREE.Vector3(-700,200,200), new THREE.Vector3(-700,0,-150), new THREE.Vector3(-500,0,-150)],
 
   ];
@@ -228,6 +228,8 @@ function init() {
 
   //strictly floors
   var platforms = [
+    [new THREE.Vector3(-400,200,-1500),new THREE.Vector3(-400,200,-1300),new THREE.Vector3(-420,200,-1300)],
+    [new THREE.Vector3(-400,200,-1500),new THREE.Vector3(-420,200,-1300),new THREE.Vector3(-420,200,-1500)],
     [new THREE.Vector3(1000,300,-1450),new THREE.Vector3(1000,300,-1020),new THREE.Vector3(980,300,-1020)],
     [new THREE.Vector3(1000,300,-1450),new THREE.Vector3(980,300,-1020),new THREE.Vector3(980,300,-1450)],
     [new THREE.Vector3(700,198,-1450),new THREE.Vector3(700,198,-1200),new THREE.Vector3(680,198,-1200)],

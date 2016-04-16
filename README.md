@@ -8,11 +8,11 @@ Gulp precompiles the assets and running <pre>node index.js</pre> on the root run
 ##TODO
 * Handle players who've left by broadcasting the disconnect serverside.
 * Adjust respawn to occur when player spawns initially as well.
-* Adjust respawn so that the player is pointed in a particular direction as well
 * Add more non-collideable scenery to the map.
 * Add more weapons with respawning power ups as well.
 * Might want to refactor the cEntity.move() method. It's a little messy at parts
-* Glitch when going up ramps with collision walls under them
+* Glitch when going up ramps with collision walls under them (with this we'll assume ramps do not end on collision walls)
+* Better server and client logs
 
 ##Errors 
 * TypeError: Cannot read property 'kills' of undefined

@@ -1778,10 +1778,12 @@ var p_hash = null,
 	winWidth = window.innerWidth,
 	centX = winWidth / 2,
 	centY = winHeight / 2,
-	mouseSensitivity = 0.004,//tweak based on fps
+	mouseSensitivity = 0.004,
 
 	mouseDown = 0,
 
+	MIN_SENSITIVITY = 0.0005,
+	MAX_SENSITIVITY = 0.010,
 	BASE_STEP_FOOT = 10,
 	BASE_SPEED = 1,
 	BASE_JUMP_POWER = 60,
@@ -2588,6 +2590,7 @@ var cEntity = function(pos){
   this.last_pressed_r = curr_time;
   this.last_pressed_z = curr_time;
   this.last_pressed_x = curr_time;
+  this.last_pressed_o_p = curr_time;
 
 }
 
@@ -2929,11 +2932,12 @@ cEntity.prototype = {
     this.weapon_index = 0;
   },
 
-  respawn: function(pos){
+  respawn: function(point){
     this.weapon.open();
     this.dead = false;
     document.getElementById("dead-overlay").style.display = "none";
-    this.position.copy(pos);
+    this.position.copy(point.pos);
+    this.pointed.copy(new THREE.Vector3(point.pnt.x, 0 , point.pnt.y));
   },
 
   move: function (){
@@ -3101,6 +3105,19 @@ cEntity.prototype = {
       this.last_pressed_z = curr_time;
       toggleStats();
     }
+    if((Controller.keyIsDown[79] || Controller.keyIsDown[80]) && (curr_time - this.last_pressed_o_p > BUTTON_PRESS_TIME)){ //o or p
+      this.last_pressed_o_p = curr_time;
+
+      if(Controller.keyIsDown[79])
+        mouseSensitivity -= 0.0005;
+      if(Controller.keyIsDown[80])
+        mouseSensitivity += 0.0005;
+
+      mouseSensitivity = Math.max(mouseSensitivity, MIN_SENSITIVITY);
+      mouseSensitivity = Math.min(mouseSensitivity, MAX_SENSITIVITY);
+
+      console.log(mouseSensitivity);
+    }
 
     //movement
     if((Controller.keyIsDown[87] && Controller.keyIsDown[83]) || (Controller.keyIsDown[68] && Controller.keyIsDown[65]))
@@ -3221,7 +3238,6 @@ pEntity.prototype = {
 
     var cos_2 = (c_pnt.x*c_pnt.x + c_pnt.y*c_pnt.y) * (pnt.x*pnt.x + pnt.y*pnt.y);
     cos_2 = num / cos_2;
-    
     //gave offset here (pi/8)^2
     cos_2 = parseInt(2*(cos_2 + 1.1542126));
 
@@ -3266,10 +3282,10 @@ pEntity.prototype = {
     return null;
   },
 
-  respawn: function(pos){
+  respawn: function(point){
     this.alive = true;
     this.current_sprite.visible = true;
-    this.position.copy(pos);
+    this.position(point.pos, point.pnt);
   },
 
   kill: function(){
@@ -3660,7 +3676,7 @@ function init() {
     //ccw
     [new THREE.Vector3(980,0,-1200), new THREE.Vector3(700,0,-1200), new THREE.Vector3(700,200,-1450), new THREE.Vector3(980,200,-1450)],
     [new THREE.Vector3(700,floor1_h,150), new THREE.Vector3(700,floor1_h,550), new THREE.Vector3(450,0,550), new THREE.Vector3(450,0,150)],
-    [new THREE.Vector3(-400,200,-1500), new THREE.Vector3(-400,200,-1300), new THREE.Vector3(-700,0,-1300), new THREE.Vector3(-700,0,-1500)],
+    [new THREE.Vector3(-420,200,-1500), new THREE.Vector3(-420,200,-1300), new THREE.Vector3(-700,0,-1300), new THREE.Vector3(-700,0,-1500)],
     [new THREE.Vector3(-500,200,200), new THREE.Vector3(-700,200,200), new THREE.Vector3(-700,0,-150), new THREE.Vector3(-500,0,-150)],
 
   ];
@@ -3673,6 +3689,8 @@ function init() {
 
   //strictly floors
   var platforms = [
+    [new THREE.Vector3(-400,200,-1500),new THREE.Vector3(-400,200,-1300),new THREE.Vector3(-420,200,-1300)],
+    [new THREE.Vector3(-400,200,-1500),new THREE.Vector3(-420,200,-1300),new THREE.Vector3(-420,200,-1500)],
     [new THREE.Vector3(1000,300,-1450),new THREE.Vector3(1000,300,-1020),new THREE.Vector3(980,300,-1020)],
     [new THREE.Vector3(1000,300,-1450),new THREE.Vector3(980,300,-1020),new THREE.Vector3(980,300,-1450)],
     [new THREE.Vector3(700,198,-1450),new THREE.Vector3(700,198,-1200),new THREE.Vector3(680,198,-1200)],
@@ -3894,9 +3912,9 @@ socket.on('kill', function (data) {
 socket.on('respawn', function (data) {
   console.log("ressurection!");
   if(p_hash == data.id){
-    character.respawn(data.pos);
+    character.respawn(data.point);
   }else if(players[data.id]){
-    players[data.id].respawn(data.pos);
+    players[data.id].respawn(data.point);
   }
 });
 
